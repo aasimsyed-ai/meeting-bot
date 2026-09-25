@@ -1,0 +1,32 @@
+name: AI evaluation (Claude)
+
+# Manual only: it calls the paid Claude API for every evaluation meeting.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Development set
+        run: pnpm --filter @meeting-assistant/core eval -- --engine claude --verbose
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Held-out set
+        run: pnpm --filter @meeting-assistant/core eval -- --engine claude --holdout --verbose
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: claude-eval-results
+          path: packages/core/eval/results

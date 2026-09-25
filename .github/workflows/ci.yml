@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, types, unit tests, AI quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: AI evaluation (development set, quality gate)
+        run: pnpm eval
+      - name: AI evaluation (held-out set)
+        run: pnpm --filter @meeting-assistant/core eval:holdout
+      - name: Dependency audit (production, high and critical)
+        run: pnpm audit --prod --audit-level high
+      - run: pnpm --filter @meeting-assistant/desktop build
+
+  app:
+    name: App tests (${{ matrix.os }})
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Unit tests on this OS
+        run: pnpm test
+      - name: Fetch the Electron binary
+        run: node -e "require('electron')"
+      - run: pnpm build
+      - name: End-to-end tests (Linux, virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm exec playwright test
+      - name: End-to-end tests
+        if: runner.os != 'Linux'
+        run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: |
+            apps/desktop/playwright-report
+            apps/desktop/test-results
+          retention-days: 7
+
+  speech:
+    name: Real speech pipeline
+    needs: checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    env:
+      MODELS: ${{ github.workspace }}/.models
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: .models
+          key: speech-models-${{ hashFiles('apps/desktop/src/main/transcription/models.ts') }}-tts-v1
+      - name: Download speech models with the app's verified downloader
+        run: node --experimental-strip-types scripts/fetch-models.mts "$MODELS"
+      - name: Download a text-to-speech model for synthetic meetings
+        run: |
+          if [ ! -d "$MODELS/vits-piper-en_US-libritts_r-medium" ]; then
+            curl -sSL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2 | tar xj -C "$MODELS"
+          fi
+      - name: Synthesize the Project Phoenix meeting (four voices)
+        run: node scripts/synth-meeting.mjs "$MODELS/vits-piper-en_US-libritts_r-medium" "$MODELS/phoenix.wav"
+      - name: Speech engine integration test
+        run: pnpm exec vitest run test/speech.integration.test.ts
+        env:
+          MEETING_ASSISTANT_TEST_MODELS: ${{ env.MODELS }}
+          MEETING_ASSISTANT_TEST_WAV: ${{ env.MODELS }}/phoenix.wav
+      - run: node -e "require('electron')" && pnpm build
+      - name: Real audio through the app, end to end
+        run: xvfb-run -a pnpm exec playwright test e2e/audio.spec.ts
+        env:
+          MEETING_ASSISTANT_TEST_MODELS: ${{ env.MODELS }}
+          MEETING_ASSISTANT_TEST_WAV: ${{ env.MODELS }}/phoenix.wav
+
+  package:
+    name: Installer (${{ matrix.os }})
+    needs: app
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build unsigned installers
+        run: pnpm run package
+        env:
+          # No certificates in CI: builds are unsigned (see docs/deployment.md).
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}
+          path: |
+            apps/desktop/release/*/*.exe
+            apps/desktop/release/*/*.dmg
+            apps/desktop/release/*/*.zip
+            apps/desktop/release/*/*.AppImage
+            apps/desktop/release/*/*.deb
+            apps/desktop/release/*/latest*.yml
+          if-no-files-found: error
+          retention-days: 14
