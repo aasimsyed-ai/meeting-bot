@@ -45,6 +45,8 @@ describe.skipIf(!models || !wav)('speech engine on synthetic meeting audio', () 
       `transcribed ${seconds.toFixed(0)} s of audio in ${(ms / 1000).toFixed(1)} s (${(seconds / (ms / 1000)).toFixed(1)}x real time), ${out.length} segments`,
     );
 
+    // Synthetic audio only, so printing the transcript is safe and makes CI failures debuggable.
+    console.log(out.map((s) => `${s.speakerKey}: ${s.text}`).join('\n'));
     const text = out
       .map((s) => s.text)
       .join(' ')

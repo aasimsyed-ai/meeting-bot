@@ -18,6 +18,10 @@ const tts = new sherpa.OfflineTts({
       model: `${ttsDir}/en_US-libritts_r-medium.onnx`,
       tokens: `${ttsDir}/tokens.txt`,
       dataDir: `${ttsDir}/espeak-ng-data`,
+      // Almost no sampling noise, so the same fixture gives nearly the same audio every run and CI
+      // results are repeatable. (0 would mean "use the default" of 0.667.)
+      noiseScale: 0.0001,
+      noiseScaleW: 0.0001,
     },
     numThreads: 2,
   },
