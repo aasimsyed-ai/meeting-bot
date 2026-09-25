@@ -255,6 +255,10 @@ export function Onboarding() {
                 <strong>Start taking notes</strong>. When it ends, press <strong>Stop</strong>. Your
                 notes are ready a moment later.
               </p>
+              <p className="small muted">
+                Let people know when you are taking notes. In some places, everyone in a
+                conversation has to agree before it is recorded.
+              </p>
             </div>
             <div className="row">
               <button className="btn btn-primary btn-lg" onClick={() => void finish()}>
