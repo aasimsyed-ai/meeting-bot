@@ -142,6 +142,47 @@ describe('rules extractor: regressions', () => {
   });
 });
 
+describe('rules extractor: robustness to speech recognition', () => {
+  it.each([
+    ["We're moving the deployment to Monday.", 'Move the deployment to Monday'],
+    ["We're pushing the launch back a week.", 'Push the launch back a week'],
+    ["We're switching to the managed database.", 'Switch to the managed database'],
+    ["We're postponing the vendor review.", 'Postpone the vendor review'],
+  ])('reads an announced change as a decision: %s', (text, decision) => {
+    expect(run([['Alice Johnson', text]]).decisions).toEqual([
+      expect.objectContaining({ text: decision, status: 'confirmed' }),
+    ]);
+  });
+
+  it.each([
+    ["We're moving on to the next topic."],
+    ["We're moving to questions now."],
+    ["We're pushing hard to finish the audit."],
+    ["We're not moving the deployment to Monday."],
+    ['Are we moving the deployment to Monday?'],
+  ])('does not read this as a decision: %s', (text) => {
+    expect(run([['Alice Johnson', text]]).decisions).toEqual([]);
+  });
+
+  it('treats a proposal with a misheard first word ("Where if we") as a proposal', () => {
+    const r = run([
+      ['Bob Smith', 'Where if we move the deployment to Monday?'],
+      ['Alice Johnson', 'Monday works for me.'],
+    ]);
+    expect(r.decisions).toEqual([
+      expect.objectContaining({ text: 'Move the deployment to Monday', status: 'confirmed' }),
+    ]);
+  });
+
+  it('does not treat "if we ..., what happens?" as a proposal', () => {
+    const r = run([
+      ['Bob Smith', 'So if we deploy on Friday, what happens?'],
+      ['Carol King', 'Sounds good.'],
+    ]);
+    expect(r.decisions).toEqual([]);
+  });
+});
+
 describe('rules extractor: questions and risks', () => {
   it('reports unanswered questions only', () => {
     const r = run([
