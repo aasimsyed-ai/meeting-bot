@@ -257,7 +257,8 @@ function Idle() {
 function channelState(c: ChannelHealth, demo: boolean): string {
   if (demo) return 'Simulated';
   if (!c.enabled) return c.problem ? 'Not available' : 'Off';
-  return c.receiving ? 'Listening' : 'Waiting for audio…';
+  if (c.receiving) return 'Listening';
+  return c.problem ? 'No audio' : 'Waiting for audio…';
 }
 
 function problemAction(p: CaptureProblem, onResume: () => void) {
