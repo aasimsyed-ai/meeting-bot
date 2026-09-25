@@ -52,7 +52,7 @@ test('meeting audio becomes a transcript with speakers and correct notes', async
 
   await expect(win.locator('section[aria-labelledby="decisions"]')).toContainText(/monday/i);
   const tasks = win.locator('section[aria-labelledby="actions"]');
-  await expect(tasks.locator('input[aria-label="Task"]').first()).toHaveValue(/firewall/i);
+  await expect(tasks.locator('[aria-label="Task"]').first()).toHaveValue(/firewall/i);
   await expect(tasks.locator('input[aria-label="Owner"]').first()).toHaveValue(/^Speaker \d$/);
   await win.getByRole('tab', { name: /Transcript/ }).click();
   const speakerChips = win.locator('section[aria-labelledby="speakers"] .chip');
