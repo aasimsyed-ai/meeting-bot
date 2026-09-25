@@ -139,3 +139,13 @@ describe('ASR repair', () => {
     expect(repairAsrText('i dont know yet')).toBe("i don't know yet");
   });
 });
+
+describe('rules extractor: topics', () => {
+  it('folds a greeting into the first announced topic instead of making a junk topic', () => {
+    const r = run([
+      ['Alice Johnson', "Good morning everyone. This is the weekly. Let's start with the deployment plan."],
+      ['Bob Smith', 'The build is green and ready to go.'],
+    ]);
+    expect(r.topics.map((t) => t.title)).toEqual(['Deployment plan']);
+  });
+});

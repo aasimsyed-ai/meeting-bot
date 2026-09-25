@@ -729,7 +729,8 @@ function extractTopics(units: Unit[]): RawTopic[] {
     const t = TRANSITION_RE.exec(u.text);
     const current = blocks[blocks.length - 1]!;
     if (t && !looksLikeInjection(u.text) && contentWords(t[1]!).length >= 1) {
-      if (current.units.length <= 1 && !current.title) current.title = titleFrom(t[1]!);
+      // A short untitled lead-in (greetings) belongs to the first real topic.
+      if (!current.title && current.units.length < 4) current.title = titleFrom(t[1]!);
       else blocks.push({ title: titleFrom(t[1]!), units: [] });
     } else if (current.units.length >= 60) {
       blocks.push({ title: null, units: [] });
