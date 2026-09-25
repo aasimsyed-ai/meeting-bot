@@ -17,6 +17,8 @@ export interface ProcessInfo {
   pid: number;
   parentPid: number;
   executablePath: string | null;
+  /** 0 for a process that has exited but is still referenced by others (a "zombie"). */
+  threadCount?: number;
 }
 
 const PID_FILE = 'instance.pid';
@@ -33,7 +35,8 @@ export function recoveryPlan(
   selfPid: number,
 ): { alive: boolean; helpers: number[] } {
   const same = (p: string | null) => !!p && p.toLowerCase() === execPath.toLowerCase();
-  const recorded = running.find((p) => p.pid === recordedPid);
+  // An exited process stays listed while its helpers hold handles to it, but with no threads.
+  const recorded = running.find((p) => p.pid === recordedPid && p.threadCount !== 0);
   if (recorded && (recorded.executablePath === null || same(recorded.executablePath)))
     return { alive: true, helpers: [] };
   const helpers = running
@@ -64,7 +67,7 @@ function windowsProcesses(pid: number): ProcessInfo[] {
       '-NonInteractive',
       '-Command',
       `Get-CimInstance Win32_Process -Filter "ProcessId=${pid} OR ParentProcessId=${pid}" | ` +
-        'Select-Object ProcessId,ParentProcessId,ExecutablePath | ConvertTo-Json -Compress',
+        'Select-Object ProcessId,ParentProcessId,ExecutablePath,ThreadCount | ConvertTo-Json -Compress',
     ],
     { encoding: 'utf8', timeout: 10_000, windowsHide: true },
   ).trim();
@@ -73,11 +76,13 @@ function windowsProcesses(pid: number): ProcessInfo[] {
     ProcessId: number;
     ParentProcessId: number;
     ExecutablePath: string | null;
+    ThreadCount: number | null;
   }[];
   return rows.map((r) => ({
     pid: r.ProcessId,
     parentPid: r.ParentProcessId,
     executablePath: r.ExecutablePath,
+    threadCount: r.ThreadCount ?? undefined,
   }));
 }
 

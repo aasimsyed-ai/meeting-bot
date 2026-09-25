@@ -254,6 +254,14 @@ describe('single instance and crash recovery', () => {
     expect(recoveryPlan(running, 7, exe, 99).alive).toBe(true);
   });
 
+  it('treats an exited process that is still listed (no threads) as ended', () => {
+    const running = [
+      { pid: 7, parentPid: 1, executablePath: exe, threadCount: 0 },
+      { pid: 11, parentPid: 7, executablePath: exe, threadCount: 12 },
+    ];
+    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: false, helpers: [11] });
+  });
+
   it('treats a reused process id (another program) as a dead instance', () => {
     const running = [
       { pid: 7, parentPid: 1, executablePath: 'C:\\Windows\\explorer.exe' },
