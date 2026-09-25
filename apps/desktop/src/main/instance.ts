@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -7,42 +7,43 @@ import { join } from 'node:path';
  *
  * When the main process dies abruptly on Windows, its helper processes (network
  * service, GPU, renderers) can keep running for a long time and keep holding the
- * single-instance lock, so reopening the app silently does nothing. The running
- * instance records its process id; a new launch that cannot get the lock checks
- * whether that process is really gone and, only then, ends the helpers it left
- * behind (children of the dead process that run this same executable).
+ * single-instance lock, so reopening the app silently does nothing. Windows even
+ * keeps listing the dead main process while those helpers hold handles to it.
+ *
+ * So liveness comes from a heartbeat the app controls: the running instance
+ * writes its process id to a file and touches it every 2 seconds. A launch that
+ * is refused the lock waits until the heartbeat has been silent for 6 seconds,
+ * and only then ends the helpers that instance left behind (its children running
+ * this same executable). A live instance keeps beating and is never touched.
  */
 
 export interface ProcessInfo {
   pid: number;
   parentPid: number;
   executablePath: string | null;
-  /** 0 for a process that has exited but is still referenced by others (a "zombie"). */
   threadCount?: number;
 }
 
 const PID_FILE = 'instance.pid';
+const HEARTBEAT_MS = 2_000;
+const STALE_MS = 6_000;
 
-/**
- * What to do about a recorded previous instance, given the processes that are running now.
- * Pure, so it can be unit tested on any OS. A recorded process that still runs this app
- * (or whose path cannot be read) counts as a live instance and is never touched.
- */
-export function recoveryPlan(
+/** True once a heartbeat has been silent long enough that its instance must be gone. */
+export function heartbeatIsStale(lastBeatMs: number, nowMs: number): boolean {
+  return nowMs - lastBeatMs > STALE_MS;
+}
+
+/** Helpers left by an ended instance: its children that run this app. Pure, for tests. */
+export function orphanedHelpers(
   running: ProcessInfo[],
   recordedPid: number,
   execPath: string,
   selfPid: number,
-): { alive: boolean; helpers: number[] } {
+): number[] {
   const same = (p: string | null) => !!p && p.toLowerCase() === execPath.toLowerCase();
-  // An exited process stays listed while its helpers hold handles to it, but with no threads.
-  const recorded = running.find((p) => p.pid === recordedPid && p.threadCount !== 0);
-  if (recorded && (recorded.executablePath === null || same(recorded.executablePath)))
-    return { alive: true, helpers: [] };
-  const helpers = running
+  return running
     .filter((p) => p.parentPid === recordedPid && p.pid !== selfPid && same(p.executablePath))
     .map((p) => p.pid);
-  return { alive: false, helpers };
 }
 
 function isAlive(pid: number): boolean {
@@ -58,7 +59,7 @@ function sleepSync(ms: number): void {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-/** The recorded process (if it is still running) and its children. */
+/** The recorded process (if still listed) and its children. */
 function windowsProcesses(pid: number): ProcessInfo[] {
   const out = execFileSync(
     'powershell.exe',
@@ -88,26 +89,38 @@ function windowsProcesses(pid: number): ProcessInfo[] {
 
 /** Returns true if helpers of a crashed instance were found and ended. */
 function cleanUpAfterCrash(dataDir: string, log: (msg: string) => void): boolean {
+  const file = join(dataDir, PID_FILE);
   let deadPid: number;
   try {
-    deadPid = Number(readFileSync(join(dataDir, PID_FILE), 'utf8').trim());
+    deadPid = Number(readFileSync(file, 'utf8').trim());
   } catch {
     log('No record of a previous session; nothing to recover.');
     return false;
   }
   if (!Number.isInteger(deadPid) || deadPid <= 0 || deadPid === process.pid) return false;
-  let helpers: number[];
-  try {
-    const running = windowsProcesses(deadPid);
-    const plan = recoveryPlan(running, deadPid, process.execPath, process.pid);
-    if (plan.alive) {
+  // A live instance touches the file every 2 s. Wait until it has been silent for 6 s.
+  const started = Date.now();
+  for (;;) {
+    let lastBeat: number;
+    try {
+      lastBeat = statSync(file).mtimeMs;
+    } catch {
+      return false; // Removed by a clean exit meanwhile.
+    }
+    if (heartbeatIsStale(lastBeat, Date.now())) break;
+    if (Date.now() - started > STALE_MS + HEARTBEAT_MS) {
       log(`The previous session (process ${deadPid}) is still running.`);
       return false;
     }
-    helpers = plan.helpers;
+    sleepSync(500);
+  }
+  let helpers: number[];
+  try {
+    const running = windowsProcesses(deadPid);
+    helpers = orphanedHelpers(running, deadPid, process.execPath, process.pid);
     log(
-      `The previous session (process ${deadPid}) has ended; ${running.length} of its processes ` +
-        `are still running, ${helpers.length} of them helpers of this app.`,
+      `The previous session (process ${deadPid}) stopped; ${helpers.length} of its helper ` +
+        'processes are still running.',
     );
   } catch (err) {
     log(`Could not list processes left by the previous session: ${String(err)}`);
@@ -154,17 +167,34 @@ export function acquireInstanceLock(
   return false;
 }
 
+let heartbeat: ReturnType<typeof setInterval> | null = null;
+
 function recordInstance(dataDir: string): true {
+  const file = join(dataDir, PID_FILE);
   try {
     mkdirSync(dataDir, { recursive: true });
-    writeFileSync(join(dataDir, PID_FILE), String(process.pid), { mode: 0o600 });
+    writeFileSync(file, String(process.pid), { mode: 0o600 });
   } catch {
     // Recovery after a crash is best effort; the app works without it.
+    return true;
+  }
+  if (process.platform === 'win32') {
+    heartbeat = setInterval(() => {
+      try {
+        const now = new Date();
+        utimesSync(file, now, now);
+      } catch {
+        // Best effort.
+      }
+    }, HEARTBEAT_MS);
+    heartbeat.unref();
   }
   return true;
 }
 
 /** Called on a clean exit so the next launch has nothing to recover. */
 export function releaseInstance(dataDir: string): void {
+  if (heartbeat) clearInterval(heartbeat);
+  heartbeat = null;
   rmSync(join(dataDir, PID_FILE), { force: true });
 }

@@ -30,7 +30,12 @@ import {
 } from '../src/main/transcription/models';
 import { fakeEncryptor } from './helpers';
 import type { EmailDraftRow } from '../src/shared/types';
-import { acquireInstanceLock, recoveryPlan, releaseInstance } from '../src/main/instance';
+import {
+  acquireInstanceLock,
+  heartbeatIsStale,
+  orphanedHelpers,
+  releaseInstance,
+} from '../src/main/instance';
 import { createIpcHandler } from '../src/main/ipc-handler';
 
 describe('meeting detection', () => {
@@ -226,9 +231,10 @@ describe('IPC validation', () => {
 describe('single instance and crash recovery', () => {
   const exe = 'C:\\Program Files\\Meeting Assistant\\Meeting Assistant.exe';
 
-  it('ends only helpers of a dead instance that run this app', () => {
-    const plan = recoveryPlan(
+  it('ends only helpers of the ended instance that run this app', () => {
+    const helpers = orphanedHelpers(
       [
+        { pid: 7, parentPid: 1, executablePath: exe, threadCount: 0 },
         { pid: 11, parentPid: 7, executablePath: exe },
         { pid: 12, parentPid: 7, executablePath: exe.toUpperCase() },
         { pid: 13, parentPid: 7, executablePath: 'C:\\Windows\\notepad.exe' },
@@ -240,34 +246,14 @@ describe('single instance and crash recovery', () => {
       exe,
       99,
     );
-    expect(plan).toEqual({ alive: false, helpers: [11, 12] });
+    expect(helpers).toEqual([11, 12]);
   });
 
-  it('never touches a recorded instance that is still running this app', () => {
-    const running = [
-      { pid: 7, parentPid: 1, executablePath: exe },
-      { pid: 11, parentPid: 7, executablePath: exe },
-    ];
-    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: true, helpers: [] });
-    // Unknown path: assume it is ours and alive.
-    running[0]!.executablePath = null as unknown as string;
-    expect(recoveryPlan(running, 7, exe, 99).alive).toBe(true);
-  });
-
-  it('treats an exited process that is still listed (no threads) as ended', () => {
-    const running = [
-      { pid: 7, parentPid: 1, executablePath: exe, threadCount: 0 },
-      { pid: 11, parentPid: 7, executablePath: exe, threadCount: 12 },
-    ];
-    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: false, helpers: [11] });
-  });
-
-  it('treats a reused process id (another program) as a dead instance', () => {
-    const running = [
-      { pid: 7, parentPid: 1, executablePath: 'C:\\Windows\\explorer.exe' },
-      { pid: 20, parentPid: 7, executablePath: 'C:\\Windows\\notepad.exe' },
-    ];
-    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: false, helpers: [] });
+  it('treats an instance as ended only after its heartbeat is silent for 6 seconds', () => {
+    const now = 1_000_000;
+    expect(heartbeatIsStale(now - 2_000, now)).toBe(false);
+    expect(heartbeatIsStale(now - 6_000, now)).toBe(false);
+    expect(heartbeatIsStale(now - 6_001, now)).toBe(true);
   });
 
   it('records the running instance and forgets it on a clean exit', () => {
