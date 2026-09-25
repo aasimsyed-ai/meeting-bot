@@ -30,6 +30,7 @@ import {
 } from '../src/main/transcription/models';
 import { fakeEncryptor } from './helpers';
 import type { EmailDraftRow } from '../src/shared/types';
+import { acquireInstanceLock, orphanedHelpers, releaseInstance } from '../src/main/instance';
 
 describe('meeting detection', () => {
   it.each([
@@ -218,6 +219,48 @@ describe('IPC validation', () => {
         { status: 'completed', deadlineDate: '2026-10-01' },
       ]).success,
     ).toBe(true);
+  });
+});
+
+describe('single instance and crash recovery', () => {
+  const exe = 'C:\\Program Files\\Meeting Assistant\\Meeting Assistant.exe';
+
+  it('picks only helpers of the dead process that run this app', () => {
+    const helpers = orphanedHelpers(
+      [
+        { pid: 11, parentPid: 7, executablePath: exe },
+        { pid: 12, parentPid: 7, executablePath: exe.toUpperCase() },
+        { pid: 13, parentPid: 7, executablePath: 'C:\\Windows\\notepad.exe' },
+        { pid: 14, parentPid: 8, executablePath: exe },
+        { pid: 15, parentPid: 7, executablePath: null },
+        { pid: 99, parentPid: 7, executablePath: exe },
+      ],
+      7,
+      exe,
+      99,
+    );
+    expect(helpers).toEqual([11, 12]);
+  });
+
+  it('records the running instance and forgets it on a clean exit', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ma-inst-'));
+    expect(acquireInstanceLock(() => true, dir)).toBe(true);
+    expect(readFileSync(join(dir, 'instance.pid'), 'utf8')).toBe(String(process.pid));
+    releaseInstance(dir);
+    expect(existsSync(join(dir, 'instance.pid'))).toBe(false);
+  });
+
+  it('never ends anything when the recorded instance is still alive', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ma-inst-'));
+    // The recorded pid belongs to a live process (this test's parent): no recovery.
+    writeFileSync(join(dir, 'instance.pid'), String(process.ppid));
+    let calls = 0;
+    const lock = () => {
+      calls++;
+      return false;
+    };
+    expect(acquireInstanceLock(lock, dir)).toBe(false);
+    expect(calls).toBe(1);
   });
 });
 

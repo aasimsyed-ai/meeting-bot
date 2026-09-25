@@ -28,6 +28,7 @@ import { MeetingDetector } from './detection';
 import { UtilityTranscriber } from './transcription/client';
 import { modelPaths } from './transcription/models';
 import { setupUpdater } from './updater';
+import { acquireInstanceLock, releaseInstance } from './instance';
 import { APP_CHANNELS } from '../shared/channels';
 import { IPC_SCHEMAS, type Channel } from '../shared/ipc';
 import type { AppEvent, CaptureStatus } from '../shared/types';
@@ -46,7 +47,13 @@ if (env.dataDir) app.setPath('userData', env.dataDir);
 else if (env.appEnv !== 'production')
   app.setPath('userData', `${app.getPath('userData')}-${env.appEnv}`);
 
-if (!app.requestSingleInstanceLock()) {
+if (
+  !acquireInstanceLock(
+    () => app.requestSingleInstanceLock(),
+    app.getPath('userData'),
+    (m) => console.error(m),
+  )
+) {
   // Another instance owns this data folder; Electron has asked it to show its window.
   console.error('Meeting Assistant is already running. Showing the open window instead.');
   app.quit();
@@ -209,6 +216,7 @@ async function main(): Promise<void> {
   app.on('window-all-closed', () => {
     // Stay in the tray/menu bar so meeting detection and capture keep working.
   });
+  app.on('will-quit', () => releaseInstance(dataDir));
 }
 
 function hardenSessions(): void {
