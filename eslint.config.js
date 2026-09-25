@@ -40,6 +40,19 @@ export default tseslint.config(
     },
   },
   {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        require: 'readonly',
+        module: 'writable',
+        exports: 'writable',
+        __dirname: 'readonly',
+      },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
     files: ['apps/desktop/src/renderer/public/pcm-worklet.js'],
     languageOptions: {
       globals: { AudioWorkletProcessor: 'readonly', registerProcessor: 'readonly' },

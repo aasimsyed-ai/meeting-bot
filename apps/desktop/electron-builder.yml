@@ -18,11 +18,12 @@ asarUnpack:
   - node_modules/sherpa-onnx-*/**
   - node_modules/audiotee/bin/**
 npmRebuild: false
+afterPack: scripts/verify-native.cjs
 publish:
   provider: github
   owner: aasimsyed-ai
   repo: meeting-bot
-  releaseType: release
+  releaseType: draft
 
 win:
   target:
@@ -59,6 +60,7 @@ dmg:
   title: Meeting Assistant ${version}
 
 linux:
+  executableName: meeting-assistant
   target:
     - AppImage
     - deb
