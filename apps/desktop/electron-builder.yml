@@ -1,0 +1,67 @@
+# Packaging for Windows, macOS and Linux.
+# Code signing and notarization need certificates (see docs/deployment.md);
+# without them the builds work but show OS warnings and cannot auto-update on macOS.
+appId: ai.meetingassistant.desktop
+productName: Meeting Assistant
+copyright: Copyright © 2026 Meeting Assistant
+directories:
+  output: release/${version}
+  buildResources: build
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: resources
+    to: .
+    filter: ['*.png']
+asarUnpack:
+  - node_modules/sherpa-onnx-*/**
+  - node_modules/audiotee/bin/**
+npmRebuild: false
+publish:
+  provider: github
+  owner: aasimsyed-ai
+  repo: meeting-bot
+  releaseType: release
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: Meeting-Assistant-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  shortcutName: Meeting Assistant
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  artifactName: Meeting-Assistant-${version}-${arch}.${ext}
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  minimumSystemVersion: '12.0'
+  extendInfo:
+    NSMicrophoneUsageDescription: Meeting Assistant uses your microphone to capture what you say in meetings, only while you are taking notes.
+    NSAudioCaptureUsageDescription: Meeting Assistant listens to meeting audio so it can take notes, only while you are taking notes.
+    NSScreenCaptureUsageDescription: Meeting Assistant looks at window titles to notice when you are in a meeting.
+    LSUIElement: false
+dmg:
+  title: Meeting Assistant ${version}
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office
+  artifactName: Meeting-Assistant-${version}-${arch}.${ext}
+  maintainer: Meeting Assistant
