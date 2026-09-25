@@ -132,7 +132,8 @@ export function Spinner({ label }: { label?: string }) {
 
 export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="stack" aria-busy="true" aria-label="Loading">
+    <div className="stack" role="status" aria-busy="true">
+      <span className="sr-only">Loading</span>
       {Array.from({ length: lines }, (_, i) => (
         <div key={i} className="skeleton" style={{ width: `${90 - i * 12}%` }} />
       ))}
