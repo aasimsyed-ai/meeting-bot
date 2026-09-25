@@ -16,6 +16,8 @@ export interface Env {
   /** Test-only: speed up simulated meetings. */
   demoSpeed: number;
   claudeApiKey: string | null;
+  /** Test-only: a 16 kHz WAV streamed in real time as meeting audio. */
+  testMeetingAudio: string | null;
 }
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = false): Env {
@@ -37,6 +39,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = fa
     demoSpeed: Math.max(1, Math.min(200, Number(source.MEETING_ASSISTANT_DEMO_SPEED) || 1)),
     // Never used in tests, so automated runs cannot call a paid API by accident.
     claudeApiKey: isTest ? null : source.ANTHROPIC_API_KEY || null,
+    testMeetingAudio: isTest ? source.MEETING_ASSISTANT_TEST_MEETING_AUDIO || null : null,
   };
 }
 

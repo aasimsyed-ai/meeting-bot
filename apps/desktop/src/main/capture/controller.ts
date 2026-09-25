@@ -6,6 +6,7 @@ import {
   type IpcMainEvent,
 } from 'electron';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { phoenixWeekly } from '@meeting-assistant/core/fixtures';
 import type { CaptureSession } from './session';
 import {
@@ -48,6 +49,8 @@ export class CaptureController {
       rendererDir: string;
       demoSpeed: number;
       audioteeBinary: () => string | undefined;
+      /** Test only: stream this 16 kHz WAV as meeting audio instead of the OS source. */
+      testMeetingAudio?: string | null;
     },
   ) {}
 
@@ -158,6 +161,14 @@ export class CaptureController {
     micDeviceId: string | null;
     system: boolean;
   }): Promise<void> {
+    if (this.opts.testMeetingAudio) {
+      await this.command(
+        { type: 'start', mic: opts.mic, micDeviceId: opts.micDeviceId, system: false },
+        true,
+      );
+      this.streamTestAudio(this.opts.testMeetingAudio);
+      return;
+    }
     const useAudioTee = opts.system && process.platform === 'darwin';
     if (opts.system && process.platform === 'darwin' && !macSupportsSystemAudio()) {
       this.session.channelFailed(
@@ -244,6 +255,22 @@ export class CaptureController {
     } catch {
       return false;
     }
+  }
+
+  /** Test only: feed a WAV file as meeting audio, in real time, through the normal session path. */
+  private streamTestAudio(file: string): void {
+    const buf = readFileSync(file);
+    const dataAt = buf.indexOf('data') + 8;
+    const samples = new Float32Array((buf.length - dataAt) / 2);
+    for (let i = 0; i < samples.length; i++) samples[i] = buf.readInt16LE(dataAt + i * 2) / 32768;
+    let pos = 0;
+    const step = () => {
+      if (pos >= samples.length) return;
+      this.session.ingest('system', samples.slice(pos, pos + 1600));
+      pos += 1600;
+      this.demoTimers.push(setTimeout(step, 100 / this.opts.demoSpeed));
+    };
+    step();
   }
 
   /** Plays the Project Phoenix sample meeting through the real pipeline, clearly labelled as a sample. */
