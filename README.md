@@ -72,7 +72,7 @@ Optional Cloud AI: add your own Claude API key under Settings. The transcript is
 
 ```bash
 pnpm lint && pnpm format:check && pnpm typecheck
-pnpm test          # 166 core + 87 desktop unit tests
+pnpm test          # 167 core + 92 desktop unit tests
 pnpm eval          # AI quality gate on 16 annotated meetings
 pnpm e2e           # Playwright drives the real Electron app (Linux: xvfb-run -a pnpm e2e)
 ```

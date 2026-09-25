@@ -64,7 +64,7 @@ A violation is any item on a fixture's forbidden list (for example an action ite
 - Prompt injection in speech: flagged, no action item, no email recipient (core `security.test.ts`, eval fixture, E2E `samples.spec.ts`).
 - Search input cannot inject FTS syntax; every term is quoted.
 - Permission matrix for owner, admin, organizer, attendee, external and unrelated users; tenant isolation even for admins.
-- IPC: malformed or oversized arguments are rejected (`misc.test.ts`). Calls from any window other than the main window are rejected in `main/index.ts`; that check has no automated test yet.
+- IPC: calls from any window other than the main window, unknown channels, and malformed or oversized arguments are refused before any handler runs; handler errors reach the UI without internal details (`misc.test.ts`).
 - Logs never contain transcript text, email bodies, keys or tokens.
 - Secrets are stored only through the OS keychain; without one they stay in memory.
 - A tampered model download is rejected and nothing is installed.

@@ -7,8 +7,8 @@ Latest full run: 2026-09-25, branch `claude/universal-ai-meeting-assistant-yj65n
 | Layer                             | Result                                                                                | Where                              |
 | --------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------- |
 | Lint, format, types               | Pass                                                                                  | Local and CI                       |
-| Core unit tests                   | 166 passed                                                                            | Local and CI                       |
-| Desktop unit tests                | 87 passed, 1 skipped (the speech test, which needs models; it runs in the speech job) | Local; CI on Linux, Windows, macOS |
+| Core unit tests                   | 167 passed                                                                            | Local and CI                       |
+| Desktop unit tests                | 92 passed, 1 skipped (the speech test, which needs models; it runs in the speech job) | Local; CI on Linux, Windows, macOS |
 | AI quality gate (development set) | Pass (numbers below)                                                                  | Local and CI                       |
 | AI held-out set                   | Pass (numbers below)                                                                  | Local and CI                       |
 | Performance (analysis)            | Pass                                                                                  | Local and CI                       |

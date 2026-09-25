@@ -35,7 +35,7 @@ Data is not encrypted at rest beyond the OS account's own protection (for exampl
 - Renderer windows: `contextIsolation`, `sandbox`, no Node integration, `webSecurity` on, strict Content Security Policy (`default-src 'self'`, no remote scripts, `object-src 'none'`, `base-uri 'none'`, `form-action 'none'`).
 - Navigation is blocked; new windows are denied (https links open in the default browser); `<webview>` is blocked.
 - Media permission is granted only to the app's own windows; every other permission request is refused.
-- IPC: one invoke channel; the sender must be the main window; every argument is validated with a zod schema (sizes, formats, allowed values); errors are reduced to safe messages before reaching the UI.
+- IPC: one invoke channel (`main/ipc-handler.ts`); the sender must be the main window; every argument is validated with a zod schema (sizes, formats, allowed values); errors are reduced to safe messages before reaching the UI. Unit tests cover each of these.
 - Preloads expose a minimal bridge (`invoke`, `onEvent`, `platform`), not Node or Electron APIs.
 - The hidden capture window has no UI and can only send audio frames and capture events.
 
@@ -73,7 +73,6 @@ User input is reduced to quoted, stemmed literal terms before reaching SQLite FT
 | Gap                                             | Tracking                                                     |
 | ----------------------------------------------- | ------------------------------------------------------------ |
 | Installers are unsigned                         | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16) |
-| IPC sender check has no automated test          | This document; add a test with the Electron E2E harness      |
 | No database encryption beyond the OS account    | Risk register                                                |
 | No external security review or penetration test | Required before a public release                             |
 

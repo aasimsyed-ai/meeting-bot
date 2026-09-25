@@ -30,25 +30,26 @@ Statuses: BACKLOG, READY, IN_PROGRESS, BLOCKED, IN_REVIEW, TESTING, FAILED, FIXI
 
 ### Done
 
-| ID    | Item                                                                               | Pri | Acceptance criteria (summary)                                                  |
-| ----- | ---------------------------------------------------------------------------------- | --- | ------------------------------------------------------------------------------ |
-| MA-01 | Transcript normalization and echo removal                                          | P0  | Clean text, repaired timestamps, mic echo of meeting audio removed; unit tests |
-| MA-02 | Deadline normalization in the meeting's time zone                                  | P0  | Relative dates resolved; ambiguity flagged; 37 unit tests                      |
-| MA-03 | Offline extractor and evidence validator                                           | P0  | Quality gate met on 16 transcripts; zero hallucinations on held-out set        |
-| MA-04 | Claude extractor with structured output, fallback, chunking                        | P1  | Unit-tested with a fake client; falls back to offline on any failure           |
-| MA-05 | Follow-up email, external recipient warning, mail app draft                        | P0  | Never sends by itself; external domains flagged; mock provider in tests        |
-| MA-06 | Meeting memory Q&A, search, recurring diff                                         | P1  | Answers cite meetings; FTS input sanitized; recurring changes shown            |
-| MA-07 | Access policy and tenant isolation                                                 | P1  | Permission matrix tests; no cross-tenant access even for admins                |
-| MA-08 | Local data layer with migrations and audit log                                     | P0  | Idempotent processing; user edits survive reprocessing                         |
-| MA-09 | Capture session: mic and meeting audio, health, pause, sleep                       | P0  | Real capture path works in E2E; missing audio explained                        |
-| MA-10 | On-device speech engine with verified downloads                                    | P0  | Real speech to notes in CI; tampered download rejected                         |
-| MA-11 | Speaker labels with end-of-meeting clustering                                      | P1  | Four synthetic voices separated                                                |
-| MA-12 | Crash recovery                                                                     | P0  | Killed mid-meeting, the next launch recovers the notes (Linux, macOS in CI)    |
-| MA-13 | UI: Home, live view, Meetings, Meeting detail, Tasks, Search, Settings, onboarding | P0  | Full journey E2E; keyboard only; axe clean                                     |
-| MA-14 | Tray, shortcuts, notifications, meeting detection                                  | P1  | Detection rules unit-tested; never starts on its own                           |
-| MA-15 | Sample meetings (Acme Demo Corporation)                                            | P1  | Load and remove; profile restored                                              |
-| MA-16 | CI on three OSes, real speech job, installers, packaged-app E2E                    | P0  | Workflows green                                                                |
-| MA-17 | Documentation set                                                                  | P1  | README and docs in this folder                                                 |
+| ID    | Item                                                                               | Pri | Acceptance criteria (summary)                                                            |
+| ----- | ---------------------------------------------------------------------------------- | --- | ---------------------------------------------------------------------------------------- |
+| MA-01 | Transcript normalization and echo removal                                          | P0  | Clean text, repaired timestamps, mic echo of meeting audio removed; unit tests           |
+| MA-02 | Deadline normalization in the meeting's time zone                                  | P0  | Relative dates resolved; ambiguity flagged; 37 unit tests                                |
+| MA-03 | Offline extractor and evidence validator                                           | P0  | Quality gate met on 16 transcripts; zero hallucinations on held-out set                  |
+| MA-04 | Claude extractor with structured output, fallback, chunking                        | P1  | Unit-tested with a fake client; falls back to offline on any failure                     |
+| MA-05 | Follow-up email, external recipient warning, mail app draft                        | P0  | Never sends by itself; external domains flagged; mock provider in tests                  |
+| MA-06 | Meeting memory Q&A, search, recurring diff                                         | P1  | Answers cite meetings; FTS input sanitized; recurring changes shown                      |
+| MA-07 | Access policy and tenant isolation                                                 | P1  | Permission matrix tests; no cross-tenant access even for admins                          |
+| MA-08 | Local data layer with migrations and audit log                                     | P0  | Idempotent processing; user edits survive reprocessing                                   |
+| MA-09 | Capture session: mic and meeting audio, health, pause, sleep                       | P0  | Real capture path works in E2E; missing audio explained                                  |
+| MA-10 | On-device speech engine with verified downloads                                    | P0  | Real speech to notes in CI; tampered download rejected                                   |
+| MA-11 | Speaker labels with end-of-meeting clustering                                      | P1  | Four synthetic voices separated                                                          |
+| MA-12 | Crash recovery                                                                     | P0  | Killed mid-meeting, the next launch recovers the notes (Linux, macOS in CI)              |
+| MA-13 | UI: Home, live view, Meetings, Meeting detail, Tasks, Search, Settings, onboarding | P0  | Full journey E2E; keyboard only; axe clean                                               |
+| MA-14 | Tray, shortcuts, notifications, meeting detection                                  | P1  | Detection rules unit-tested; never starts on its own                                     |
+| MA-15 | Sample meetings (Acme Demo Corporation)                                            | P1  | Load and remove; profile restored                                                        |
+| MA-16 | CI on three OSes, real speech job, installers, packaged-app E2E                    | P0  | Workflows green                                                                          |
+| MA-18 | Automated tests for the IPC sender check and error reduction                       | P3  | Refused senders, channels and arguments never reach a handler; errors carry no internals |
+| MA-17 | Documentation set                                                                  | P1  | README and docs in this folder                                                           |
 
 ### Open
 
@@ -65,4 +66,3 @@ Statuses: BACKLOG, READY, IN_PROGRESS, BLOCKED, IN_REVIEW, TESTING, FAILED, FIXI
 | MA-28 | Screen context (OCR of slides)                                                 | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22) |
 | MA-29 | Calendar integration and "Prepare me"                                          | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23) |
 | MA-30 | Model attributions in the app; mirror models on own releases                   | P2  | READY   | Release checklist                                            |
-| MA-31 | Automated test for the IPC sender check                                        | P3  | READY   | [security.md](security.md)                                   |
