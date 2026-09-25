@@ -13,4 +13,4 @@ playwright-report/
 .eval-cache/
 apps/desktop/resources/models/
 *.tsbuildinfo
-eval/results/
+**/eval/results/
