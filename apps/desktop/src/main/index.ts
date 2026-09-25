@@ -47,6 +47,8 @@ else if (env.appEnv !== 'production')
   app.setPath('userData', `${app.getPath('userData')}-${env.appEnv}`);
 
 if (!app.requestSingleInstanceLock()) {
+  // Another instance owns this data folder; Electron has asked it to show its window.
+  console.error('Meeting Assistant is already running. Showing the open window instead.');
   app.quit();
 } else {
   void main();
