@@ -204,7 +204,10 @@ function Layout() {
             {label}
           </a>
         ))}
-        <div className="sidebar-footer">{capture.state !== 'idle' && <CapturePill />}</div>
+        {/* The live view on Home has the full controls; everywhere else the pill keeps capture visible. */}
+        <div className="sidebar-footer">
+          {capture.state !== 'idle' && path !== '/' && <CapturePill />}
+        </div>
       </nav>
       <main className="main" id="main">
         {page}

@@ -123,6 +123,7 @@ async function main(): Promise<void> {
         rendererUrl: rendererUrl(),
         rendererDir: join(__dirname, '../renderer'),
         demoSpeed: env.demoSpeed,
+        testMeetingAudio: env.testMeetingAudio,
         audioteeBinary: () =>
           app.isPackaged
             ? join(
@@ -448,7 +449,8 @@ function buildMenu(): void {
 }
 
 async function confirmQuit(): Promise<void> {
-  if (services.session.isActive) {
+  // Tests quit without a prompt; the capture is still saved by shutdown().
+  if (services.session.isActive && env.appEnv !== 'test') {
     const { response } = await dialog.showMessageBox({
       type: 'question',
       buttons: ['Stop and quit', 'Keep taking notes'],
