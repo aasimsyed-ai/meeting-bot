@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, onboard, shot, type Launched } from './app';
 
@@ -71,11 +72,18 @@ test('a crash mid-meeting is detected and the notes can be recovered', async () 
   await l.win.getByRole('button', { name: /Try a sample meeting/ }).click();
   await expect(l.win.locator('.transcript-live')).toContainText('firewall', { timeout: 20_000 });
   const dataDir = l.dataDir;
-  // Simulate a crash: kill the main process without any shutdown. On Windows its helper
-  // processes keep running and hold the single-instance lock; the relaunch must recover from that
-  // (main/instance.ts) instead of silently closing.
+  // Simulate a crash: kill the app's main process without any shutdown. On Windows the process
+  // Playwright returns is not the app's main process, so also kill the one the app recorded.
+  const mainPid = Number(readFileSync(join(dataDir, 'instance.pid'), 'utf8'));
   const proc = l.app.process();
   const exited = new Promise((r) => proc.once('exit', r));
+  if (mainPid && mainPid !== proc.pid) {
+    try {
+      process.kill(mainPid);
+    } catch {
+      execFileSync('taskkill', ['/F', '/PID', String(mainPid)], { stdio: 'ignore' });
+    }
+  }
   proc.kill('SIGKILL');
   await exited;
   await new Promise((r) => setTimeout(r, 1000));
