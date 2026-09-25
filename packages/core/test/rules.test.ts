@@ -110,6 +110,38 @@ describe('rules extractor: decisions', () => {
   });
 });
 
+describe('rules extractor: regressions', () => {
+  // BUG-004 (#10): agreeing with a decision is not accepting an unrelated task.
+  it('does not treat "Okay, Monday it is" as accepting a pending request', () => {
+    const r = run([
+      ['Bob Smith', 'Carol, can you draft the budget?'],
+      ['Bob Smith', 'What if we move the deployment to Monday?'],
+      ['Carol King', 'Okay, Monday it is.'],
+    ]);
+    expect(r.actionItems.find((a) => a.owner === 'Carol King')).toBeUndefined();
+    expect(r.decisions[0]).toEqual(expect.objectContaining({ status: 'confirmed' }));
+  });
+
+  // BUG-004 (#10): "Let's go with that" from someone else confirms the earlier proposal.
+  it('confirms a proposal another person adopts with "let\'s go with that"', () => {
+    const r = run([
+      ['Bob Smith', 'I think we should use the managed database.'],
+      ['Alice Johnson', "Good point. Let's go with that."],
+    ]);
+    expect(r.decisions).toEqual([
+      expect.objectContaining({ text: 'Use the managed database', status: 'confirmed' }),
+    ]);
+  });
+
+  it('keeps a proposal possible when its own author says "let\'s go with that"', () => {
+    const r = run([
+      ['Bob Smith', 'I think we should use the managed database.'],
+      ['Bob Smith', "Let's go with that."],
+    ]);
+    expect(r.decisions[0]?.status).toBe('possible');
+  });
+});
+
 describe('rules extractor: questions and risks', () => {
   it('reports unanswered questions only', () => {
     const r = run([

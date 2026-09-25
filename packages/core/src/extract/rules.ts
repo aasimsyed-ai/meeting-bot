@@ -593,16 +593,23 @@ function extractDecisions(units: Unit[]): RawDecision[] {
       const goWith = /^go with\s+(.+)$/i.exec(object);
       let text: string | null;
       let ids = [u.segId];
+      let adopted = false;
       if (goWith && PRONOUN_OBJECT.test(goWith[1]!)) {
         const prev = latestProposal(u, 6);
         if (!prev) continue;
         text = prev.text;
         ids = [prev.unit.segId, u.segId];
+        // Someone else adopting the proposal is agreement.
+        adopted = prev.unit.speaker !== u.speaker;
       } else {
         text = cleanDecision(object) ?? (goWith ? cleanDecision(`Go with ${goWith[1]}`) : null);
       }
       if (!text) continue;
       proposals.push({ text, unit: u });
+      if (adopted) {
+        add(text, 'confirmed', ids);
+        continue;
+      }
       const agree = agreementAfter(i, u.speaker);
       add(text, agree ? 'confirmed' : 'possible', agree ? [...ids, agree.segId] : ids);
     }
