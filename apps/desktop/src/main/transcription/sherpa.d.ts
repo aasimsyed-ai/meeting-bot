@@ -12,7 +12,8 @@ declare module 'sherpa-onnx-node' {
     constructor(config: Record<string, unknown>, bufferSizeInSeconds: number);
     acceptWaveform(samples: Float32Array): void;
     isEmpty(): boolean;
-    front(): SpeechSegment;
+    /** Pass false inside Electron: its V8 build forbids external buffers. */
+    front(enableExternalBuffer?: boolean): SpeechSegment;
     pop(): void;
     flush(): void;
     reset(): void;
@@ -34,7 +35,7 @@ declare module 'sherpa-onnx-node' {
     constructor(config: Record<string, unknown>);
     createStream(): EmbeddingStream;
     isReady(stream: EmbeddingStream): boolean;
-    compute(stream: EmbeddingStream): Float32Array;
+    compute(stream: EmbeddingStream, enableExternalBuffer?: boolean): Float32Array;
     dim: number;
   }
   export class OfflineTts {

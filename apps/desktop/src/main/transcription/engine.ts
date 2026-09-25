@@ -180,7 +180,8 @@ export class SpeechEngine {
   private drain(channel: 'mic' | 'system', ch: ChannelState): EngineSegment[] {
     const out: EngineSegment[] = [];
     while (!ch.vad.isEmpty()) {
-      const seg = ch.vad.front();
+      // Copy instead of sharing native memory: Electron forbids external buffers.
+      const seg = ch.vad.front(false);
       ch.vad.pop();
       const text = this.recognize(seg.samples);
       if (!text || NOISE_ONLY.test(text)) continue;
@@ -207,7 +208,7 @@ export class SpeechEngine {
     const stream = this.embedder!.createStream();
     stream.acceptWaveform({ samples, sampleRate: SAMPLE_RATE });
     stream.inputFinished();
-    return this.embedder!.compute(stream);
+    return this.embedder!.compute(stream, false);
   }
 
   /** Assign a live "spk-N" key by comparing a voice embedding with known voices. */
