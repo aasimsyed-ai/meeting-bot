@@ -1,9 +1,29 @@
 import { expect, test } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, onboard, shot, type Launched } from './app';
 
 let l: Launched | null = null;
+
+/**
+ * Killing Electron's main process leaves its helper processes (network service, GPU) running for
+ * a while on Windows, still holding the data folder. A real user relaunches seconds later; wait
+ * for them the same way (tests run one at a time, so no other Electron is expected).
+ */
+async function leftoverProcessesGone(): Promise<void> {
+  if (process.platform !== 'win32') return void (await new Promise((r) => setTimeout(r, 1000)));
+  let list = '';
+  for (let i = 0; i < 30; i++) {
+    list = execFileSync('tasklist', ['/FI', 'IMAGENAME eq electron.exe', '/NH'], {
+      encoding: 'utf8',
+    });
+    if (!/electron\.exe/i.test(list)) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  console.log(`Electron processes still running 15 s after the kill:\n${list}`);
+}
+
 test.afterEach(async () => {
   await l?.app.close().catch(() => undefined);
   l = null;
@@ -77,7 +97,7 @@ test('a crash mid-meeting is detected and the notes can be recovered', async () 
   const exited = new Promise((r) => proc.once('exit', r));
   proc.kill('SIGKILL');
   await exited;
-  await new Promise((r) => setTimeout(r, process.platform === 'win32' ? 3000 : 1000));
+  await leftoverProcessesGone();
 
   l = await launch({ dataDir });
   const { win } = l;
