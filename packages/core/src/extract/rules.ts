@@ -492,6 +492,14 @@ function cleanDecision(raw: string): string | null {
   );
   t = t.replace(/,?\s+(?:if|as long as|unless|provided)\b.*$/i, '');
   t = normalizeWhitespace(t);
+  // Speech recognition sometimes drops sentence breaks; cut run-ons at a clause boundary.
+  const w = t.split(' ');
+  if (w.length > 14) {
+    const cut = w.findIndex(
+      (x, i) => i >= 4 && /^(?:that|which|because|so|and|but|then)$/i.test(x),
+    );
+    if (cut > 0) t = w.slice(0, cut).join(' ');
+  }
   if (contentWords(t).length < 2) return null;
   return capitalize(t);
 }
