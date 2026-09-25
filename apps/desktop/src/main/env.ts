@@ -1,0 +1,45 @@
+import type { AppEnv } from '../shared/types';
+
+/**
+ * Environment separation. Tests and development never share data with a
+ * real installation, and automated tests can never send real email.
+ */
+export interface Env {
+  appEnv: AppEnv;
+  /** Overrides the data folder (tests use a temporary folder). */
+  dataDir: string | null;
+  emailMode: 'mailapp' | 'mock';
+  /** Test-only: pretend OS permissions are granted, so CI can run the full flow. */
+  fakePermissions: boolean;
+  /** Test-only: a fixed "now" so dates in tests are stable. */
+  fixedNow: string | null;
+  /** Test-only: speed up simulated meetings. */
+  demoSpeed: number;
+  claudeApiKey: string | null;
+}
+
+export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = false): Env {
+  const appEnv: AppEnv =
+    source.MEETING_ASSISTANT_ENV === 'test'
+      ? 'test'
+      : source.MEETING_ASSISTANT_ENV === 'development' ||
+          (!isPackaged && source.NODE_ENV !== 'production')
+        ? 'development'
+        : 'production';
+  const isTest = appEnv === 'test';
+  return {
+    appEnv,
+    dataDir: source.MEETING_ASSISTANT_DATA_DIR || null,
+    // Tests are always mock, whatever else is set.
+    emailMode: isTest || source.EMAIL_MODE === 'mock' ? 'mock' : 'mailapp',
+    fakePermissions: isTest && source.MEETING_ASSISTANT_FAKE_PERMISSIONS === '1',
+    fixedNow: isTest ? source.MEETING_ASSISTANT_NOW || null : null,
+    demoSpeed: Math.max(1, Math.min(200, Number(source.MEETING_ASSISTANT_DEMO_SPEED) || 1)),
+    // Never used in tests, so automated runs cannot call a paid API by accident.
+    claudeApiKey: isTest ? null : source.ANTHROPIC_API_KEY || null,
+  };
+}
+
+export function nowFrom(env: Env): () => Date {
+  return env.fixedNow ? () => new Date(env.fixedNow!) : () => new Date();
+}
