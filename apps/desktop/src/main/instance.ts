@@ -21,17 +21,25 @@ export interface ProcessInfo {
 
 const PID_FILE = 'instance.pid';
 
-/** Helpers left behind by a dead main process. Pure, so it can be unit tested on any OS. */
-export function orphanedHelpers(
-  processes: ProcessInfo[],
-  deadPid: number,
+/**
+ * What to do about a recorded previous instance, given the processes that are running now.
+ * Pure, so it can be unit tested on any OS. A recorded process that still runs this app
+ * (or whose path cannot be read) counts as a live instance and is never touched.
+ */
+export function recoveryPlan(
+  running: ProcessInfo[],
+  recordedPid: number,
   execPath: string,
   selfPid: number,
-): number[] {
+): { alive: boolean; helpers: number[] } {
   const same = (p: string | null) => !!p && p.toLowerCase() === execPath.toLowerCase();
-  return processes
-    .filter((p) => p.parentPid === deadPid && p.pid !== selfPid && same(p.executablePath))
+  const recorded = running.find((p) => p.pid === recordedPid);
+  if (recorded && (recorded.executablePath === null || same(recorded.executablePath)))
+    return { alive: true, helpers: [] };
+  const helpers = running
+    .filter((p) => p.parentPid === recordedPid && p.pid !== selfPid && same(p.executablePath))
     .map((p) => p.pid);
+  return { alive: false, helpers };
 }
 
 function isAlive(pid: number): boolean {
@@ -47,14 +55,15 @@ function sleepSync(ms: number): void {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-function windowsChildren(parentPid: number): ProcessInfo[] {
+/** The recorded process (if it is still running) and its children. */
+function windowsProcesses(pid: number): ProcessInfo[] {
   const out = execFileSync(
     'powershell.exe',
     [
       '-NoProfile',
       '-NonInteractive',
       '-Command',
-      `Get-CimInstance Win32_Process -Filter "ParentProcessId=${parentPid}" | ` +
+      `Get-CimInstance Win32_Process -Filter "ProcessId=${pid} OR ParentProcessId=${pid}" | ` +
         'Select-Object ProcessId,ParentProcessId,ExecutablePath | ConvertTo-Json -Compress',
     ],
     { encoding: 'utf8', timeout: 10_000, windowsHide: true },
@@ -82,16 +91,17 @@ function cleanUpAfterCrash(dataDir: string, log: (msg: string) => void): boolean
     return false;
   }
   if (!Number.isInteger(deadPid) || deadPid <= 0 || deadPid === process.pid) return false;
-  if (isAlive(deadPid)) {
-    log(`The previous session (process ${deadPid}) is still running.`);
-    return false;
-  }
   let helpers: number[];
   try {
-    const children = windowsChildren(deadPid);
-    helpers = orphanedHelpers(children, deadPid, process.execPath, process.pid);
+    const running = windowsProcesses(deadPid);
+    const plan = recoveryPlan(running, deadPid, process.execPath, process.pid);
+    if (plan.alive) {
+      log(`The previous session (process ${deadPid}) is still running.`);
+      return false;
+    }
+    helpers = plan.helpers;
     log(
-      `The previous session (process ${deadPid}) has ended; ${children.length} of its processes ` +
+      `The previous session (process ${deadPid}) has ended; ${running.length} of its processes ` +
         `are still running, ${helpers.length} of them helpers of this app.`,
     );
   } catch (err) {
@@ -99,16 +109,26 @@ function cleanUpAfterCrash(dataDir: string, log: (msg: string) => void): boolean
     return false;
   }
   if (!helpers.length) return false;
+  let ended = 0;
   for (const pid of helpers) {
     try {
       process.kill(pid);
+      ended++;
     } catch {
-      // Already gone.
+      try {
+        execFileSync('taskkill', ['/F', '/PID', String(pid)], {
+          stdio: 'ignore',
+          windowsHide: true,
+        });
+        ended++;
+      } catch {
+        // Already gone, or not ours to end.
+      }
     }
   }
-  log(`Ended ${helpers.length} helper processes left by a previous session that did not close.`);
+  log(`Ended ${ended} of ${helpers.length} helper processes left by a previous session.`);
   for (let i = 0; i < 40 && helpers.some(isAlive); i++) sleepSync(100);
-  return true;
+  return ended > 0;
 }
 
 /**

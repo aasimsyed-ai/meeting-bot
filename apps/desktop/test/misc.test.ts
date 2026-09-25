@@ -30,7 +30,7 @@ import {
 } from '../src/main/transcription/models';
 import { fakeEncryptor } from './helpers';
 import type { EmailDraftRow } from '../src/shared/types';
-import { acquireInstanceLock, orphanedHelpers, releaseInstance } from '../src/main/instance';
+import { acquireInstanceLock, recoveryPlan, releaseInstance } from '../src/main/instance';
 import { createIpcHandler } from '../src/main/ipc-handler';
 
 describe('meeting detection', () => {
@@ -226,8 +226,8 @@ describe('IPC validation', () => {
 describe('single instance and crash recovery', () => {
   const exe = 'C:\\Program Files\\Meeting Assistant\\Meeting Assistant.exe';
 
-  it('picks only helpers of the dead process that run this app', () => {
-    const helpers = orphanedHelpers(
+  it('ends only helpers of a dead instance that run this app', () => {
+    const plan = recoveryPlan(
       [
         { pid: 11, parentPid: 7, executablePath: exe },
         { pid: 12, parentPid: 7, executablePath: exe.toUpperCase() },
@@ -240,7 +240,26 @@ describe('single instance and crash recovery', () => {
       exe,
       99,
     );
-    expect(helpers).toEqual([11, 12]);
+    expect(plan).toEqual({ alive: false, helpers: [11, 12] });
+  });
+
+  it('never touches a recorded instance that is still running this app', () => {
+    const running = [
+      { pid: 7, parentPid: 1, executablePath: exe },
+      { pid: 11, parentPid: 7, executablePath: exe },
+    ];
+    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: true, helpers: [] });
+    // Unknown path: assume it is ours and alive.
+    running[0]!.executablePath = null as unknown as string;
+    expect(recoveryPlan(running, 7, exe, 99).alive).toBe(true);
+  });
+
+  it('treats a reused process id (another program) as a dead instance', () => {
+    const running = [
+      { pid: 7, parentPid: 1, executablePath: 'C:\\Windows\\explorer.exe' },
+      { pid: 20, parentPid: 7, executablePath: 'C:\\Windows\\notepad.exe' },
+    ];
+    expect(recoveryPlan(running, 7, exe, 99)).toEqual({ alive: false, helpers: [] });
   });
 
   it('records the running instance and forgets it on a clean exit', () => {
