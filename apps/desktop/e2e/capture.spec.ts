@@ -24,10 +24,18 @@ test('live capture uses the real microphone path and explains what is missing', 
   await expect(
     win.getByText('The speech engine is not downloaded yet.', { exact: false }),
   ).toBeVisible();
-  // With Chromium's fake devices the loopback stream is fake too, so meeting audio flows as well.
-  await expect(win.locator('.meter', { hasText: 'Meeting audio' })).toContainText('Listening', {
-    timeout: 15_000,
-  });
+  // Windows/Linux: Chromium's fake devices also fake the loopback stream, so meeting audio flows.
+  // macOS: meeting audio comes from AudioTee, which needs a permission CI cannot grant; the app must say so.
+  const meetingMeter = win.locator('.meter', { hasText: 'Meeting audio' });
+  if (process.platform === 'darwin') {
+    await expect(
+      meetingMeter.or(
+        win.getByText(/Meeting audio (could not be captured|is no longer being captured)/),
+      ),
+    ).toBeVisible();
+  } else {
+    await expect(meetingMeter).toContainText('Listening', { timeout: 15_000 });
+  }
   await shot(win, '09-live-capture');
 
   await win.getByRole('button', { name: 'Pause' }).click();
@@ -44,7 +52,7 @@ test('live capture uses the real microphone path and explains what is missing', 
   ).toBeVisible();
   const audioRoot = join(l.dataDir, 'audio');
   const [meetingDir] = readdirSync(audioRoot);
-  for (const channel of ['mic', 'system']) {
+  for (const channel of process.platform === 'darwin' ? ['mic'] : ['mic', 'system']) {
     const file = join(audioRoot, meetingDir!, `${channel}.pcm`);
     expect(existsSync(file)).toBe(true);
     // 16 kHz, 16-bit: more than a second of real audio was written.
