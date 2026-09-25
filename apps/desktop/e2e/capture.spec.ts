@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, onboard, shot, type Launched } from './app';
 
@@ -73,8 +73,8 @@ test('a crash mid-meeting is detected and the notes can be recovered', async () 
   await expect(l.win.locator('.transcript-live')).toContainText('firewall', { timeout: 20_000 });
   const dataDir = l.dataDir;
   // Simulate a crash: kill the app's main process without any shutdown. On Windows the process
-  // Playwright returns is not the app's main process, so also kill the one the app recorded.
-  const mainPid = Number(readFileSync(join(dataDir, 'instance.pid'), 'utf8'));
+  // Playwright returns is not the app's main process, so ask Electron for the real one.
+  const mainPid = await l.app.evaluate(() => process.pid);
   const proc = l.app.process();
   const exited = new Promise((r) => proc.once('exit', r));
   if (mainPid && mainPid !== proc.pid) {
