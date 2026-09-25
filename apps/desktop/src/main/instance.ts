@@ -78,14 +78,24 @@ function cleanUpAfterCrash(dataDir: string, log: (msg: string) => void): boolean
   try {
     deadPid = Number(readFileSync(join(dataDir, PID_FILE), 'utf8').trim());
   } catch {
+    log('No record of a previous session; nothing to recover.');
     return false;
   }
   if (!Number.isInteger(deadPid) || deadPid <= 0 || deadPid === process.pid) return false;
-  if (isAlive(deadPid)) return false;
+  if (isAlive(deadPid)) {
+    log(`The previous session (process ${deadPid}) is still running.`);
+    return false;
+  }
   let helpers: number[];
   try {
-    helpers = orphanedHelpers(windowsChildren(deadPid), deadPid, process.execPath, process.pid);
-  } catch {
+    const children = windowsChildren(deadPid);
+    helpers = orphanedHelpers(children, deadPid, process.execPath, process.pid);
+    log(
+      `The previous session (process ${deadPid}) has ended; ${children.length} of its processes ` +
+        `are still running, ${helpers.length} of them helpers of this app.`,
+    );
+  } catch (err) {
+    log(`Could not list processes left by the previous session: ${String(err)}`);
     return false;
   }
   if (!helpers.length) return false;
