@@ -10,6 +10,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/release/**',
       '**/coverage/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       '**/*.d.ts',
       'apps/desktop/resources/**',
     ],
