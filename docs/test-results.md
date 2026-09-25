@@ -8,13 +8,13 @@ Latest full run: 2026-09-25, branch `claude/universal-ai-meeting-assistant-yj65n
 | --------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------- |
 | Lint, format, types               | Pass                                                                                  | Local and CI                       |
 | Core unit tests                   | 167 passed                                                                            | Local and CI                       |
-| Desktop unit tests                | 92 passed, 1 skipped (the speech test, which needs models; it runs in the speech job) | Local; CI on Linux, Windows, macOS |
+| Desktop unit tests                | 87 passed, 1 skipped (the speech test, which needs models; it runs in the speech job) | Local; CI on Linux, Windows, macOS |
 | AI quality gate (development set) | Pass (numbers below)                                                                  | Local and CI                       |
 | AI held-out set                   | Pass (numbers below)                                                                  | Local and CI                       |
 | Performance (analysis)            | Pass                                                                                  | Local and CI                       |
 | Real speech integration           | Pass                                                                                  | Local and CI (Linux)               |
-| E2E, development build            | Linux 8/8 + real audio, macOS 8/8, Windows: see below                                 | Local (Linux) and CI               |
-| E2E, packaged app                 | Linux 9/9 including real audio (local), Linux and macOS 8/8 (CI), Windows: see below  | Local and CI                       |
+| E2E, development build            | Linux, macOS and Windows: 8/8 each; real audio on Linux (speech job)                  | Local (Linux) and CI               |
+| E2E, packaged app                 | Linux, macOS and Windows 8/8 each in CI; Linux 9/9 including real audio (local)       | Local and CI                       |
 | Installers                        | Linux AppImage (154 MB) and deb (120 MB) built locally; all three platforms in CI     | Local and CI                       |
 | Dependency audit (production)     | No known vulnerabilities                                                              | Local and CI                       |
 
@@ -70,17 +70,17 @@ The generated transcripts are lighter than real speech (a real 2-hour meeting is
 
 ## End to end (Playwright driving the real Electron app)
 
-| Test                                                                          | Linux                | macOS                                                  | Windows             |
-| ----------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ | ------------------- |
-| First-time user: onboarding, sample meeting, notes, tasks, email, search, ask | Pass                 | Pass                                                   | Pass                |
-| Delete a meeting, then everything                                             | Pass                 | Pass                                                   | Pass                |
-| Live capture through the real microphone path                                 | Pass                 | Pass (meeting audio correctly reported as unavailable) | Pass                |
-| Crash mid-meeting, then recover                                               | Pass                 | Pass                                                   | Fixing (see status) |
-| Sample tour: recurring changes, my tasks, external email, speaker names       | Pass                 | Pass                                                   | Pass                |
-| Prompt injection shown as a warning, never acted on                           | Pass                 | Pass                                                   | Pass                |
-| Accessibility (axe, main screens)                                             | Pass                 | Pass                                                   | Pass                |
-| Keyboard only                                                                 | Pass                 | Pass                                                   | Pass                |
-| Real meeting audio through the app                                            | Pass (CI speech job) | Not run                                                | Not run             |
+| Test                                                                          | Linux                | macOS                                                  | Windows |
+| ----------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ | ------- |
+| First-time user: onboarding, sample meeting, notes, tasks, email, search, ask | Pass                 | Pass                                                   | Pass    |
+| Delete a meeting, then everything                                             | Pass                 | Pass                                                   | Pass    |
+| Live capture through the real microphone path                                 | Pass                 | Pass (meeting audio correctly reported as unavailable) | Pass    |
+| Crash mid-meeting, then recover                                               | Pass                 | Pass                                                   | Pass    |
+| Sample tour: recurring changes, my tasks, external email, speaker names       | Pass                 | Pass                                                   | Pass    |
+| Prompt injection shown as a warning, never acted on                           | Pass                 | Pass                                                   | Pass    |
+| Accessibility (axe, main screens)                                             | Pass                 | Pass                                                   | Pass    |
+| Keyboard only                                                                 | Pass                 | Pass                                                   | Pass    |
+| Real meeting audio through the app                                            | Pass (CI speech job) | Not run                                                | Not run |
 
 ## Bugs found by testing
 

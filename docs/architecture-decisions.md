@@ -108,10 +108,10 @@ Electron's V8 build forbids external array buffers. sherpa-onnx returns audio an
 
 A sandboxed preload can only `require` a few built-in modules, so a shared chunk (for example `chunks/channels-*.js`) makes the preload fail and the UI never gets its bridge. Both preloads are bundled as standalone CommonJS files. The capture preload inlines its two channel names, and a unit test checks they match the shared definitions and that no preload imports a chunk. electron-vite's `isolatedEntries` would do this automatically but crashes without a TTY in 5.0.0.
 
-## ADR-014: Recover the single-instance lock after a crash on Windows
+## ADR-014: No custom single-instance recovery on Windows
 
-**Found.** On Windows, when the main process is killed, its network service, GPU and renderer processes keep running for well over 15 seconds and keep the single-instance lock. A new launch then hands over to a window that no longer exists and closes, so the app seems not to open.
+**Investigated.** The Windows crash test failed because relaunching after a "crash" reported that the app was already running. Leftover helper processes seemed to hold the single-instance lock, so a recovery path was built (a heartbeat file, then ending the dead instance's helpers).
 
-**Decision.** The running instance writes its process id to `instance.pid` in the data folder and removes it on a clean exit. A launch that is refused the lock on Windows checks whether that process is gone; only then does it end that process's children that run the same executable, and take the lock. It never touches a live instance or any other program, and it tries once.
+**Found.** The heartbeat showed the old instance still alive: on Windows the process Playwright returns is not the app's main process, so the test never crashed the app. Once the test killed the real main process, the relaunch got the lock at once (5.1 s test, same as Linux) and the recovery path never ran.
 
-**Trade-off.** A little platform-specific code (PowerShell to list child processes, only on the refused path). The alternative, asking users to end processes in Task Manager, is not acceptable for a crash recovery feature.
+**Decision.** Use Electron's single-instance lock as is. The recovery code was removed rather than kept "just in case", because code that ends processes should not ship on a disproven premise. A launch that is refused the lock says so on stderr.

@@ -53,16 +53,15 @@ Statuses: BACKLOG, READY, IN_PROGRESS, BLOCKED, IN_REVIEW, TESTING, FAILED, FIXI
 
 ### Open
 
-| ID    | Item                                                                           | Pri | Status  | Issue                                                        |
-| ----- | ------------------------------------------------------------------------------ | --- | ------- | ------------------------------------------------------------ |
-| MA-20 | Windows: reopening right after a crash is blocked by leftover helper processes | P1  | FIXING  | see [status](status.md)                                      |
-| MA-21 | Real-device validation on Windows and macOS with real meetings                 | P1  | BLOCKED | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15) |
-| MA-22 | Code signing and notarization                                                  | P1  | BLOCKED | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16) |
-| MA-23 | Claude engine evaluated with the real API                                      | P2  | BLOCKED | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17) |
-| MA-24 | Fresh held-out evaluation set                                                  | P2  | READY   | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18) |
-| MA-25 | Speaker quality on real calls; in-room meetings                                | P2  | BACKLOG | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19) |
-| MA-26 | Meeting audio on macOS 13 and older; Linux desktops                            | P2  | BACKLOG | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20) |
-| MA-27 | Gmail and Outlook sending                                                      | P2  | BACKLOG | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21) |
-| MA-28 | Screen context (OCR of slides)                                                 | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22) |
-| MA-29 | Calendar integration and "Prepare me"                                          | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23) |
-| MA-30 | Model attributions in the app; mirror models on own releases                   | P2  | READY   | Release checklist                                            |
+| ID    | Item                                                           | Pri | Status  | Issue                                                        |
+| ----- | -------------------------------------------------------------- | --- | ------- | ------------------------------------------------------------ |
+| MA-21 | Real-device validation on Windows and macOS with real meetings | P1  | BLOCKED | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15) |
+| MA-22 | Code signing and notarization                                  | P1  | BLOCKED | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16) |
+| MA-23 | Claude engine evaluated with the real API                      | P2  | BLOCKED | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17) |
+| MA-24 | Fresh held-out evaluation set                                  | P2  | READY   | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18) |
+| MA-25 | Speaker quality on real calls; in-room meetings                | P2  | BACKLOG | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19) |
+| MA-26 | Meeting audio on macOS 13 and older; Linux desktops            | P2  | BACKLOG | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20) |
+| MA-27 | Gmail and Outlook sending                                      | P2  | BACKLOG | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21) |
+| MA-28 | Screen context (OCR of slides)                                 | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22) |
+| MA-29 | Calendar integration and "Prepare me"                          | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23) |
+| MA-30 | Model attributions in the app; mirror models on own releases   | P2  | READY   | Release checklist                                            |

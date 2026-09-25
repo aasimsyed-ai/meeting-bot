@@ -29,7 +29,7 @@ A local-first desktop app (Electron) that turns any meeting (Teams, Zoom, Google
 - AI: one structured pass. Claude (`claude-opus-5`, `client.beta.messages.parse` + `betaZodOutputFormat`, `fallbacks: 'default'` with beta `server-side-fallback-2026-07-01`, adaptive thinking) or the offline rules engine. The validator (`core/src/validate.ts`) is the hallucination guard for both. Email is composed by code from validated notes.
 - Email: default opens a `mailto:` draft in the user's mail app; mock provider in tests writes `test-outbox/`. Never report "sent" unless a provider really sent.
 - Sandboxed preloads must be single files. The two preloads share no modules (capture preload inlines its channel names; a test checks they match). electron-vite's `isolatedEntries` crashes without a TTY (5.0.0), so it is not used.
-- Windows: a killed main process leaves helpers holding the single-instance lock; `main/instance.ts` recovers (ADR-014). The running instance's pid is in `instance.pid`.
+- Windows E2E: `electronApp.process()` is not the app's main process; to simulate a crash, kill `await app.evaluate(() => process.pid)` (ADR-014).
 - Packaging: `scripts/verify-native.cjs` fails the build if the speech engine binary for the target is missing. macOS CI installs both CPU variants (`supportedArchitectures`) before packaging. Linux executable name is `meeting-assistant`. Releases are drafts.
 - `MEETING_ASSISTANT_E2E_EXECUTABLE` runs the E2E suite against a packaged app.
 - Synthetic test audio uses near-zero TTS noise (0 means "default" in sherpa-onnx) so CI is repeatable.

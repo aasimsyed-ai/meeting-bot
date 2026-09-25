@@ -19,15 +19,15 @@ Status: **Done** (built and tested), **Partial** (works with stated limits), **N
 
 ### Capture
 
-| Requirement                                            | Status    | Notes                                                                                                                          |
-| ------------------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Works with any meeting app, same flow for all          | Done      | Local capture; the app name is a label                                                                                         |
-| Microphone and meeting audio captured separately       | Done      | Windows/Linux: Chromium loopback. macOS 14.2+: AudioTee                                                                        |
-| Pause, resume, stop; tray/menu bar controls; shortcuts | Done      | `Ctrl/Cmd+Shift+.` stop, `Ctrl/Cmd+Shift+,` pause/resume                                                                       |
-| Notice when a meeting starts                           | Done      | Window-title detection; suggests only, never starts on its own                                                                 |
-| Tell the user plainly when audio is missing            | Done      | Per-channel meters and messages with a fix action                                                                              |
-| Survive sleep and crashes                              | Done      | Pause on sleep; audio and transcript saved as they arrive; recovery on next launch. Windows relaunch issue under investigation |
-| Screen context (slides, shared screens)                | Not built | Designed (ADR-010), [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22)                                               |
+| Requirement                                            | Status    | Notes                                                                                                               |
+| ------------------------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| Works with any meeting app, same flow for all          | Done      | Local capture; the app name is a label                                                                              |
+| Microphone and meeting audio captured separately       | Done      | Windows/Linux: Chromium loopback. macOS 14.2+: AudioTee                                                             |
+| Pause, resume, stop; tray/menu bar controls; shortcuts | Done      | `Ctrl/Cmd+Shift+.` stop, `Ctrl/Cmd+Shift+,` pause/resume                                                            |
+| Notice when a meeting starts                           | Done      | Window-title detection; suggests only, never starts on its own                                                      |
+| Tell the user plainly when audio is missing            | Done      | Per-channel meters and messages with a fix action                                                                   |
+| Survive sleep and crashes                              | Done      | Pause on sleep; audio and transcript saved as they arrive; recovery on next launch (tested on all three OSes in CI) |
+| Screen context (slides, shared screens)                | Not built | Designed (ADR-010), [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22)                                    |
 
 ### Transcript
 
