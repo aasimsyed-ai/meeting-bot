@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+out/
+dist/
+release/
+coverage/
+packages/core/fixtures/**/*.json

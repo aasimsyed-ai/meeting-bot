@@ -1,0 +1,27 @@
+{
+  "name": "@meeting-assistant/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Platform-independent meeting intelligence: transcript to notes, decisions, action items, email.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures": "./fixtures/index.ts",
+    "./claude": "./src/extract/claude.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "eval": "node --experimental-strip-types --no-warnings eval/run.ts",
+    "eval:holdout": "node --experimental-strip-types --no-warnings eval/run.ts --holdout"
+  },
+  "dependencies": {
+    "chrono-node": "^2.10.1",
+    "zod": "^4.1.0"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  }
+}

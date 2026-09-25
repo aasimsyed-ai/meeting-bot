@@ -1,0 +1,39 @@
+{
+  "name": "meeting-assistant",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Universal AI meeting assistant: turns any meeting into actionable notes.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @meeting-assistant/desktop dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "eval": "pnpm --filter @meeting-assistant/core eval",
+    "e2e": "pnpm --filter @meeting-assistant/desktop e2e",
+    "package": "pnpm --filter @meeting-assistant/desktop package",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^24.9.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^4.1.11"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ]
+  },
+  "type": "module"
+}
