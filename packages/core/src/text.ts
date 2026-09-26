@@ -36,6 +36,9 @@ export function stem(word: string): string {
     'ing',
     'ations',
     'ation',
+    'ates',
+    'ated',
+    'ate',
     'ers',
     'er',
     'ed',
@@ -48,6 +51,8 @@ export function stem(word: string): string {
     }
   }
   if (w.length > 4 && w.endsWith('e')) w = w.slice(0, -1);
+  // "migrating" and "migrat(e)" end up like "migration" and "migrate": "migr".
+  if (w.length >= 6 && w.endsWith('at')) w = w.slice(0, -2);
   return w;
 }
 

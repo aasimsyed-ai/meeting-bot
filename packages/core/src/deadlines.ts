@@ -21,6 +21,11 @@ const NUM = '(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|\\d+)';
 
 /** Ordered from most to least specific; the first pattern that matches wins. */
 const PATTERNS: RegExp[] = [
+  // "by end of day tomorrow", "tomorrow EOD"
+  new RegExp(
+    `${PREP}(?:(?:the\\s+)?(?:end of (?:the )?day|eod|cob|close of business)\\s+tomorrow|tomorrow\\s+(?:end of (?:the )?day|eod|cob|close of business))\\b`,
+    'i',
+  ),
   new RegExp(
     `${PREP}(?:this\\s+|next\\s+)?${WD}\\s+(?:end of (?:the )?day|eod|cob|close of business|morning|afternoon|evening|night)\\b`,
     'i',
@@ -137,6 +142,7 @@ export function normalizeDeadline(
     return result(phrase, null);
 
   const hasWeekday = new RegExp(`\\b${WD}\\b`).test(p);
+  if (/\btomorrow\b/.test(p)) return result(phrase, addDays(ref, 1));
   if (
     !hasWeekday &&
     /\b(today|tonight|this (morning|afternoon|evening)|eod|cob|close of business|end of business)\b|end of (the )?day/.test(
@@ -144,7 +150,6 @@ export function normalizeDeadline(
     )
   )
     return result(phrase, ref);
-  if (/\btomorrow\b/.test(p)) return result(phrase, addDays(ref, 1));
 
   if (/end of (the )?next week/.test(p)) return result(phrase, addDays(fridayOfWeek(ref), 7));
   if (/end of (the |this )?week|\beow\b/.test(p)) {

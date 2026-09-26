@@ -75,6 +75,12 @@ const AGREE_ANYWHERE_RE =
   /^[^,.;]{0,30}\b(?:works for (?:me|us)|is fine(?: with me| by me)?|sounds good|fine by me)\b/i;
 const AGREE_RE =
   /^(?:agreed|sounds good|sounds great|works for me|that works|yes|yep|yeah|sure|great|perfect|let's do (?:it|that)|makes sense|fine by me|i agree|\+1|deal|done|ok(?:ay)?|alright|good call|good idea|love it|same here)\b/i;
+/** Work taken over from someone else: "take the billing migration", "take over the demo". */
+const HANDOVER_RE = /^(?:take(?:\s+over)?|pick up|cover|handle)\s+/i;
+/** Work called off: "forget about the load test", "drop the load test", "cancel the demo". */
+const CANCEL_RE =
+  /\b(?:forget (?:about )?|(?:let's |we can |i'll |we'll )?(?:drop|cancel|scrap|skip|scratch)\s+(?!off\b|by\b|in\b))(?:the\s+|that\s+)?([a-z][\w\s-]{2,60}?)(?:\s+(?:then|anymore|for now|altogether))?[.!]*$/i;
+
 /** A turn that is only agreement: "Agreed." "Perfect." */
 const AGREE_ONLY_RE =
   /^(?:agreed|decided|confirmed|settled|great|perfect|ok(?:ay)?|alright|all right|good|sounds good)[.!]*$/i;
@@ -275,6 +281,7 @@ function extractActions(
 ): RawActionItem[] {
   const items: (RawActionItem & { lastIndex: number })[] = [];
   const pending: PendingRequest[] = [];
+  const cancelled: Set<string>[] = [];
   const push = (
     task: string | null,
     owner: string | null,
@@ -286,6 +293,23 @@ function extractActions(
     if (!task) return;
     const ids = unitsUsed.map((u) => u.segId);
     const last = Math.max(...unitsUsed.map((u) => u.index));
+    // "Henry, can you take the billing migration instead?" "Yes": the same work moves to a
+    // new owner. It is not a second task.
+    const handover = HANDOVER_RE.exec(task);
+    if (handover && owner) {
+      const object = contentStems(task.slice(handover[0].length));
+      const earlier = items.find(
+        (i) =>
+          i.owner !== owner && [...contentStems(i.task)].filter((w) => object.has(w)).length >= 2,
+      );
+      if (earlier) {
+        earlier.owner = owner;
+        if (deadline) earlier.deadlinePhrase = deadline;
+        for (const id of ids) if (!earlier.segmentIds.includes(id)) earlier.segmentIds.push(id);
+        earlier.lastIndex = Math.max(earlier.lastIndex, last);
+        return;
+      }
+    }
     // Same person restating the same commitment moments later: merge instead of duplicating.
     const dup = items.find(
       (i) =>
@@ -298,7 +322,8 @@ function extractActions(
     if (dup) {
       if (!dup.owner && owner) dup.owner = owner;
       if (contentWords(task).length > contentWords(dup.task).length) dup.task = task;
-      if (!dup.deadlinePhrase && deadline) dup.deadlinePhrase = deadline;
+      // A later restatement with a new date moves the deadline ("by Thursday then").
+      if (deadline && (!dup.deadlinePhrase || last >= dup.lastIndex)) dup.deadlinePhrase = deadline;
       for (const id of ids) if (!dup.segmentIds.includes(id)) dup.segmentIds.push(id);
       dup.lastIndex = Math.max(dup.lastIndex, last);
       return;
@@ -333,6 +358,9 @@ function extractActions(
     'i',
   );
   const namedPleaseRe = new RegExp(`\\b(${nameRe})\\s*,\\s*please\\s+(.+)`, 'i');
+  // "Grace or Jack, one of you please send the survey": real work, but no single owner.
+  const oneOfYouRe =
+    /\b(?:one|either) of you\s*,?\s*(?:please\s+|can\s+|could\s+|needs? to\s+|should\s+)?(.+)/i;
   const anonRequestRe =
     /\b(?:can|could|would)\s+(?:you|someone|somebody|anyone)\s+(?:please\s+)?(.+?)\??$/i;
   const whoCanRe = /\bwho\s+(?:can|could|will|wants to|is going to|'s going to)\s+(.+?)\??$/i;
@@ -394,6 +422,25 @@ function extractActions(
 
     if (NEGATION_RE.test(text) && !/\bdon't forget to\b/i.test(text)) continue;
     if (PAST_RE.test(text)) continue;
+
+    // Cancellations: "forget about the load test", "I'll drop the load test then". The
+    //    work is off the list, so it is not a task, and an earlier task for it goes away.
+    const cancel = CANCEL_RE.exec(text);
+    if (cancel && !question) {
+      const gone = contentStems(cancel[1]!);
+      for (let k = items.length - 1; k >= 0; k--)
+        if ([...contentStems(items[k]!.task)].filter((w) => gone.has(w)).length >= 2)
+          items.splice(k, 1);
+      for (const p of pending)
+        if ([...contentStems(p.task)].filter((w) => gone.has(w)).length >= 2) p.consumed = true;
+      cancelled.push(gone);
+      continue;
+    }
+    const oy = oneOfYouRe.exec(text);
+    if (oy && !question) {
+      push(cleanTask(oy[1]!, deadline), null, deadline, 'medium', [u], text);
+      continue;
+    }
 
     // 2) Requests addressed to a named person. They become tasks once accepted
     //    (or right away when phrased as an instruction).
@@ -479,9 +526,11 @@ function extractActions(
     }
   }
 
-  // Direct instructions that nobody declined still count.
+  // Direct instructions that nobody declined still count, unless the work was cancelled.
   for (const p of pending) {
-    if (!p.consumed && p.imperative && p.addressee)
+    const stems = contentStems(p.task);
+    const wasCancelled = cancelled.some((c) => [...c].filter((w) => stems.has(w)).length >= 2);
+    if (!p.consumed && p.imperative && p.addressee && !wasCancelled)
       push(p.task, p.addressee, p.deadline, 'medium', [p.unit], p.unit.text);
   }
   return items.map(({ lastIndex: _lastIndex, ...rest }) => rest);
@@ -545,6 +594,8 @@ function extractDecisions(units: Unit[]): RawDecision[] {
     /^(?:(?:ok(?:ay)?|alright|all right|so|great|fine|good)[,\s]+)*(.{2,40}?)\s+it is(?:,?\s+then)?[.!]*$/i;
   const restateRe =
     /^(?:(?:agreed|decided|confirmed|so|ok(?:ay)?|alright)[.,!:]?\s+)?(.{3,60}?)\s+(?:is|will be|stays|is going to be)\s+(.{2,40}?)[.!]*$/i;
+  const keepRe =
+    /^(?:(?:fair enough|ok(?:ay)?|alright|all right|fine|then)[,.]?\s+)?(?:the\s+|our\s+)?(\w+(?:\s\w+)?)\s+stays\s+(on|at|in|as)\s+(.+?)(?:,?\s+then)?[.!]*$/i;
   const settledRe = /\b(?:that's|that is)\s+(?:settled|decided|final|the plan|a decision)\b/i;
   // "We're moving the deployment to Monday": an announced change is a decision. Not "we're moving on".
   const announceRe =
@@ -636,6 +687,23 @@ function extractDecisions(units: Unit[]): RawDecision[] {
       ) {
         add(prop.text, 'confirmed', [
           ...new Set([prop.unit.segId, ...(agreedFirst ? [prevU.segId] : []), u.segId]),
+        ]);
+        continue;
+      }
+    }
+
+    // "Fair enough, the retro stays on Thursday then": keeping things as they are,
+    // after a proposal to change them, is a decision.
+    const keep = keepRe.exec(u.text);
+    if (keep && !isQuestion(u)) {
+      const subject = keep[1]!.replace(/^(?:the|our)\s+/i, '');
+      const prop = latestProposal(u, 6, (p) =>
+        words(p.text).includes(subject.toLowerCase().split(' ')[0]!),
+      );
+      if (prop) {
+        add(cleanDecision(`Keep the ${subject} ${keep[2]!} ${keep[3]!}`)!, 'confirmed', [
+          prop.unit.segId,
+          u.segId,
         ]);
         continue;
       }

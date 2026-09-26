@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ALL_FIXTURES, RECORDED_AI_OUTPUTS } from '../fixtures/index.ts';
 import { HOLDOUT_FIXTURES } from '../fixtures/holdout.ts';
+import { HARD_FIXTURES } from '../fixtures/hard.ts';
 import { analyzeMeeting } from '../src/pipeline.ts';
 import {
   AI_PROVIDERS,
@@ -30,8 +31,9 @@ const engineArg = (
 ) as AiProviderId;
 const verbose = process.argv.includes('--verbose');
 const holdout = process.argv.includes('--holdout');
-const FIXTURES = holdout ? HOLDOUT_FIXTURES : ALL_FIXTURES;
-const setName = holdout ? 'holdout' : 'dev';
+const hard = process.argv.includes('--hard');
+const FIXTURES = hard ? HARD_FIXTURES : holdout ? HOLDOUT_FIXTURES : ALL_FIXTURES;
+const setName = hard ? 'hard' : holdout ? 'holdout' : 'dev';
 
 function makeExtractor(): Extractor | null {
   if (!AI_PROVIDERS.includes(engineArg)) throw new Error(`Unknown engine: ${engineArg}`);
@@ -99,7 +101,7 @@ async function main() {
   console.log(`  failed meetings            ${errors} of ${FIXTURES.length}`);
   console.log(`  total time                 ${Date.now() - started} ms`);
 
-  const gated = (engineArg === 'rules' || engineArg === 'mock') && !holdout;
+  const gated = (engineArg === 'rules' || engineArg === 'mock') && setName === 'dev';
   const failedGates = gated
     ? Object.entries(RULES_THRESHOLDS).filter(
         ([k, min]) => (agg as unknown as Record<string, number>)[k]! < min!,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_FIXTURES, generateLongMeeting } from '../fixtures/index.ts';
 import { HOLDOUT_FIXTURES } from '../fixtures/holdout.ts';
+import { HARD_FIXTURES } from '../fixtures/hard.ts';
 import { analyzeMeeting } from '../src/pipeline.ts';
 import { RulesExtractor } from '../src/extract/rules.ts';
 import { aggregate, RULES_THRESHOLDS, scoreFixture } from '../eval/metrics.ts';
@@ -28,6 +29,21 @@ describe('AI quality gate (offline engine)', () => {
     for (const [metric, min] of Object.entries(RULES_THRESHOLDS)) {
       expect(agg[metric as keyof typeof agg], metric).toBeGreaterThanOrEqual(min!);
     }
+  });
+
+  it('tells discussion, decisions and action items apart on the difficult set', async () => {
+    // Suggestions, "maybe", sarcasm, declined offers, cancelled and reassigned work,
+    // ambiguous owners and moved deadlines (fixtures/hard.ts). Tuned against, so this
+    // guards against regressions rather than measuring unseen meetings.
+    const scores = await scoreAll(HARD_FIXTURES);
+    const agg = aggregate(scores);
+    expect(scores.flatMap((s) => s.violations)).toEqual([]);
+    expect(agg.hallucinationRate).toBe(0);
+    expect(agg.decisionPrecision).toBe(1);
+    expect(agg.actionPrecision).toBeGreaterThanOrEqual(0.9);
+    expect(agg.actionRecall).toBeGreaterThanOrEqual(0.9);
+    expect(agg.ownerAccuracy).toBeGreaterThanOrEqual(0.9);
+    expect(agg.deadlineAccuracy).toBeGreaterThanOrEqual(0.9);
   });
 
   it('never hallucinates or leaks on the held-out set', async () => {
