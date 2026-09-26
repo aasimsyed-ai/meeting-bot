@@ -48,6 +48,13 @@ function record(id: string, findings: Findings) {
   );
 }
 
+/** Screenshots for the UX review, kept with the results (never in the repository). */
+async function snap(win: Page, id: string, name: string) {
+  const dir = join(audioRoot!, 'results', 'shots');
+  mkdirSync(dir, { recursive: true });
+  await win.screenshot({ path: join(dir, `${id}-${name}.png`) });
+}
+
 const pactl = (...args: string[]) => execFileSync('pactl', args, { encoding: 'utf8' }).trim();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -111,13 +118,16 @@ async function runScenario(
   const findings: Findings = { scenario: sc.id };
 
   // 1. Open the app and set it up as a new user.
+  await snap(win, sc.id, '01-first-open');
   await onboard(win, sc.user.name, sc.user.email);
+  await snap(win, sc.id, '02-home');
 
   // 2. Join the meeting: the meeting window opens; the app notices it.
   meeting = await openFakeMeeting(sc.id, audioRoot!);
   const card = win.locator('.card', { hasText: 'Microsoft Teams meeting detected' });
   await expect(card).toBeVisible({ timeout: 20_000 });
   findings.detected = await card.innerText();
+  await snap(win, sc.id, '03-meeting-detected');
   await card.getByRole('button', { name: 'Take notes' }).click();
 
   // 3. Taking notes: obvious state, both audio sources, and the screen.
@@ -130,6 +140,8 @@ async function runScenario(
   await expect(win.locator('.meter', { hasText: 'Screen' })).toContainText(/Reading slides/, {
     timeout: 15_000,
   });
+  await sleep(15_000);
+  await snap(win, sc.id, '04-taking-notes');
   if (opts.during) await opts.during(win);
   await meeting.finished;
   // The user comes back to the app (it may have been minimized during the meeting).
@@ -144,10 +156,15 @@ async function runScenario(
   await meeting.windowClosed;
   const ended = win.locator('.notice', { hasText: 'The meeting window has closed' });
   await expect(ended).toBeVisible({ timeout: 40_000 });
+  await snap(win, sc.id, '05-meeting-ended');
   await ended.getByRole('button', { name: 'Stop' }).click();
+  const stopped = Date.now();
 
   // 5. Notes arrive.
-  await expect(win.getByRole('heading', { name: 'TL;DR' })).toBeVisible({ timeout: 120_000 });
+  await snap(win, sc.id, '06-processing');
+  await expect(win.getByRole('heading', { name: 'TL;DR' })).toBeVisible({ timeout: 300_000 });
+  findings.notesSecondsAfterStop = Math.round((Date.now() - stopped) / 1000);
+  await snap(win, sc.id, '07-summary');
 
   // 6. Transcript and slides; remote voices are numbered until the user names them.
   await win.getByRole('tab', { name: /Transcript/ }).click();
@@ -157,12 +174,30 @@ async function runScenario(
   for (const text of sc.expected.screen ?? []) await expect.soft(onScreen).toContainText(text);
   await nameSpeakers(win, sc, findings);
   if (opts.shots) await shot(win, '11-harness-transcript');
+  await snap(win, sc.id, '08-transcript');
 
   // 7. Summary: decisions, tasks, owners, dates.
   await win.getByRole('tab', { name: 'Summary' }).click();
   findings.tldr = await win.locator('section', { hasText: 'TL;DR' }).first().innerText();
   const decisions = win.locator('section[aria-labelledby="decisions"]');
   findings.decisions = await decisions.innerText();
+  for (const bad of sc.expected.notDecisions ?? [])
+    await expect
+      .soft(decisions, `"${bad}" is not a decision`)
+      .not.toContainText(new RegExp(bad, 'i'));
+  if (sc.expected.questions?.length) {
+    const questions = win.locator('section[aria-labelledby="questions"]');
+    findings.questions = (await questions.count()) ? await questions.innerText() : null;
+    for (const q of sc.expected.questions)
+      await expect.soft(questions, `open question ${q}`).toContainText(new RegExp(q, 'i'));
+  }
+  if (sc.expected.changedRequirement) {
+    // Where, if anywhere, does the changed requirement show up in the notes?
+    const summaryText = await win.locator('main').innerText();
+    findings.changedRequirementInNotes = new RegExp(sc.expected.changedRequirement, 'i').test(
+      summaryText,
+    );
+  }
   for (const d of sc.expected.decisions) {
     await expect.soft(decisions, `decision ${d.match}`).toContainText(new RegExp(d.match, 'i'));
     if (d.status === 'confirmed')
@@ -200,6 +235,24 @@ async function runScenario(
     .toBe(sc.expected.tasks.filter((e) => !e.knownIssue).length);
   if (opts.shots) await shot(win, '12-harness-notes');
 
+  // Evidence: "Why?" on a task opens the transcript at the line where it was said.
+  record(sc.id, findings);
+  const firstTask = sc.expected.tasks.find((e) => !e.knownIssue);
+  const at = firstTask ? tasks.findIndex((x) => new RegExp(firstTask.match, 'i').test(x.task)) : -1;
+  if (at >= 0) {
+    // "Why?" shows the quote with its time; "Show in transcript" jumps to it.
+    await rows.nth(at).getByRole('button', { name: 'Why?' }).click();
+    findings.evidenceQuote = await rows.nth(at).locator('.evidence').innerText();
+    await rows.nth(at).getByRole('button', { name: 'Show in transcript' }).click();
+    await expect
+      .soft(win.getByRole('tab', { name: /Transcript/ }))
+      .toHaveAttribute('aria-selected', 'true');
+    const lit = win.locator('.segment.highlight');
+    await expect.soft(lit, '"Why?" highlights the line where the task was said').toBeVisible();
+    findings.evidenceOpened = (await lit.count()) ? await lit.innerText() : null;
+    await win.getByRole('tab', { name: 'Summary' }).click();
+  }
+
   // 8. Review the follow-up email (never sent in tests).
   await win.getByRole('button', { name: 'Review email' }).click();
   const dialog = win.getByRole('dialog');
@@ -209,6 +262,7 @@ async function runScenario(
   for (const e of sc.expected.tasks.filter((x) => !x.knownIssue))
     expect.soft(body, `email mentions ${e.match}`).toMatch(new RegExp(e.match, 'i'));
   if (opts.shots) await shot(win, '13-harness-email');
+  await snap(win, sc.id, '09-email');
   await dialog.getByRole('button', { name: 'Close' }).click();
   try {
     findings.sent = readdirSync(join(l.dataDir, 'test-outbox')).length;
@@ -336,4 +390,10 @@ test('device changes mid-meeting: minimized, microphone unplugged and back, head
   expect
     .soft(transcript, 'remote voices heard after switching to headphones')
     .toMatch(/launching on the fifteenth|fifteenth works/i);
+});
+
+test("team sync (about ten minutes): a normal user's meeting, start to email", async () => {
+  test.setTimeout(1_500_000);
+  const { findings } = await runScenario('team-sync-10min');
+  expect.soft(findings.sent).toBe(0);
 });

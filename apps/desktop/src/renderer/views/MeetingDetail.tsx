@@ -73,6 +73,10 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
   }
   const d = q.data;
   const m = d.summary;
+  // Remote voices are numbered until someone names them.
+  const unnamed = d.speakers.filter(
+    (s) => s.segments > 0 && !s.name && /^Speaker \d+$/.test(s.label),
+  );
   const showEvidence = (e: Evidence) => {
     setHighlight(e.segmentIds[0] ?? null);
     setTab('transcript');
@@ -161,6 +165,20 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
         </div>
       )}
 
+      {tab === 'summary' && d.notes && unnamed.length > 0 && (
+        <Notice
+          tone="accent"
+          action={
+            <button className="btn btn-sm" onClick={() => setTab('transcript')}>
+              Name them
+            </button>
+          }
+        >
+          {unnamed.length === 1 ? 'One voice is' : `${unnamed.length} voices are`} not named yet (
+          {unnamed.map((s) => s.label).join(', ')}). Naming them puts real names on the tasks and in
+          the email.
+        </Notice>
+      )}
       {tab === 'summary' && d.notes && (
         <Summary detail={d} onEvidence={showEvidence} onEmail={() => setEmailOpen(true)} />
       )}

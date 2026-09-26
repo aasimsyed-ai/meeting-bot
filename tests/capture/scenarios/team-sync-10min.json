@@ -1,0 +1,741 @@
+{
+  "id": "team-sync-10min",
+  "about": "A ten-minute weekly sync, run as a normal user would. Charlie (the user) is on the microphone; Alice and Bob are remote. One decision, three tasks for two owners, one deadline, one open question, one changed requirement, and plenty of ordinary talk around them.",
+  "windowTitle": "Customer portal weekly | Meeting | Microsoft Teams",
+  "user": {
+    "name": "Charlie Davis",
+    "email": "charlie.davis@acme.example.test"
+  },
+  "voices": {
+    "Alice": 10,
+    "Bob": 450,
+    "Charlie": 200
+  },
+  "gapSeconds": 2.6,
+  "lines": [
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Hi both, thanks for joining. This is the customer portal weekly.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Hi Alice. Hi Charlie.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Hi everyone. Good to see you.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Let's start with a quick status round, and then we have a few things to settle about the redesign.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Sure. On my side, the new navigation is finished and it is running on the staging site since Monday.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The search page still has a layout problem on small screens, but that is a small fix.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "I spent most of the week on the account settings page. The forms are done, and I started on the error messages.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Great progress. How did the support team like the new navigation?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "They liked it. Their only comment was that the help link is hard to find.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "That matches what I heard from two customers last week.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The staging site is a bit slow on the account pages. The page load is about three seconds.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Is that the database or the front end?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Mostly the front end. The account page loads every widget at once.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "We saw the same thing on the old portal. Lazy loading helped a lot there.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Right, the new code already does lazy loading for images, just not for the widgets.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Is it a problem for the release?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Not really. Three seconds is within our target, but it could be better.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Okay, good to know.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The deployment pipeline is also faster now. A full build takes about twelve minutes instead of twenty.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "That is a nice improvement. It makes testing much less painful.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Is anything blocked at the moment?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "No, nothing is blocked. We are waiting on the final icons from the design team, but they are not needed until next month.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Same for me, nothing blocked.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "I also read the survey results from last month.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Most customers said the old portal was hard to use on a phone.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "That is exactly why the new layout is mobile first.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The mobile numbers are interesting. About sixty percent of visits come from phones now.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "That is much higher than two years ago.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "It used to be around thirty percent, if I remember correctly.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "And most of those visits are people checking their invoices.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Makes sense. Invoices are the most visited page by far.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Good to know. We can look at the help link placement later.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "I also want to show you the new analytics dashboard quickly, if we have a minute.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Sure, go ahead.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "This is the weekly view. Visits went up by about eight percent since the new navigation went live on staging.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Is that real users or mostly our own testing?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Good question. It is only internal traffic on staging, so the numbers are not very meaningful yet.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Then let's not read too much into them until the release.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Agreed. The more interesting part is the funnel for the checkout.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "About a third of people who start a payment on the old portal stop on the second step.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "The second step is the one that asks for the billing address again, right?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Exactly. The new checkout flow fills it in automatically.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "That alone could make a real difference.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "It is also the part customers mention most in the survey comments.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "That is everything on the dashboard for now.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Thanks, that was useful context.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Now, the first thing to settle. For the redesign, we have been going back and forth between building a new design system and using the one we already have.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "A new design system would give us more freedom, but it would easily take two months before we could use it.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "And the existing one already covers almost every component we need for the portal.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "So I suggest we use the existing design system for the portal.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Agreed, that makes sense to me.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Yes, I agree. Let's go with the existing design system.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Great, that is decided then.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Maybe we should also try a new color palette at some point. The current blue feels a bit dated.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Maybe, but I would not change colors in the middle of the redesign.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Let's leave the colors for another time.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Before the client change, a quick look at the support tickets from last week.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "We had forty two tickets about the portal. That is a bit lower than the week before.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "What were the main topics?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Mostly password resets, and people who could not find their old invoices.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The invoice search in the new portal should fix most of those.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "I hope so. The password resets are a different story. Those are usually people who forgot which email address they used.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "That is not really something the portal can solve on its own.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "No, but the new login page shows a hint with the first letters of the email address, which already helps a little.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Support also mentioned that the error messages on the old forms were confusing.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The new forms explain what went wrong next to each field, so that should be better.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Good. I like that the redesign already answers most of what customers complain about.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "It does. The only open topic from support is the help link we talked about earlier.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Next, there is a change from the client. I talked to them yesterday.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "They now want dark mode in the first release. Before, it was planned for later in the year.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Okay, that changes the plan a bit. Dark mode touches every page.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "The existing design system already has dark colors defined, so it is less work than it sounds.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "True. It mostly means testing every page twice.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "The release is still planned for the end of next month.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "With dark mode the testing phase gets longer, but I think the date still holds.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "The designers told me the contrast checks for dark mode are fairly quick.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Good. Then nothing changes for the release date.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "One question from my side. Do we still support the old browser versions?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Only the last two versions of each browser, same as the main website.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Okay, that answers it. Thanks.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Then let's plan for it. Now, the tasks for this week.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Bob, can you update the checkout flow mockups by Thursday? The client wants to see them in the Friday review.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Yes, I'll update the checkout flow mockups by Thursday.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "I will write the accessibility checklist for the new pages.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Perfect, thank you Charlie.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "I'll also set up the usability test sessions with five customers.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Thanks Bob. That is really helpful.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "About the help link, one option is to put it in the top bar.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Another option is a floating button in the corner.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Floating buttons sometimes cover content on phones.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "True. The top bar is probably the safer choice.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "I don't have a strong opinion. Both could work.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "We can look at it again next week, when we have the usability results.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "One thing we still have not figured out. Who approves the new text on the pricing page?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Last time it was marketing, but they changed their team.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "I honestly do not know who owns that now. We need to find out.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "If nobody approves it in time, the pricing page could delay the whole release.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Good point. Let's keep that in mind.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "How was everyone's weekend, by the way?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Quiet. I finally finished the book I started in the summer.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "We went hiking. The weather was perfect for it.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Nice. I mostly stayed home with the kids.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "By the way, did either of you try the new coffee place downstairs?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "I did. The coffee is good, but the line is long in the morning.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Ha, I will try it tomorrow. Okay, anything else for today?",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "Nothing from me.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Charlie",
+      "channel": "mic",
+      "text": "Nothing else from me either.",
+      "speed": 0.92
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Then thanks everyone, see you next week.",
+      "speed": 0.92
+    }
+  ],
+  "slides": [
+    {
+      "fromLine": 3,
+      "lines": [
+        "Customer portal weekly",
+        "1. Status round",
+        "2. Design system",
+        "3. Client changes",
+        "4. Tasks"
+      ]
+    },
+    {
+      "fromLine": 34,
+      "lines": [
+        "Analytics (staging only)",
+        "Visits: +8% since new navigation",
+        "Checkout: 1 in 3 stop at step 2"
+      ]
+    },
+    {
+      "fromLine": 46,
+      "lines": [
+        "Design system",
+        "Option A: build a new one (about 2 months)",
+        "Option B: use the existing one"
+      ]
+    },
+    {
+      "fromLine": 68,
+      "lines": [
+        "Client change",
+        "Dark mode moves into release 1",
+        "Was planned for later in the year"
+      ]
+    },
+    {
+      "fromLine": 80,
+      "lines": [
+        "This week",
+        "Checkout flow mockups",
+        "Accessibility checklist",
+        "Usability test sessions"
+      ]
+    }
+  ],
+  "expected": {
+    "decisions": [
+      {
+        "match": "existing design system",
+        "status": "confirmed"
+      },
+      {
+        "match": "dark mode",
+        "status": "confirmed"
+      }
+    ],
+    "notDecisions": ["color"],
+    "tasks": [
+      {
+        "match": "checkout flow mock ?ups",
+        "owner": "Bob",
+        "weekday": "Thursday"
+      },
+      {
+        "match": "accessibility checklist",
+        "owner": "Charlie Davis"
+      },
+      {
+        "match": "usability test",
+        "owner": "Bob"
+      }
+    ],
+    "questions": ["pricing page"],
+    "changedRequirement": "dark mode",
+    "screen": ["Dark mode moves into release 1"]
+  }
+}

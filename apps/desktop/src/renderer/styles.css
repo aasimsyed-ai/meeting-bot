@@ -422,6 +422,13 @@ a {
   color: white;
 }
 
+/* Stays red on hover: the generic hover background made the white "Stop" text unreadable. */
+.btn-danger-solid:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  filter: brightness(0.9);
+}
+
 .btn-ghost {
   border-color: transparent;
   background: transparent;

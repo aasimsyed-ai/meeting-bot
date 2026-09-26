@@ -230,7 +230,7 @@ export function Onboarding() {
               <div className="stack" style={{ gap: 8 }}>
                 {model.error && <div className="notice notice-warning">{model.error}</div>}
                 <button
-                  className="btn"
+                  className="btn btn-primary"
                   style={{ alignSelf: 'flex-start' }}
                   onClick={() => void call('models:download')}
                 >
@@ -239,7 +239,10 @@ export function Onboarding() {
               </div>
             )}
             <div className="row">
-              <button className="btn btn-primary" onClick={() => setStep('ready')}>
+              <button
+                className={model.ready || model.downloading ? 'btn btn-primary' : 'btn btn-ghost'}
+                onClick={() => setStep('ready')}
+              >
                 {model.ready || model.downloading ? 'Continue' : 'Later'}
               </button>
             </div>

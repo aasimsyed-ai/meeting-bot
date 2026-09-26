@@ -17,6 +17,8 @@ export interface Scenario {
     questions?: string[];
     screen?: string[];
     notTasks?: string[];
+    notDecisions?: string[];
+    changedRequirement?: string;
   };
 }
 
