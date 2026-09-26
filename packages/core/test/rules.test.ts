@@ -99,6 +99,44 @@ describe('rules extractor: decisions', () => {
     expect(r.decisions[0]?.status).toBe('possible');
   });
 
+  it('confirms when the proposer closes it after the others went along', () => {
+    // The capture-validation dialogue: nobody says "agreed" except the proposer, but the
+    // others plan their work around it and she closes the topic.
+    const r = run([
+      ['Alice Johnson', "Let's move the deployment to Monday."],
+      ['Bob Smith', "I'll update the firewall rule by Friday."],
+      ['Carol King', "I'll finish QA before Monday."],
+      ['Alice Johnson', 'Agreed. Deployment is Monday.'],
+    ]);
+    expect(r.decisions).toEqual([
+      expect.objectContaining({
+        status: 'confirmed',
+        text: 'Move the deployment to Monday',
+        segmentIds: ['s1', 's4'],
+      }),
+    ]);
+  });
+
+  it('does not confirm a proposer agreeing with themselves, or over an objection', () => {
+    const alone = run([
+      ['Alice Johnson', "Let's move the deployment to Monday."],
+      ['Alice Johnson', 'Agreed. Deployment is Monday.'],
+    ]);
+    expect(alone.decisions[0]?.status).toBe('possible');
+    const objected = run([
+      ['Alice Johnson', "Let's move the deployment to Monday."],
+      ['Bob Smith', "I'm worried Monday is too soon."],
+      ['Alice Johnson', 'Agreed. Deployment is Monday.'],
+    ]);
+    expect(objected.decisions[0]?.status).toBe('possible');
+    const asked = run([
+      ['Alice Johnson', "Let's move the deployment to Monday."],
+      ['Bob Smith', "I'll update the firewall rule by Friday."],
+      ['Alice Johnson', 'So deployment is Monday?'],
+    ]);
+    expect(asked.decisions[0]?.status).toBe('possible');
+  });
+
   it('resolves "X it is" to the earlier proposal', () => {
     const r = run([
       ['Bob Smith', 'What if we move the deployment to Monday?'],
@@ -223,5 +261,15 @@ describe('rules extractor: topics', () => {
       ['Bob Smith', 'The build is green and ready to go.'],
     ]);
     expect(r.topics.map((t) => t.title)).toEqual(['Deployment plan']);
+  });
+
+  it('never titles a topic with contractions or weekdays', () => {
+    const r = run([
+      ['Alice Johnson', "Let's move the deployment to Monday."],
+      ['Bob Smith', "I'll update the firewall rule by Friday."],
+      ['Carol King', "I'll finish QA before Monday."],
+      ['Alice Johnson', 'Agreed. Deployment is Monday.'],
+    ]);
+    expect(r.topics.map((t) => t.title)).toEqual(['Deployment']);
   });
 });

@@ -11,6 +11,9 @@ const STOPWORDS = new Set(
   ).split(/\s+/),
 );
 
+/** Title for a stretch of meeting with no clear topic. */
+export const GENERAL_DISCUSSION = 'General discussion';
+
 export function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, ' ').trim();
 }

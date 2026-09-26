@@ -19,6 +19,7 @@ import {
   contentWords,
   coverage,
   firstName,
+  GENERAL_DISCUSSION,
   hash53,
   normalizeWhitespace,
   similarity,
@@ -407,7 +408,11 @@ export function composeTldr(
 ): string {
   const parts: string[] = [];
   // Titles keep their capitals ("Project Phoenix"), so no "The meeting covered ..." sentence.
-  const topics = notes.topics.slice(0, 3).map((t) => t.title);
+  // A placeholder title says nothing, so the summary skips it.
+  const topics = notes.topics
+    .slice(0, 3)
+    .map((t) => t.title)
+    .filter((t) => t !== GENERAL_DISCUSSION);
   if (topics.length)
     parts.push(`${topics.length === 1 ? 'Topic' : 'Topics'}: ${joinList(topics)}.`);
   const confirmed = notes.decisions.filter((d) => d.status === 'confirmed');

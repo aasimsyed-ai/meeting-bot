@@ -13,7 +13,9 @@ import { findDeadlinePhrase, stripDeadline } from '../deadlines.ts';
 import { looksLikeInjection } from '../injection.ts';
 import {
   capitalize,
+  contentStems,
   contentWords,
+  GENERAL_DISCUSSION,
   firstName,
   normalizeWhitespace,
   sentences,
@@ -73,6 +75,11 @@ const AGREE_ANYWHERE_RE =
   /^[^,.;]{0,30}\b(?:works for (?:me|us)|is fine(?: with me| by me)?|sounds good|fine by me)\b/i;
 const AGREE_RE =
   /^(?:agreed|sounds good|sounds great|works for me|that works|yes|yep|yeah|sure|great|perfect|let's do (?:it|that)|makes sense|fine by me|i agree|\+1|deal|done|ok(?:ay)?|alright|good call|good idea|love it|same here)\b/i;
+/** A turn that is only agreement: "Agreed." "Perfect." */
+const AGREE_ONLY_RE =
+  /^(?:agreed|decided|confirmed|settled|great|perfect|ok(?:ay)?|alright|all right|good|sounds good)[.!]*$/i;
+/** A turn that starts by closing a topic: "Agreed, deployment is Monday." */
+const CLOSING_RE = /^(?:agreed|decided|confirmed)\b/i;
 const DISAGREE_RE =
   /\b(?:but|however|risky|disagree|not sure|don't think|do not think|won't work|can't|cannot|too soon|not ready|push back|concern|worried|wait)\b/i;
 const NEGATION_RE =
@@ -536,6 +543,8 @@ function extractDecisions(units: Unit[]): RawDecision[] {
     /\b(?:we(?:'ve| have)?\s+(?:all\s+)?(?:agreed|decided)(?:\s+(?:that|to|on))?|it(?:'s| is| was)\s+(?:agreed|decided)(?:\s+that)?|the decision is(?:\s+that|\s+to)?|final decision\s*(?:is|:)|(?:decision|final call|verdict)\s*:|we(?:'re| are)\s+going (?:with|to go with)|we're moving forward with|we are moving forward with|the (?:final )?plan is|agreed[,:]\s*(?:we|let's))\s+(.+)/i;
   const itIsRe =
     /^(?:(?:ok(?:ay)?|alright|all right|so|great|fine|good)[,\s]+)*(.{2,40}?)\s+it is(?:,?\s+then)?[.!]*$/i;
+  const restateRe =
+    /^(?:(?:agreed|decided|confirmed|so|ok(?:ay)?|alright)[.,!:]?\s+)?(.{3,60}?)\s+(?:is|will be|stays|is going to be)\s+(.{2,40}?)[.!]*$/i;
   const settledRe = /\b(?:that's|that is)\s+(?:settled|decided|final|the plan|a decision)\b/i;
   // "We're moving the deployment to Monday": an announced change is a decision. Not "we're moving on".
   const announceRe =
@@ -550,6 +559,12 @@ function extractDecisions(units: Unit[]): RawDecision[] {
     [...proposals]
       .reverse()
       .find((p) => u.index - p.unit.index <= window && (!filter || filter(p)));
+
+  // Others spoke after the proposal and nobody objected.
+  const wentAlong = (from: number, to: number, proposer: string): boolean => {
+    const between = units.slice(from + 1, to).filter((n) => n.speaker !== proposer);
+    return between.length > 0 && !between.some((n) => DISAGREE_RE.test(n.text));
+  };
 
   const agreementAfter = (i: number, proposer: string): Unit | null => {
     for (let j = i + 1; j < Math.min(units.length, i + 4); j++) {
@@ -600,6 +615,30 @@ function extractDecisions(units: Unit[]): RawDecision[] {
         prop ? [prop.unit.segId, u.segId] : [u.segId],
       );
       continue;
+    }
+
+    // "Agreed. Deployment is Monday.": someone closes a proposal by restating it. The
+    // proposer counts too, but only after others have spoken without objecting.
+    const prevU = units[i - 1];
+    const agreedFirst = !!prevU && prevU.speaker === u.speaker && AGREE_ONLY_RE.test(prevU.text);
+    const rs =
+      (agreedFirst || CLOSING_RE.test(u.text)) && !isQuestion(u) ? restateRe.exec(u.text) : null;
+    if (rs) {
+      const stems = contentStems(u.text);
+      const prop = latestProposal(
+        u,
+        10,
+        (p) => [...contentStems(p.text)].filter((w) => stems.has(w)).length >= 2,
+      );
+      if (
+        prop &&
+        (prop.unit.speaker !== u.speaker || wentAlong(prop.unit.index, u.index, u.speaker))
+      ) {
+        add(prop.text, 'confirmed', [
+          ...new Set([prop.unit.segId, ...(agreedFirst ? [prevU.segId] : []), u.segId]),
+        ]);
+        continue;
+      }
     }
 
     if (settledRe.test(u.text)) {
@@ -739,16 +778,23 @@ function titleFrom(text: string): string {
   return capitalize(t.split(/\s+/).slice(0, 6).join(' '));
 }
 
+/** Words that say nothing about a topic on their own. */
+const NOT_A_TOPIC =
+  /^(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|make|done|work|working|time|start|sounds|agreed)$/;
+
+/** Fallback title: words people kept coming back to. Never contractions or dates. */
 function keywordTitle(units: Unit[]): string {
   const freq = new Map<string, number>();
   for (const u of units)
     for (const w of contentWords(u.text))
-      if (w.length > 3 && !/^\d+$/.test(w)) freq.set(w, (freq.get(w) ?? 0) + 1);
+      if (w.length > 3 && !/^\d+$/.test(w) && !w.includes("'") && !NOT_A_TOPIC.test(w))
+        freq.set(w, (freq.get(w) ?? 0) + 1);
   const top = [...freq.entries()]
+    .filter(([, n]) => n >= 2)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
     .map(([w]) => w);
-  return top.length ? capitalize(top.join(', ')) : 'General discussion';
+  return top.length ? capitalize(top.join(', ')) : GENERAL_DISCUSSION;
 }
 
 function extractTopics(units: Unit[]): RawTopic[] {
