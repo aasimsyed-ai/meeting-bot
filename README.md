@@ -8,7 +8,7 @@ It works the same with Microsoft Teams, Zoom, Google Meet, Slack huddles or anyt
 
 ## Current status
 
-**Working beta, not yet released.** The full flow works end to end and is tested on Linux, Windows and macOS in CI, including real speech recognition on synthetic meeting audio and the packaged app. It has **not** been used on real Teams, Zoom, Meet or Slack calls on real Windows or Mac laptops yet, and installers are unsigned. See [docs/status.md](docs/status.md) for the honest details.
+**Working beta, not yet released.** The full flow works end to end and is tested on Linux, Windows and macOS in CI. On Linux it is also tested through the real operating-system audio and window paths with a stand-in meeting app (the capture harness), including a ten-minute meeting run exactly as a user would. It has **not** been used on real Teams, Zoom, Meet or Slack calls on real Windows or Mac laptops yet, and installers are unsigned. See [docs/status.md](docs/status.md) and [docs/capture-validation.md](docs/capture-validation.md) for the honest details.
 
 ## Features
 
@@ -46,7 +46,7 @@ packages/core     Meeting intelligence in plain TypeScript: transcript cleanup,
 ```
 
 1. A hidden window captures the microphone and meeting audio (macOS: AudioTee) as 16 kHz audio.
-2. A separate process runs on-device speech recognition (sherpa-onnx: Silero VAD, Moonshine, WeSpeaker) and saves lines as they are spoken.
+2. A separate process runs on-device speech recognition (sherpa-onnx: Silero VAD, Parakeet v3 by default, WeSpeaker) and saves lines as they are spoken. The text of shared slides is read on the device from still pictures of the meeting window (never video, pictures never kept).
 3. At Stop, the transcript goes through one structured extraction pass (offline rules by default; a local model server or Claude optionally), then a validator that drops anything without evidence.
 4. Everything is stored in SQLite with full-text search, in your user data folder.
 
@@ -54,7 +54,7 @@ More: [docs/architecture.md](docs/architecture.md), decisions in [docs/architect
 
 ## Prerequisites
 
-- To use: Windows 10/11, macOS 12+ (14.2+ for meeting audio) or Linux x64. About 300 MB of disk for the one-time speech engine download.
+- To use: Windows 10/11, macOS 12+ (14.2+ for meeting audio) or Linux x64. About 550 MB of disk for the one-time speech engine download (about 300 MB with the smaller Standard model).
 - To build: Node.js 22.12+, pnpm 10 (`corepack enable`). On Linux, Electron's usual system libraries.
 
 ## Getting started (from source)
@@ -72,10 +72,12 @@ No paid service is needed. Notes are made by the offline engine by default. For 
 
 ```bash
 pnpm lint && pnpm format:check && pnpm typecheck
-pnpm test          # 167 core + 87 desktop unit tests
-pnpm eval          # AI quality gate on 16 annotated meetings
+pnpm test          # 250 core + 103 desktop unit tests
+pnpm eval          # AI quality gate on 16 annotated meetings (-- --holdout, -- --hard for the other sets)
 pnpm e2e           # Playwright drives the real Electron app (Linux: xvfb-run -a pnpm e2e)
 ```
+
+Real capture through the OS audio and window paths, with a stand-in meeting app (Linux): [tests/capture/README.md](tests/capture/README.md).
 
 What each layer covers and the manual real-device checklist: [docs/test-plan.md](docs/test-plan.md). Latest numbers: [docs/test-results.md](docs/test-results.md).
 
@@ -89,20 +91,21 @@ CI builds unsigned Windows, macOS and Linux installers on every push. Signing is
 
 ## Documentation
 
-|                                                                                   |                                                          |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| [Status](docs/status.md)                                                          | What works, what does not, release readiness             |
-| [Product requirements](docs/product-requirements.md)                              | What the product must do and where each item stands      |
-| [Project plan](docs/project-plan.md)                                              | Milestones and backlog                                   |
-| [Architecture](docs/architecture.md), [decisions](docs/architecture-decisions.md) | How it is built and why                                  |
-| [Security and privacy](docs/security.md)                                          | Data, hardening, AI safety                               |
-| [Test plan](docs/test-plan.md), [results](docs/test-results.md)                   | How it is tested and the numbers                         |
-| [Bug log](docs/bug-log.md), [risk register](docs/risk-register.md)                | Known bugs and risks                                     |
-| [Platform support](docs/platform-support.md), [deployment](docs/deployment.md)    | Where it runs and how it ships                           |
-| [Open-source dependencies](docs/open-source-dependencies.md)                      | What we reuse and the licenses                           |
-| [AI engines](docs/ai-providers.md)                                                | Offline, mock, local model and optional Claude           |
-| [Release prerequisites](docs/release-prerequisites.md)                            | Production-only items: signing, costs, free alternatives |
-| [Project memory](docs/project-memory.md)                                          | Durable facts for contributors                           |
+|                                                                                   |                                                           |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [Status](docs/status.md)                                                          | What works, what does not, release readiness              |
+| [Capture validation](docs/capture-validation.md)                                  | Real meeting capture: audit, test matrix, what was tested |
+| [Product requirements](docs/product-requirements.md)                              | What the product must do and where each item stands       |
+| [Project plan](docs/project-plan.md)                                              | Milestones and backlog                                    |
+| [Architecture](docs/architecture.md), [decisions](docs/architecture-decisions.md) | How it is built and why                                   |
+| [Security and privacy](docs/security.md)                                          | Data, hardening, AI safety                                |
+| [Test plan](docs/test-plan.md), [results](docs/test-results.md)                   | How it is tested and the numbers                          |
+| [Bug log](docs/bug-log.md), [risk register](docs/risk-register.md)                | Known bugs and risks                                      |
+| [Platform support](docs/platform-support.md), [deployment](docs/deployment.md)    | Where it runs and how it ships                            |
+| [Open-source dependencies](docs/open-source-dependencies.md)                      | What we reuse and the licenses                            |
+| [AI engines](docs/ai-providers.md)                                                | Offline, mock, local model and optional Claude            |
+| [Release prerequisites](docs/release-prerequisites.md)                            | Production-only items: signing, costs, free alternatives  |
+| [Project memory](docs/project-memory.md)                                          | Durable facts for contributors                            |
 
 ## Privacy and consent
 

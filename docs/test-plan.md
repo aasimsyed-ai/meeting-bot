@@ -10,18 +10,22 @@ What we test, how, and what still needs a real person, account or device. Result
 
 ## Layers
 
-| Layer                 | Where                                                       | Runs                                    | What it proves                                                                                                                               |
-| --------------------- | ----------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Core unit tests       | `packages/core/test`                                        | Every push (CI `checks`)                | Deadlines, transcript cleanup, extraction rules, validator, Claude adapter (fake client), email, Q&A, security                               |
-| AI quality gate       | `packages/core/eval`, `test/eval-gate.test.ts`              | Every push                              | Precision, recall, owner and deadline accuracy on 16 transcripts; zero hallucinations on the held-out set                                    |
-| Performance           | `test/eval-gate.test.ts`                                    | Every push                              | Analysis of 5, 30, 60 and 120 minute meetings (6 to 50 participants) finishes in under 5 seconds                                             |
-| Desktop unit tests    | `apps/desktop/test`                                         | Every push, on Linux, Windows and macOS | Data layer, migrations, access checks, search, capture session, crash recovery, retention, IPC validation, secrets, logging, model downloads |
-| Speech integration    | `apps/desktop/test/speech.integration.test.ts`              | CI `speech` job (Linux)                 | Real models on synthetic four-voice audio: transcript, four speakers, correct notes                                                          |
-| End to end            | `apps/desktop/e2e`                                          | Every push, on Linux, Windows and macOS | The real Electron app, driven like a user                                                                                                    |
-| Real audio E2E        | `apps/desktop/e2e/audio.spec.ts`                            | CI `speech` job (Linux)                 | Meeting audio streamed into the running app becomes a transcript, speakers and notes                                                         |
-| Installers            | CI `package` job                                            | After app tests pass                    | Unsigned installers build on all three platforms                                                                                             |
-| AI path (mock)        | `pnpm eval -- --engine mock`, `core/test/providers.test.ts` | Every push                              | Full AI path (prompt, JSON, schema, chunking, fallback, validator) with a deterministic mock; hostile output rejected                        |
-| Real model evaluation | `pnpm eval -- --engine local-llm` or `claude`               | Optional, manual                        | Local model: free, needs a local server. Claude: NOT TESTED — REQUIRES PROVIDER CREDENTIALS                                                  |
+| Layer                 | Where                                                              | Runs                                    | What it proves                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core unit tests       | `packages/core/test`                                               | Every push (CI `checks`)                | Deadlines, transcript cleanup, extraction rules, validator, Claude adapter (fake client), email, Q&A, security                               |
+| AI quality gate       | `packages/core/eval`, `test/eval-gate.test.ts`                     | Every push                              | Precision, recall, owner and deadline accuracy on 16 transcripts; zero hallucinations on the held-out set                                    |
+| Performance           | `test/eval-gate.test.ts`                                           | Every push                              | Analysis of 5, 30, 60 and 120 minute meetings (6 to 50 participants) finishes in under 5 seconds                                             |
+| Desktop unit tests    | `apps/desktop/test`                                                | Every push, on Linux, Windows and macOS | Data layer, migrations, access checks, search, capture session, crash recovery, retention, IPC validation, secrets, logging, model downloads |
+| Speech integration    | `apps/desktop/test/speech.integration.test.ts`                     | CI `speech` job (Linux)                 | Real models on synthetic four-voice audio: transcript, four speakers, correct notes                                                          |
+| End to end            | `apps/desktop/e2e`                                                 | Every push, on Linux, Windows and macOS | The real Electron app, driven like a user                                                                                                    |
+| Real audio E2E        | `apps/desktop/e2e/audio.spec.ts`                                   | CI `speech` job (Linux)                 | Meeting audio streamed into the running app becomes a transcript, speakers and notes                                                         |
+| Permission cases      | `apps/desktop/e2e/permissions.spec.ts`                             | Every push, on Linux, Windows and macOS | Denied microphone, screen and meeting audio; retry after allowing; access removed mid-meeting (denial simulated in the capture page)         |
+| Capture harness       | `tests/capture`, `apps/desktop/e2e/harness.spec.ts`                | CI `speech` job (Linux), two scenarios  | Real OS audio and window paths with a stand-in meeting app: detection, both audio sources, slides, device changes, notes, email              |
+| Difficult set, trust  | `fixtures/hard.ts`, `test/eval-gate.test.ts`, `test/trust.test.ts` | Every push                              | Discussion vs decision vs task; evidence for every item; the email says only what the notes say                                              |
+| Transcription probe   | `apps/desktop/test/asr-probe.integration.test.ts`                  | Manual (measurement)                    | Names, numbers, dates, URLs, acronyms, noise and interruptions, per speech model                                                             |
+| Installers            | CI `package` job                                                   | After app tests pass                    | Unsigned installers build on all three platforms                                                                                             |
+| AI path (mock)        | `pnpm eval -- --engine mock`, `core/test/providers.test.ts`        | Every push                              | Full AI path (prompt, JSON, schema, chunking, fallback, validator) with a deterministic mock; hostile output rejected                        |
+| Real model evaluation | `pnpm eval -- --engine local-llm` or `claude`                      | Optional, manual                        | Local model: free, needs a local server. Claude: NOT TESTED — REQUIRES PROVIDER CREDENTIALS                                                  |
 
 ## Test data: Acme Demo Corporation
 
@@ -88,7 +92,9 @@ Run on Windows 11 and macOS 14.2 or newer, each with Teams, Zoom, Google Meet an
 9. Review the follow-up email, open it in the default mail app, and check recipients and the external warning.
 10. Delete the meeting and confirm its audio folder and search results are gone.
 
-Record the OS version, hardware, app, result and any bug numbers in [test-results.md](test-results.md).
+Record the OS version, hardware, app, result and any bug numbers in [test-results.md](test-results.md), and fill in the matrix in [capture-validation.md](capture-validation.md#2-real-capture-test-matrix).
+
+For the ten-minute human workflow, three people can read the script in `tests/capture/scenarios/team-sync-10min.json` aloud in a real call; the expected decisions, tasks, owners, deadline and open question are in the same file.
 
 ## Commands
 

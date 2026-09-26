@@ -9,6 +9,8 @@ flowchart TD
     SYS[Meeting audio]
   end
   MIC --> CW["Hidden capture window<br/>getUserMedia + AudioWorklet (16 kHz)"]
+  WIN[Meeting window] -->|still pictures on change| SCR["Screen watcher<br/>slide text on device, meeting-ended notice"]
+  SCR --> SESSION
   SYS -->|Windows / Linux: Chromium loopback| CW
   SYS -->|macOS 14.2+: AudioTee| SESSION
   CW -->|100 ms frames over IPC| SESSION["Capture session<br/>state, health, PCM checkpoints"]
@@ -33,6 +35,7 @@ flowchart TD
 | Capture window (hidden, sandboxed) | Microphone and loopback streams, AudioWorklet tap, sends Float32 frames. No UI.                                                                                      |
 | Speech utility process             | sherpa-onnx VAD, recognition, speaker embeddings; end-of-meeting speaker clustering.                                                                                 |
 | AudioTee (macOS)                   | Swift child process streaming system audio as PCM.                                                                                                                   |
+| Slide reader (worker thread)       | tesseract.js reading text from still pictures of the meeting window, only when it changes.                                                                           |
 
 ## Data model (SQLite)
 

@@ -54,16 +54,16 @@ Statuses: BACKLOG, READY, IN_PROGRESS, BLOCKED, IN_REVIEW, TESTING, FAILED, FIXI
 
 ### Open
 
-| ID    | Item                                                             | Pri | Status  | Issue                                                                                                              |
-| ----- | ---------------------------------------------------------------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| MA-21 | Real-device validation on Windows and macOS with real meetings   | P1  | BLOCKED | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)                                                       |
-| MA-22 | Code signing and notarization (release stage, M5)                | P1  | BACKLOG | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16), [release-prerequisites.md](release-prerequisites.md) |
-| MA-23 | Optional Claude engine evaluated (requires provider credentials) | P3  | BACKLOG | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)                                                       |
-| MA-32 | Measure a free local model (Ollama) on the evaluation sets       | P2  | READY   | [ai-providers.md](ai-providers.md)                                                                                 |
-| MA-24 | Fresh held-out evaluation set                                    | P2  | READY   | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)                                                       |
-| MA-25 | Speaker quality on real calls; in-room meetings                  | P2  | BACKLOG | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19)                                                       |
-| MA-26 | Meeting audio on macOS 13 and older; Linux desktops              | P2  | BACKLOG | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20)                                                       |
-| MA-27 | Gmail and Outlook sending                                        | P2  | BACKLOG | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21)                                                       |
-| MA-28 | Screen context (OCR of slides)                                   | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22)                                                       |
-| MA-29 | Calendar integration and "Prepare me"                            | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23)                                                       |
-| MA-30 | Model attributions in the app; mirror models on own releases     | P2  | READY   | Release checklist                                                                                                  |
+| ID    | Item                                                             | Pri | Status              | Issue                                                                                                              |
+| ----- | ---------------------------------------------------------------- | --- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| MA-21 | Real-device validation on Windows and macOS with real meetings   | P1  | BLOCKED             | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)                                                       |
+| MA-22 | Code signing and notarization (release stage, M5)                | P1  | BACKLOG             | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16), [release-prerequisites.md](release-prerequisites.md) |
+| MA-23 | Optional Claude engine evaluated (requires provider credentials) | P3  | BACKLOG             | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)                                                       |
+| MA-32 | Measure a free local model (Ollama) on the evaluation sets       | P2  | READY               | [ai-providers.md](ai-providers.md)                                                                                 |
+| MA-24 | Fresh held-out evaluation set                                    | P2  | READY               | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)                                                       |
+| MA-25 | Speaker quality on real calls; in-room meetings                  | P2  | BACKLOG             | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19)                                                       |
+| MA-26 | Meeting audio on macOS 13 and older; Linux desktops              | P2  | BACKLOG             | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20)                                                       |
+| MA-27 | Gmail and Outlook sending                                        | P2  | BACKLOG             | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21)                                                       |
+| MA-28 | Screen context (OCR of slides)                                   | P2  | DONE (Linux tested) | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22)                                                       |
+| MA-29 | Calendar integration and "Prepare me"                            | P3  | BACKLOG             | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23)                                                       |
+| MA-30 | Model attributions in the app; mirror models on own releases     | P2  | READY               | Release checklist                                                                                                  |

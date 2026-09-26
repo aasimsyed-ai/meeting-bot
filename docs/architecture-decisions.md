@@ -123,3 +123,25 @@ A sandboxed preload can only `require` a few built-in modules, so a shared chunk
 **Why.** The product must work end to end with no paid service. A missing key means a local or mock implementation, never a blocked project. Tests of the AI path must be deterministic and free, so the mock replays recorded reference outputs and can be scripted to return hostile or broken output.
 
 **Trade-off.** The offline engine is conservative, and real model quality (local or cloud) is not measured yet. Local models need a few GB of disk and a reasonably fast computer.
+
+## ADR-016: Read slides, never record video
+
+**Decision.** While notes are being taken, the app takes a small still picture of the meeting window every 3 seconds and reads its text on the device (tesseract.js) only when part of the window has new, settled content. Only the text is stored. Moving parts such as webcam tiles are ignored. The same watcher notices when the meeting window closes and suggests stopping; it never stops by itself.
+
+**Why.** Slides carry names, dates and numbers that help people check their notes, but video would be heavy, intrusive and unnecessary. Reading only on change keeps CPU use low (about half a second per slide).
+
+**Trade-off.** Text is secondary context: the offline engine does not create tasks or decisions from it. Screen reading needs the Screen Recording permission on macOS and has only been tested on Linux.
+
+## ADR-017: Parakeet v3 is the default speech model
+
+**Decision.** New installs use Parakeet v3 (int8) instead of Moonshine base. Moonshine base and tiny stay as smaller options.
+
+**Why.** On the capture harness, Moonshine misheard "QA" every time and "firewall" in one of three captures, which changed tasks; Parakeet got those right in most runs and had a lower word error rate (1.9% against 3.5% on a four-voice meeting). Both are free and run on the device.
+
+**Trade-off.** A bigger one-time download (487 MB compressed instead of 251 MB) and about twice the CPU; still about 4.7 times faster than real time on 2 threads. Existing installs keep their choice.
+
+## ADR-018: Honest capture state and self-recovery
+
+**Decision.** The capture session reports whether audio is actually arriving; the live screen, sidebar and tray share one headline and never say "Taking notes" when nothing is heard. Lost sources are restarted automatically with backoff and on any audio device change, and "Try again" restarts them on request. Meeting audio is captured without Chromium's voice processing.
+
+**Why.** Found by the capture audit and harness: the app could claim to take notes while hearing nothing, could not recover a source mid-meeting, and captured loopback audio almost silent because of default voice processing.
