@@ -14,3 +14,4 @@ playwright-report/
 apps/desktop/resources/models/
 *.tsbuildinfo
 **/eval/results/
+.models/
