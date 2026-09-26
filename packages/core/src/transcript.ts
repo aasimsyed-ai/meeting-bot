@@ -107,7 +107,9 @@ export function normalizeTranscript(input: readonly TranscriptSegment[]): Normal
 
 /**
  * When someone listens on speakers, the microphone also picks up the other people.
- * Drop microphone segments that repeat an overlapping system-audio segment.
+ * Drop microphone segments that repeat a system-audio segment spoken at the same moment.
+ * An echo starts together with the original; a reply that repeats the words ("Can you
+ * check the pricing table?" "Yes, I'll check the pricing table.") starts after it.
  */
 export function removeEcho(segments: readonly TranscriptSegment[]): TranscriptSegment[] {
   const system = segments.filter((s) => s.channel === 'system');
@@ -115,10 +117,7 @@ export function removeEcho(segments: readonly TranscriptSegment[]): TranscriptSe
   return segments.filter((seg) => {
     if (seg.channel !== 'mic') return true;
     return !system.some(
-      (sys) =>
-        sys.startMs <= seg.endMs + 1500 &&
-        seg.startMs <= sys.endMs + 1500 &&
-        similarity(sys.text, seg.text) >= 0.6,
+      (sys) => Math.abs(sys.startMs - seg.startMs) <= 1500 && similarity(sys.text, seg.text) >= 0.6,
     );
   });
 }

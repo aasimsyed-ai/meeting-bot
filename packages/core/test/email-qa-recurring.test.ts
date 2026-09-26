@@ -38,6 +38,27 @@ describe('follow-up email', () => {
     expect(email.body.trim().endsWith('Best,\nAlice Johnson')).toBe(true);
   });
 
+  it('never shortens a numbered speaker to "Speaker" in the summary or next steps', async () => {
+    // Found by the capture harness: "captured for Bob and Speaker".
+    const segments = [
+      ['Bob Smith', "I'll send the press release by Thursday."],
+      ['Speaker 3', "I'll update the help center articles before the launch."],
+    ].map(([speaker, text], i) => ({
+      id: `s${i + 1}`,
+      startMs: i * 4000,
+      endMs: i * 4000 + 3000,
+      speaker: speaker!,
+      speakerId: speaker!,
+      text: text!,
+    }));
+    const { notes, email } = await analyzeMeeting(
+      { meeting: { ...phoenixWeekly.meeting, participants: [] }, segments },
+      { extractor: new RulesExtractor(), now: NOW },
+    );
+    expect(notes.tldr).toContain('for Bob and Speaker 3');
+    expect(email.body).toContain('Bob, Speaker 3: please confirm');
+  });
+
   it('excludes the sender and flags external recipients', () => {
     const { to, warnings } = resolveRecipients(clientMeeting.meeting);
     expect(to.map((r) => r.email)).toEqual([

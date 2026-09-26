@@ -114,6 +114,13 @@ export function firstName(name: string): string {
   return normalizeWhitespace(name).split(' ')[0] ?? name;
 }
 
+/** First name for people, but whole placeholder labels: "Bob", yet "Speaker 3", not "Speaker". */
+export function shortName(name: string): string {
+  return /^(?:speaker|participant|guest)\s*\d+$/i.test(name.trim())
+    ? normalizeWhitespace(name)
+    : firstName(name);
+}
+
 /** Stable, fast, non-cryptographic 53-bit hash (cyrb53). Used for ids and cache keys. */
 export function hash53(str: string, seed = 0): string {
   let h1 = 0xdeadbeef ^ seed;

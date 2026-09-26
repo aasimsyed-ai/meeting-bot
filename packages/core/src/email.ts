@@ -1,5 +1,5 @@
 import type { EmailDraft, EmailRecipient, MeetingContext, MeetingNotes } from './types.ts';
-import { firstName } from './text.ts';
+import { shortName } from './text.ts';
 import { formatFriendlyDate, localDate, toIsoDate } from './time.ts';
 
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
@@ -98,7 +98,7 @@ export function composeFollowUpEmail(
     ...new Set(notes.actionItems.map((a) => a.owner).filter((o): o is string => Boolean(o))),
   ];
   if (owners.length)
-    next.push(`${owners.map(firstName).join(', ')}: please confirm your action items and dates.`);
+    next.push(`${owners.map(shortName).join(', ')}: please confirm your action items and dates.`);
   if (notes.actionItems.some((a) => !a.owner))
     next.push('Some action items still need an owner. Reply if you can take one.');
   if (notes.openQuestions.length)

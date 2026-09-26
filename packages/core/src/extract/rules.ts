@@ -780,7 +780,7 @@ function titleFrom(text: string): string {
 
 /** Words that say nothing about a topic on their own. */
 const NOT_A_TOPIC =
-  /^(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|make|done|work|working|time|start|sounds|agreed)$/;
+  /^(?:\d+(?:st|nd|rd|th)|(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth)|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|check|send|make|done|work|working|time|start|sounds|agreed)$/;
 
 /** Fallback title: words people kept coming back to. Never contractions or dates. */
 function keywordTitle(units: Unit[]): string {

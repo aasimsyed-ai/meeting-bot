@@ -106,6 +106,20 @@ describe('echo removal', () => {
     ]);
     expect(out.map((s) => s.id)).toEqual(['s1', 'm2']);
   });
+
+  it('keeps a reply that repeats the words of the question', () => {
+    // Found by the capture harness: the user's commitment was dropped as an "echo".
+    const out = removeEcho([
+      seg('s1', 12_400, 'Can you check the pricing table by Wednesday?', 'Alice', {
+        channel: 'system',
+        endMs: 14_700,
+      }),
+      seg('m1', 15_900, "Yes, I'll check the pricing table by Wednesday.", 'You', {
+        channel: 'mic',
+      }),
+    ]);
+    expect(out.map((s) => s.id)).toEqual(['s1', 'm1']);
+  });
 });
 
 describe('prompt formatting and chunking', () => {

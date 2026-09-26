@@ -22,6 +22,7 @@ import {
   GENERAL_DISCUSSION,
   hash53,
   normalizeWhitespace,
+  shortName,
   similarity,
   truncate,
   words,
@@ -427,7 +428,7 @@ export function composeTldr(
       ...new Set(notes.actionItems.map((a) => a.owner).filter((o): o is string => Boolean(o))),
     ];
     parts.push(
-      `${n} action ${n === 1 ? 'item was' : 'items were'} captured${owners.length ? ` for ${joinList(owners.map(firstName))}` : ''}.`,
+      `${n} action ${n === 1 ? 'item was' : 'items were'} captured${owners.length ? ` for ${joinList(owners.map(shortName))}` : ''}.`,
     );
   } else {
     parts.push('No action items were captured.');
