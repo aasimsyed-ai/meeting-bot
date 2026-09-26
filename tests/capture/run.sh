@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the capture harness on Linux: virtual audio devices, synthesized scenarios, a window
 # manager (so apps can see each other's windows), then the harness E2E against the built app.
-#   tests/capture/run.sh <models-dir> [scenario ...]
+#   tests/capture/run.sh <models-dir> [scenario ...]   (default: every scenario)
 # <models-dir> holds the speech models and the TTS model (see tests/capture/README.md).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -9,7 +9,9 @@ repo="$(cd "$here/../.." && pwd)"
 models="$(cd "${1:?usage: run.sh <models-dir> [scenario ...]}" && pwd)"
 shift || true
 scenarios=("$@")
-[ ${#scenarios[@]} -eq 0 ] && scenarios=(deployment-standup)
+if [ ${#scenarios[@]} -eq 0 ]; then
+  for f in "$here"/scenarios/*.json; do scenarios+=("$(basename "$f" .json)"); done
+fi
 out="${MEETING_ASSISTANT_HARNESS_AUDIO:-$repo/.harness}"
 mkdir -p "$out"
 
