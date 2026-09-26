@@ -26,6 +26,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Install the speech engine for both Mac architectures
+        # pnpm installs native binaries only for the current CPU; the x64 build needs its own.
+        if: runner.os == 'macOS'
+        run: |
+          printf 'supportedArchitectures:\n  os: [current]\n  cpu: [arm64, x64]\n' >> ../../pnpm-workspace.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - name: Build and publish (draft release)

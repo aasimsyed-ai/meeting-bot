@@ -10,6 +10,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/release/**',
       '**/coverage/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
       '**/*.d.ts',
       'apps/desktop/resources/**',
     ],
@@ -38,6 +40,19 @@ export default tseslint.config(
         setTimeout: 'readonly',
       },
     },
+  },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        require: 'readonly',
+        module: 'writable',
+        exports: 'writable',
+        __dirname: 'readonly',
+      },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
     files: ['apps/desktop/src/renderer/public/pcm-worklet.js'],

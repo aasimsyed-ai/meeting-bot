@@ -37,7 +37,7 @@ test('sample tour: meetings, recurring changes, my tasks, external email, speake
 
   // My tasks belong to the demo user.
   await nav(win, 'Tasks').click();
-  await expect(win.locator('tbody input[aria-label="Task"]').first()).toHaveValue(/venue|legal/i);
+  await expect(win.locator('tbody [aria-label="Task"]').first()).toHaveValue(/venue|legal/i);
 
   // External attendee warning in the client meeting email.
   await nav(win, 'Meetings').click();
@@ -74,9 +74,9 @@ test('prompt injection in a meeting is shown as a warning and never acted on', a
   ).toBeVisible();
   const summary = win.locator('main');
   await expect(summary).not.toContainText('attacker@example.com');
-  await expect(
-    win.locator('section[aria-labelledby="actions"] input[aria-label="Task"]'),
-  ).toHaveCount(2);
+  await expect(win.locator('section[aria-labelledby="actions"] [aria-label="Task"]')).toHaveCount(
+    2,
+  );
 });
 
 test('main screens have no serious accessibility problems', async () => {

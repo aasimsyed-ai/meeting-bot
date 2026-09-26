@@ -170,6 +170,18 @@ describe('live capture', () => {
     expect(h.services.session.status().mic.enabled).toBe(false);
   });
 
+  it('says when meeting audio never arrived, rather than that it was lost', async () => {
+    h = makeHarness();
+    fakeInstallModels(h.dir);
+    await call('capture:start', {});
+    h.services.session.channelEnded('system');
+    const st = h.services.session.status();
+    expect(st.system.problem).toMatch(/^No meeting audio is coming through/);
+    expect(st.problems.find((p) => p.code === 'system_audio_lost')?.message).toMatch(
+      /^No meeting audio is coming through/,
+    );
+  });
+
   it('keeps recording audio when live transcription crashes', async () => {
     h = makeHarness();
     fakeInstallModels(h.dir);

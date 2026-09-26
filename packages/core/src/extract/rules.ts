@@ -504,6 +504,15 @@ function cleanDecision(raw: string): string | null {
   return capitalize(t);
 }
 
+const ANNOUNCE_VERB: Record<string, string> = {
+  moving: 'Move',
+  pushing: 'Push',
+  shifting: 'Shift',
+  postponing: 'Postpone',
+  delaying: 'Delay',
+  switching: 'Switch',
+};
+
 const PRONOUN_OBJECT =
   /^(?:that|it|this|those|these|the plan|that plan|that option|this option|option \w+)$/i;
 
@@ -528,6 +537,11 @@ function extractDecisions(units: Unit[]): RawDecision[] {
   const itIsRe =
     /^(?:(?:ok(?:ay)?|alright|all right|so|great|fine|good)[,\s]+)*(.{2,40}?)\s+it is(?:,?\s+then)?[.!]*$/i;
   const settledRe = /\b(?:that's|that is)\s+(?:settled|decided|final|the plan|a decision)\b/i;
+  // "We're moving the deployment to Monday": an announced change is a decision. Not "we're moving on".
+  const announceRe =
+    /\bwe(?:'re| are)\s+(?:(moving|pushing|shifting)\s+(?!on\b|to\b|ahead\b|forward\b|hard\b|fast\b|quickly\b)((?:\S+\s+){1,6}?(?:to|until|back|out)\b.*)|(postponing|delaying)\s+(.+)|(switching)\s+(to\s+.+))/i;
+  // "What if we ...?" even when the first word is misheard ("Where if we ...?", "So if we ...?").
+  const ifWeRe = /^(?:\w+\s+)?if we\s+([^,?]+)\?$/i;
   const proposalRe =
     /\b(?:we should|we could|i suggest(?: that)?(?: we)?|i propose(?: that)?(?: we)?|how about(?: we)?|what if we|why don't we|i think we should|i'd suggest|i recommend(?: that)?(?: we)?|(?:then )?we(?:'re| are) going to(?= \w)|(?:then )?we(?:'ll| will)(?= (?:push|move|shift|delay|postpone|pull in|bring forward|switch|change|use|launch|ship|deploy|go live|keep|freeze|cap|adopt|drop|cancel)\b)|let's(?! (?:see|talk|discuss|think|check|look|revisit|take a|circle|start|get started|move on|keep going|keep that|keep it|wrap|kick|begin|jump|go around|do a quick|hear|go through|review|dig|focus|pick this up|table|park|leave it|meet|also make sure|find out)\b))\s+(?!see\b|talk\b|discuss\b|think\b|look\b)(.+)/i;
 
@@ -567,6 +581,14 @@ function extractDecisions(units: Unit[]): RawDecision[] {
       continue;
     }
 
+    const an = announceRe.exec(u.text);
+    if (an && !isQuestion(u) && !HYPOTHETICAL_RE.test(u.text) && !NEGATION_RE.test(u.text)) {
+      const verb = (an[1] ?? an[3] ?? an[5])!.toLowerCase();
+      const object = (an[2] ?? an[4] ?? an[6])!.replace(/[.!?]+$/, '').trim();
+      add(cleanDecision(`${ANNOUNCE_VERB[verb]} ${object}`), 'confirmed', [u.segId]);
+      continue;
+    }
+
     const it = itIsRe.exec(u.text);
     if (it) {
       const subject = it[1]!.replace(/^(?:then|so)\s+/i, '');
@@ -586,23 +608,30 @@ function extractDecisions(units: Unit[]): RawDecision[] {
       continue;
     }
 
-    const p = proposalRe.exec(u.text);
+    const p = proposalRe.exec(u.text) ?? ifWeRe.exec(u.text.trim());
     if (p && !HYPOTHETICAL_RE.test(u.text) && !NEGATION_RE.test(p[1]!)) {
       const object = p[1]!.replace(/[.!?]+$/, '').trim();
       // "Let's go with that": refers to the previous proposal or statement.
       const goWith = /^go with\s+(.+)$/i.exec(object);
       let text: string | null;
       let ids = [u.segId];
+      let adopted = false;
       if (goWith && PRONOUN_OBJECT.test(goWith[1]!)) {
         const prev = latestProposal(u, 6);
         if (!prev) continue;
         text = prev.text;
         ids = [prev.unit.segId, u.segId];
+        // Someone else adopting the proposal is agreement.
+        adopted = prev.unit.speaker !== u.speaker;
       } else {
         text = cleanDecision(object) ?? (goWith ? cleanDecision(`Go with ${goWith[1]}`) : null);
       }
       if (!text) continue;
       proposals.push({ text, unit: u });
+      if (adopted) {
+        add(text, 'confirmed', ids);
+        continue;
+      }
       const agree = agreementAfter(i, u.speaker);
       add(text, agree ? 'confirmed' : 'possible', agree ? [...ids, agree.segId] : ids);
     }

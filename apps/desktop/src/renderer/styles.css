@@ -928,6 +928,13 @@ a {
   padding-right: 16px;
 }
 
+textarea.inline-edit {
+  display: block;
+  resize: none;
+  field-sizing: content;
+  line-height: inherit;
+}
+
 .task-done .task-text {
   text-decoration: line-through;
   color: var(--muted);
