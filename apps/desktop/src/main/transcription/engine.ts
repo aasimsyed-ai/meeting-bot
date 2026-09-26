@@ -11,6 +11,15 @@ const SAME_SPEAKER = 0.72;
 export const FINAL_SAME_SPEAKER = 0.75;
 const MAX_FINAL_SEGMENTS = 400;
 const MAX_SPEAKERS = 12;
+/**
+ * Audio kept around each speech segment. Voice detection cuts right at its speech
+ * boundaries, which drops quiet first syllables ("I'll up-date") and final words.
+ * A quarter second each side cannot reach the next segment, because a segment only
+ * ends after half a second of silence.
+ */
+const PAD = Math.round(SAMPLE_RATE * 0.25);
+/** Recent audio per channel, so padding can be taken from before a segment. */
+const HISTORY = SAMPLE_RATE * 60;
 
 export interface SpeakerLabel {
   startMs: number;
@@ -29,6 +38,10 @@ interface ChannelState {
   vad: Sherpa.Vad;
   /** Samples waiting to fill a VAD window. */
   carry: Float32Array;
+  /** Ring buffer of the last HISTORY samples given to the VAD. */
+  history: Float32Array;
+  /** Samples given to the VAD so far (the VAD's own sample positions). */
+  total: number;
 }
 
 interface Speaker {
@@ -142,7 +155,7 @@ export class SpeechEngine {
         },
         120,
       );
-      ch = { vad, carry: new Float32Array(0) };
+      ch = { vad, carry: new Float32Array(0), history: new Float32Array(HISTORY), total: 0 };
       this.channels.set(name, ch);
     }
     return ch;
@@ -156,7 +169,7 @@ export class SpeechEngine {
     all.set(samples, ch.carry.length);
     let i = 0;
     for (; i + VAD_WINDOW <= all.length; i += VAD_WINDOW)
-      ch.vad.acceptWaveform(all.subarray(i, i + VAD_WINDOW));
+      this.accept(ch, all.subarray(i, i + VAD_WINDOW));
     ch.carry = all.slice(i);
     return this.drain(channel, ch);
   }
@@ -168,7 +181,7 @@ export class SpeechEngine {
       if (ch.carry.length) {
         const padded = new Float32Array(VAD_WINDOW);
         padded.set(ch.carry);
-        ch.vad.acceptWaveform(padded);
+        this.accept(ch, padded);
         ch.carry = new Float32Array(0);
       }
       ch.vad.flush();
@@ -177,13 +190,29 @@ export class SpeechEngine {
     return out.sort((a, b) => a.startMs - b.startMs);
   }
 
+  private accept(ch: ChannelState, window: Float32Array): void {
+    ch.vad.acceptWaveform(window);
+    for (let k = 0; k < window.length; k++) ch.history[(ch.total + k) % HISTORY] = window[k]!;
+    ch.total += window.length;
+  }
+
+  /** The segment with PAD samples either side, from recent audio when still available. */
+  private padded(ch: ChannelState, start: number, samples: Float32Array): Float32Array {
+    const from = Math.max(0, start - PAD, ch.total - HISTORY);
+    const to = Math.min(ch.total, start + samples.length + PAD);
+    if (from > start || to < start + samples.length) return samples;
+    const out = new Float32Array(to - from);
+    for (let k = 0; k < out.length; k++) out[k] = ch.history[(from + k) % HISTORY]!;
+    return out;
+  }
+
   private drain(channel: 'mic' | 'system', ch: ChannelState): EngineSegment[] {
     const out: EngineSegment[] = [];
     while (!ch.vad.isEmpty()) {
       // Copy instead of sharing native memory: Electron forbids external buffers.
       const seg = ch.vad.front(false);
       ch.vad.pop();
-      const text = this.recognize(seg.samples);
+      const text = this.recognize(this.padded(ch, seg.start, seg.samples));
       if (!text || NOISE_ONLY.test(text)) continue;
       const startMs = Math.round((seg.start / SAMPLE_RATE) * 1000);
       out.push({
