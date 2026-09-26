@@ -26,7 +26,8 @@ export interface AppInfo {
 
 // ---------------------------------------------------------------- Settings
 
-export type AiMode = 'basic' | 'claude';
+/** basic: offline engine (default). local: a free local model server. claude: optional, own key. */
+export type AiMode = 'basic' | 'local' | 'claude';
 export type ModelId = 'moonshine-base-en' | 'moonshine-tiny-en' | 'parakeet-v3';
 
 export interface Settings {
@@ -39,7 +40,7 @@ export interface Settings {
     micDeviceId: string | null;
   };
   transcription: { model: ModelId };
-  ai: { mode: AiMode; hasClaudeKey: boolean };
+  ai: { mode: AiMode; hasClaudeKey: boolean; localUrl: string; localModel: string };
   privacy: { deleteAudioAfterProcessing: boolean; keepMeetingsDays: 0 | 30 | 90 | 365 };
   notifications: boolean;
   appearance: 'system' | 'light' | 'dark';
@@ -50,7 +51,7 @@ export type SettingsPatch = {
   onboardingComplete?: boolean;
   capture?: Partial<Settings['capture']>;
   transcription?: Partial<Settings['transcription']>;
-  ai?: { mode?: AiMode };
+  ai?: { mode?: AiMode; localUrl?: string; localModel?: string };
   privacy?: Partial<Settings['privacy']>;
   notifications?: boolean;
   appearance?: Settings['appearance'];

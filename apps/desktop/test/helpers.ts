@@ -18,6 +18,7 @@ export const TEST_ENV: Env = {
   demoSpeed: 1000,
   claudeApiKey: null,
   testMeetingAudio: null,
+  aiOverride: null,
 };
 
 /** Reversible fake of the OS keychain (base64 with a marker). */

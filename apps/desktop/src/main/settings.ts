@@ -2,16 +2,18 @@ import type { Repo } from './db/repo';
 import type { SecretStore } from './secrets';
 import type { Settings, SettingsPatch } from '../shared/types';
 
-export const DEFAULT_SETTINGS: Omit<Settings, 'ai'> & { ai: { mode: Settings['ai']['mode'] } } = {
-  profile: { name: '', email: '' },
-  onboardingComplete: false,
-  capture: { detectMeetings: true, screenContext: false, systemAudio: true, micDeviceId: null },
-  transcription: { model: 'moonshine-base-en' },
-  ai: { mode: 'basic' },
-  privacy: { deleteAudioAfterProcessing: true, keepMeetingsDays: 0 },
-  notifications: true,
-  appearance: 'system',
-};
+export const DEFAULT_SETTINGS: Omit<Settings, 'ai'> & { ai: Omit<Settings['ai'], 'hasClaudeKey'> } =
+  {
+    profile: { name: '', email: '' },
+    onboardingComplete: false,
+    capture: { detectMeetings: true, screenContext: false, systemAudio: true, micDeviceId: null },
+    transcription: { model: 'moonshine-base-en' },
+    // The offline engine is the default. Local AI points at Ollama's default address.
+    ai: { mode: 'basic', localUrl: 'http://localhost:11434/v1', localModel: '' },
+    privacy: { deleteAudioAfterProcessing: true, keepMeetingsDays: 0 },
+    notifications: true,
+    appearance: 'system',
+  };
 
 type Stored = typeof DEFAULT_SETTINGS;
 
@@ -52,7 +54,7 @@ export class SettingsService {
 
   get(): Settings {
     const s = this.load();
-    return { ...s, ai: { mode: s.ai.mode, hasClaudeKey: Boolean(this.claudeKey()) } };
+    return { ...s, ai: { ...s.ai, hasClaudeKey: Boolean(this.claudeKey()) } };
   }
 
   update(patch: SettingsPatch): Settings {

@@ -46,7 +46,14 @@ const settingsPatch = z
       .partial()
       .strict(),
     ai: z
-      .object({ mode: z.enum(['basic', 'claude']) })
+      .object({
+        mode: z.enum(['basic', 'local', 'claude']),
+        localUrl: z
+          .string()
+          .max(300)
+          .regex(/^https?:\/\/[^\s]+$/),
+        localModel: text(200),
+      })
       .partial()
       .strict(),
     privacy: z
@@ -102,7 +109,7 @@ export const IPC_SCHEMAS = {
   'meetings:rename': z.tuple([id, text(200).min(1)]),
   'meetings:renameSpeaker': z.tuple([id, text(80).min(1), text(120).nullable()]),
   'meetings:setParticipants': z.tuple([id, z.array(participant).max(200)]),
-  'meetings:analyze': z.tuple([id, z.enum(['basic', 'claude']).optional()]),
+  'meetings:analyze': z.tuple([id, z.enum(['basic', 'local', 'claude']).optional()]),
   'meetings:delete': z.tuple([id]),
   'meetings:deleteTranscript': z.tuple([id]),
   'meetings:recover': z.tuple([id]),

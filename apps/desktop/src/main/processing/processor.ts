@@ -1,14 +1,16 @@
 import {
   analyzeMeeting,
   AiError,
+  createExtractor,
   RulesExtractor,
   STAGE_LABELS,
+  type AiProviderConfig,
   type Extractor,
+  type ProviderChoice,
   type Principal,
   type RawExtraction,
   type Stage,
 } from '@meeting-assistant/core';
-import { ClaudeExtractor } from '@meeting-assistant/core/claude';
 import type { Repo } from '../db/repo';
 import type { SettingsService } from '../settings';
 import type { ProcessingInfo } from '../../shared/types';
@@ -25,9 +27,11 @@ export interface ProcessorDeps {
   discardAudio: (meetingId: string) => void;
   /** Test hook: replace the extractor. */
   extractorOverride?: () => Extractor;
+  /** Developer override from MEETING_ASSISTANT_AI_PROVIDER (see env.ts). */
+  aiOverride?: AiProviderConfig | null;
 }
 
-type Mode = 'basic' | 'claude';
+type Mode = 'basic' | 'local' | 'claude';
 
 /**
  * Runs meeting analysis one job at a time. Jobs are keyed by transcript and
@@ -93,27 +97,27 @@ export class Processor {
     }
   }
 
-  private extractor(mode: Mode): { extractor: Extractor; fallback: Extractor | undefined } {
+  private extractor(mode: Mode): ProviderChoice {
     if (this.deps.extractorOverride)
       return { extractor: this.deps.extractorOverride(), fallback: new RulesExtractor() };
-    const key = this.deps.settings.claudeKey();
-    if (mode === 'claude' && key) {
-      const repo = this.deps.repo;
-      return {
-        extractor: new ClaudeExtractor({
-          apiKey: key,
-          cache: {
-            get: async (k) => {
-              const v = repo.cacheGet(k);
-              return v ? (JSON.parse(v) as RawExtraction) : undefined;
-            },
-            set: async (k, v) => repo.cacheSet(k, JSON.stringify(v)),
-          },
-        }),
-        fallback: new RulesExtractor(),
-      };
-    }
-    return { extractor: new RulesExtractor(), fallback: undefined };
+    const ai = this.deps.settings.get().ai;
+    const repo = this.deps.repo;
+    const cfg: AiProviderConfig =
+      this.deps.aiOverride ??
+      (mode === 'local'
+        ? { provider: 'local-llm', baseUrl: ai.localUrl, model: ai.localModel }
+        : mode === 'claude'
+          ? { provider: 'claude', claudeApiKey: this.deps.settings.claudeKey() ?? undefined }
+          : { provider: 'rules' });
+    return createExtractor(cfg, {
+      cache: {
+        get: async (k) => {
+          const v = repo.cacheGet(k);
+          return v ? (JSON.parse(v) as RawExtraction) : undefined;
+        },
+        set: async (k, v) => repo.cacheSet(k, JSON.stringify(v)),
+      },
+    });
   }
 
   private async run(meetingId: string, mode: Mode, force: boolean): Promise<void> {
@@ -124,7 +128,7 @@ export class Processor {
     try {
       const meta = repo.meetingMeta(p, meetingId);
       const hash = repo.transcriptHash(p, meetingId);
-      const { extractor, fallback } = this.extractor(mode);
+      const { extractor, fallback, unavailable } = this.extractor(mode);
       jobKey = `analyze:${meetingId}:${hash}:${extractor.kind}:${extractor.promptVersion}${force ? `:${Date.now()}` : ''}`;
       if (!repo.enqueueJob(meetingId, 'analyze', jobKey) && repo.job(jobKey)?.status === 'done') {
         log.info('processing_skipped_duplicate', { meetingId });
@@ -170,6 +174,7 @@ export class Processor {
           },
         },
       );
+      if (unavailable) result.notes.warnings.push(unavailable);
       repo.saveAnalysis(p, meetingId, result, hash);
       repo.setJob(jobKey, 'done');
       repo.setStatus(p, meetingId, 'ready', { stage: null, error: null });

@@ -28,6 +28,13 @@ import { EmailReview } from './EmailReview';
 import { ModelNotice } from './shared';
 import type { MeetingDetail as Detail, ProcessingInfo, TaskRow } from '../../shared/types';
 
+const ENGINE_LABELS: Record<string, string> = {
+  rules: 'Analyzed on this device',
+  mock: 'Analyzed with the test AI (mock)',
+  'local-llm': 'Analyzed with your local AI',
+  claude: 'Analyzed with Claude',
+};
+
 export function MeetingDetail({ id, path }: { id: string; path: string }) {
   const toast = useToast();
   const q = useQuery(() => call('meetings:get', id), [id], ['meetings-changed', 'tasks-changed']);
@@ -69,7 +76,7 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
     setHighlight(e.segmentIds[0] ?? null);
     setTab('transcript');
   };
-  const analyzeAgain = async (mode?: 'basic' | 'claude') => {
+  const analyzeAgain = async (mode?: 'basic' | 'local' | 'claude') => {
     try {
       await call('meetings:analyze', id, mode);
       toast('Analyzing the meeting again…');
@@ -90,8 +97,7 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
         <p className="muted">
           {formatDate(m.startedAt)}
           {m.durationMs ? ` · ${formatDuration(m.durationMs)}` : ''} · {PLATFORM_LABELS[m.platform]}
-          {d.notes &&
-            ` · ${d.notes.engine.kind === 'claude' ? 'Analyzed with Claude' : 'Analyzed on this device'}`}
+          {d.notes && ` · ${ENGINE_LABELS[d.notes.engine.kind] ?? 'Analyzed on this device'}`}
         </p>
       </header>
 

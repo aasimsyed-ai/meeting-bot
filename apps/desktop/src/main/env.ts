@@ -1,3 +1,4 @@
+import { aiConfigFromEnv, type AiProviderConfig } from '@meeting-assistant/core';
 import type { AppEnv } from '../shared/types';
 
 /**
@@ -16,6 +17,11 @@ export interface Env {
   /** Test-only: speed up simulated meetings. */
   demoSpeed: number;
   claudeApiKey: string | null;
+  /**
+   * Developer override of the notes engine (MEETING_ASSISTANT_AI_PROVIDER). Null means
+   * use the Settings choice. Tests may only pick the offline or mock engine.
+   */
+  aiOverride: AiProviderConfig | null;
   /** Test-only: a 16 kHz WAV streamed in real time as meeting audio. */
   testMeetingAudio: string | null;
 }
@@ -39,10 +45,18 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = fa
     demoSpeed: Math.max(1, Math.min(200, Number(source.MEETING_ASSISTANT_DEMO_SPEED) || 1)),
     // Never used in tests, so automated runs cannot call a paid API by accident.
     claudeApiKey: isTest ? null : source.ANTHROPIC_API_KEY || null,
+    aiOverride: aiOverride(source, isTest),
     testMeetingAudio: isTest ? source.MEETING_ASSISTANT_TEST_MEETING_AUDIO || null : null,
   };
 }
 
 export function nowFrom(env: Env): () => Date {
   return env.fixedNow ? () => new Date(env.fixedNow!) : () => new Date();
+}
+
+function aiOverride(source: NodeJS.ProcessEnv, isTest: boolean): AiProviderConfig | null {
+  if (!source.MEETING_ASSISTANT_AI_PROVIDER) return null;
+  const cfg = aiConfigFromEnv(source);
+  if (isTest && cfg.provider !== 'rules' && cfg.provider !== 'mock') return { provider: 'rules' };
+  return isTest ? { provider: cfg.provider } : cfg;
 }

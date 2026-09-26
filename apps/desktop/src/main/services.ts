@@ -118,6 +118,7 @@ export class Services {
     this.modelStatus = emptyStatus(this.settings.get().transcription.model, this.modelsRoot);
 
     this.processor = new Processor({
+      aiOverride: deps.env.aiOverride,
       repo: this.repo,
       settings: this.settings,
       principal: () => this.principal(),

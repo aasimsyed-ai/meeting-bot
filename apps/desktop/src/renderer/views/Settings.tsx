@@ -77,6 +77,8 @@ export function SettingsView() {
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [perms, setPerms] = useState<PermissionStatus | null>(null);
   const [key, setKey] = useState('');
+  const [localUrl, setLocalUrl] = useState(settings.ai.localUrl);
+  const [localModel, setLocalModel] = useState(settings.ai.localModel);
   const [confirmAll, setConfirmAll] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -264,11 +266,67 @@ export function SettingsView() {
           />
         </Row>
         <Row
-          title="Claude (best quality)"
+          title="Local AI server (free)"
+          hint="Uses a language model running on this computer, such as Ollama or LM Studio. Nothing leaves your computer. If the server is not running, notes are made with the offline engine."
+        >
+          <input
+            type="radio"
+            name="ai"
+            aria-label="Analyze with a local AI server"
+            disabled={!settings.ai.localModel}
+            checked={settings.ai.mode === 'local'}
+            onChange={() => void save({ ai: { mode: 'local' } })}
+          />
+        </Row>
+        <div className="setting-row">
+          <form
+            className="row"
+            style={{ flex: 1, flexWrap: 'wrap' }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void save(
+                { ai: { localUrl: localUrl.trim(), localModel: localModel.trim() } },
+                'Local AI settings saved.',
+              );
+            }}
+          >
+            <label htmlFor="local-url" className="sr-only">
+              Local AI server address
+            </label>
+            <input
+              id="local-url"
+              className="input"
+              style={{ flex: 2, minWidth: 220 }}
+              placeholder="http://localhost:11434/v1"
+              value={localUrl}
+              onChange={(e) => setLocalUrl(e.target.value)}
+            />
+            <label htmlFor="local-model" className="sr-only">
+              Local AI model name
+            </label>
+            <input
+              id="local-model"
+              className="input"
+              style={{ flex: 1, minWidth: 160 }}
+              placeholder="Model, e.g. qwen2.5:7b-instruct"
+              value={localModel}
+              onChange={(e) => setLocalModel(e.target.value)}
+            />
+            <button
+              className="btn"
+              type="submit"
+              disabled={!/^https?:\/\/\S+$/.test(localUrl.trim()) || !localModel.trim()}
+            >
+              Save
+            </button>
+          </form>
+        </div>
+        <Row
+          title="Claude (optional, your own key)"
           hint={
             settings.ai.hasClaudeKey
               ? 'The transcript is sent to Anthropic for analysis. If Claude is unavailable, notes are made on this computer.'
-              : 'Needs a Claude API key. The transcript is sent to Anthropic for analysis.'
+              : 'Optional and not needed for any feature. Needs your own paid Claude API key; the transcript is sent to Anthropic for analysis.'
           }
         >
           <input
