@@ -56,7 +56,7 @@ test('first-time user: onboarding -> sample meeting -> notes -> tasks -> email -
   await expect(decisions).toContainText(/Monday/);
   const tasks = win.locator('section[aria-labelledby="actions"]');
   await expect(tasks.locator('input[aria-label="Owner"]').first()).toHaveValue('David Wilson');
-  await expect(tasks.locator('input[aria-label="Task"]').first()).toHaveValue(/firewall/i);
+  await expect(tasks.locator('[aria-label="Task"]').first()).toHaveValue(/firewall/i);
   await expect(win.locator('section[aria-labelledby="questions"]')).toContainText(/approval/i);
 
   await decisions.getByRole('button', { name: 'Why?' }).first().click();
@@ -70,7 +70,10 @@ test('first-time user: onboarding -> sample meeting -> notes -> tasks -> email -
   await win.getByRole('tab', { name: 'Summary' }).click();
 
   // Edit a task: set the migration task's due date and mark the firewall task done.
-  const migration = tasks.locator('tr', { has: win.locator('input[value*="migration"]') });
+  const taskTexts = await tasks
+    .locator('[aria-label="Task"]')
+    .evaluateAll((els) => els.map((e) => (e as HTMLTextAreaElement).value));
+  const migration = tasks.locator('tbody tr').nth(taskTexts.findIndex((v) => /migration/i.test(v)));
   await migration.locator('input[type="date"]').fill('2026-10-02');
   await tasks.getByRole('checkbox').first().click();
   await expect(tasks.getByRole('checkbox').first()).toHaveAttribute('aria-checked', 'true');
@@ -108,10 +111,10 @@ test('first-time user: onboarding -> sample meeting -> notes -> tasks -> email -
   // Tasks page reflects the edits.
   await win.getByRole('link', { name: 'Tasks' }).click();
   await win.getByRole('button', { name: 'Everyone' }).click();
-  await expect(win.locator('tbody input[aria-label="Task"]').first()).toHaveValue(/migration/i);
+  await expect(win.locator('tbody [aria-label="Task"]').first()).toHaveValue(/migration/i);
   await expect(win.locator('tbody input[type="date"]').first()).toHaveValue('2026-10-02');
   await win.getByRole('tab', { name: 'Completed' }).click();
-  await expect(win.locator('tbody input[aria-label="Task"]').first()).toHaveValue(/firewall/i);
+  await expect(win.locator('tbody [aria-label="Task"]').first()).toHaveValue(/firewall/i);
   await shot(win, '07-tasks');
 
   // Search, then ask a question and open its source.

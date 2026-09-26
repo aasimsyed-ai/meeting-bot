@@ -582,11 +582,19 @@ export function TaskRowView({
         </button>
       </td>
       <td>
-        <input
+        {/* A textarea so long tasks wrap instead of being cut off; Enter saves like an input. */}
+        <textarea
           className="inline-edit task-text"
           aria-label="Task"
+          rows={1}
           value={task}
-          onChange={(e) => setTask(e.target.value)}
+          onChange={(e) => setTask(e.target.value.replace(/\s*\n\s*/g, ' '))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
           onBlur={() => task.trim() && task.trim() !== t.task && onSave({ task: task.trim() })}
         />
         <div className="row small" style={{ marginTop: 2, gap: 6, flexWrap: 'wrap' }}>
