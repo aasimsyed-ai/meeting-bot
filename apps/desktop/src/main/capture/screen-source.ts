@@ -1,7 +1,7 @@
 import { desktopCapturer, systemPreferences } from 'electron';
 import { dirname, join } from 'node:path';
 import type { ScreenSource } from './screen';
-import { signatureFromBgra } from './screen';
+import { SIG_H, SIG_W, signatureFromBgra } from './screen';
 
 type Worker = {
   recognize(image: Buffer): Promise<{ data: { text: string } }>;
@@ -44,9 +44,11 @@ export function electronScreenSource(denied: () => boolean = () => false): Scree
       return (await windows({ width: 0, height: 0 })).map((s) => ({ id: s.id, title: s.name }));
     },
     async grab(id) {
-      const small = (await windows({ width: 64, height: 36 })).find((s) => s.id === id);
+      const small = (await windows({ width: SIG_W * 2, height: SIG_H * 2 })).find(
+        (s) => s.id === id,
+      );
       if (!small || small.thumbnail.isEmpty()) return null;
-      const bitmap = small.thumbnail.resize({ width: 32, height: 18 }).toBitmap();
+      const bitmap = small.thumbnail.resize({ width: SIG_W, height: SIG_H }).toBitmap();
       return {
         signature: signatureFromBgra(bitmap),
         png: async () => {

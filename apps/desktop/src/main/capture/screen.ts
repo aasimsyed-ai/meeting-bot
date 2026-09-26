@@ -30,10 +30,18 @@ export interface ScreenTarget {
   save(note: ScreenNote): void;
 }
 
-/** The picture must hold still this much between two looks before it is read. */
-const STABLE = 0.02;
-/** And differ this much from the last picture that was read. */
-const CHANGED = 0.06;
+/** Size of the grayscale thumbnail used to notice changes (a 16 x 9 grid of 8 px cells). */
+export const SIG_W = 128;
+export const SIG_H = 72;
+const CELL = 8;
+const COLS = SIG_W / CELL;
+const ROWS = SIG_H / CELL;
+/** A cell that moved less than this between two looks is holding still. */
+const STILL = 0.012;
+/** A cell that differs this much from the last picture read has new content. */
+const NEW_CONTENT = 0.025;
+/** New content must cover at least this many settled cells (a cursor blink is not a slide). */
+const MIN_CELLS = 3;
 /** How long the meeting window can be missing before the app suggests stopping. */
 const GONE_MS = 15_000;
 const MAX_TEXT = 2000;
@@ -44,6 +52,40 @@ export function frameDiff(a: Signature, b: Signature): number {
   let sum = 0;
   for (let i = 0; i < a.length; i++) sum += Math.abs(a[i]! - b[i]!);
   return sum / a.length / 255;
+}
+
+/** Per-cell mean difference (0 to 1) of two SIG_W x SIG_H signatures. */
+export function cellDiffs(a: Signature, b: Signature): Float32Array {
+  const out = new Float32Array(COLS * ROWS);
+  if (a.length !== SIG_W * SIG_H || b.length !== a.length) return out.fill(1);
+  for (let y = 0; y < SIG_H; y++)
+    for (let x = 0; x < SIG_W; x++) {
+      const i = y * SIG_W + x;
+      out[Math.floor(y / CELL) * COLS + Math.floor(x / CELL)]! += Math.abs(a[i]! - b[i]!);
+    }
+  for (let c = 0; c < out.length; c++) out[c] = out[c]! / (CELL * CELL * 255);
+  return out;
+}
+
+/**
+ * Should this picture be read? Only when part of it has new content since the last
+ * picture read, and that part has settled (not mid-animation or mid-scroll). Parts that
+ * never hold still, like webcam tiles, are ignored, so a slide next to live video is
+ * still read.
+ */
+export function isNewKeyframe(
+  previous: Signature | null,
+  now: Signature,
+  lastRead: Signature | null,
+): boolean {
+  if (!previous) return false;
+  const still = cellDiffs(previous, now);
+  if (!lastRead) return [...still].filter((d) => d < STILL).length >= still.length / 2;
+  const fresh = cellDiffs(lastRead, now);
+  let changed = 0;
+  for (let c = 0; c < fresh.length; c++)
+    if (fresh[c]! > NEW_CONTENT && still[c]! < STILL) changed++;
+  return changed >= MIN_CELLS;
 }
 
 /** Grayscale signature from a BGRA bitmap (what Electron's NativeImage.toBitmap returns). */
@@ -182,10 +224,7 @@ export class ScreenWatcher {
     if (!shot) return;
     const previous = this.previous;
     this.previous = shot.signature;
-    // Read only a picture that has settled (not mid-animation or mid-scroll)
-    // and that is different from the last one we read.
-    if (!previous || frameDiff(previous, shot.signature) > STABLE) return;
-    if (this.lastRead && frameDiff(this.lastRead, shot.signature) < CHANGED) return;
+    if (!isNewKeyframe(previous, shot.signature, this.lastRead)) return;
     this.lastRead = shot.signature;
     const png = await shot.png();
     if (!png) return;

@@ -4,7 +4,10 @@ import {
   cleanScreenText,
   frameDiff,
   sameText,
+  isNewKeyframe,
   signatureFromBgra,
+  SIG_H,
+  SIG_W,
   type ScreenSource,
   type ScreenTarget,
 } from '../src/main/capture/screen';
@@ -12,6 +15,29 @@ import type { ScreenHealth } from '../src/shared/types';
 import type { ScreenNote } from '@meeting-assistant/core';
 
 const TEAMS = 'Project Phoenix standup | Meeting | Microsoft Teams';
+
+let frame = 0;
+/**
+ * A pretend window picture: a white slide whose text lines depend on `slide`, and
+ * optionally a webcam tile in the corner that changes every time.
+ */
+function picture(slide: number, video = false): Uint8Array {
+  const p = new Uint8Array(SIG_W * SIG_H).fill(30);
+  for (let y = 8; y < 56; y++) for (let x = 8; x < 104; x++) p[y * SIG_W + x] = 250;
+  // Three lines of "text": dark dashes whose pattern depends on the slide.
+  for (const row of [16, 28, 40])
+    for (let x = 12; x < 100; x++)
+      if (((x * 7 + row + slide * 13) >> 2) % 3 === 0) {
+        p[row * SIG_W + x] = 20;
+        p[(row + 1) * SIG_W + x] = 20;
+      }
+  if (video) {
+    frame++;
+    for (let y = 0; y < 24; y++)
+      for (let x = 108; x < SIG_W; x++) p[y * SIG_W + x] = (x * 31 + y * 17 + frame * 97) % 256;
+  }
+  return p;
+}
 
 /** A pretend screen: a list of windows and what the meeting window currently shows. */
 function fakeScreen() {
@@ -22,6 +48,8 @@ function fakeScreen() {
     ] as { id: string; title: string }[] | 'denied',
     // What the meeting window shows: a "picture" value and the text on it.
     picture: 10,
+    // Something always moving in one corner, like a webcam tile.
+    video: false,
     text: 'Project Phoenix\nDeployment Date: Monday\nOwner: Bob',
     reads: 0,
     grabbed: [] as string[],
@@ -31,7 +59,7 @@ function fakeScreen() {
     grab: async (id) => {
       state.grabbed.push(id);
       return {
-        signature: new Uint8Array(16).fill(state.picture),
+        signature: picture(state.picture, state.video),
         png: async () => Buffer.from(state.text),
       };
     },
@@ -97,6 +125,36 @@ describe('screen watcher (slides, never video)', () => {
     await w.tick();
     expect(t.notes.map((n) => n.text)).toContain('Rollout plan\nQA sign-off before Monday');
     expect(t.keyframes).toBe(2);
+  });
+
+  it('reads a new slide with the same layout, next to live video', async () => {
+    const { state, source } = fakeScreen();
+    const { t, target } = fakeTarget();
+    state.video = true;
+    const w = new ScreenWatcher(source, target, { readText: true, ownTitles: () => [] });
+    await w.tick();
+    await w.tick();
+    expect(state.reads).toBe(1);
+    await w.tick();
+    await w.tick();
+    expect(state.reads).toBe(1); // only the video moved
+    state.picture = 11; // same template, different words
+    state.text = 'Launch plan\nLaunch date: the 15th';
+    await w.tick(); // changed
+    expect(state.reads).toBe(1);
+    await w.tick(); // and settled
+    expect(state.reads).toBe(2);
+    expect(t.notes.map((n) => n.text)).toContain('Launch plan\nLaunch date: the 15th');
+  });
+
+  it('keyframe rule: settled new content only', () => {
+    const a = picture(1);
+    const b = picture(2);
+    expect(isNewKeyframe(null, a, null)).toBe(false);
+    expect(isNewKeyframe(a, a, null)).toBe(true); // first settled picture
+    expect(isNewKeyframe(a, a, a)).toBe(false); // nothing new
+    expect(isNewKeyframe(b, b, a)).toBe(true); // new slide, settled
+    expect(isNewKeyframe(a, b, a)).toBe(false); // still changing
   });
 
   it('does not save the same text twice when only the picture changed', async () => {
