@@ -1,7 +1,9 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtempSync, mkdirSync, readFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { requiredFiles } from '../src/main/transcription/models';
+import type { ModelId } from '../src/shared/types';
 
 export interface Launched {
   app: ElectronApplication;
@@ -98,4 +100,19 @@ export async function axe(
       nodes: v.nodes.length,
     }));
   });
+}
+
+/** Speech model for real-speech tests: the app's default unless MEETING_ASSISTANT_TEST_ASR_MODEL says. */
+export const TEST_ASR_MODEL = (process.env.MEETING_ASSISTANT_TEST_ASR_MODEL ||
+  'parakeet-v3') as ModelId;
+
+/** Put already-downloaded speech models into a test data folder (instead of downloading). */
+export function installModels(dataDir: string, modelsDir: string): void {
+  const root = join(dataDir, 'models');
+  mkdirSync(root, { recursive: true });
+  for (const f of requiredFiles(TEST_ASR_MODEL)) {
+    const name = f.kind === 'archive' ? f.dir! : f.fileName!;
+    cpSync(join(modelsDir, name), join(root, name), { recursive: true, dereference: true });
+    writeFileSync(join(root, `.${f.id}.installed`), f.sha256);
+  }
 }

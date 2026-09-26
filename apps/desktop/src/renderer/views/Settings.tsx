@@ -53,19 +53,19 @@ function Row({
 
 const MODELS: { id: ModelId; label: string; hint: string }[] = [
   {
+    id: 'parakeet-v3',
+    label: 'Accurate (recommended)',
+    hint: 'Best at names, numbers and acronyms. English and 24 other European languages. 515 MB.',
+  },
+  {
     id: 'moonshine-base-en',
     label: 'Standard (English)',
-    hint: 'Best accuracy for English. 280 MB.',
+    hint: 'Smaller download and lighter on the computer, but mishears more words. 280 MB.',
   },
   {
     id: 'moonshine-tiny-en',
     label: 'Fast (English)',
-    hint: 'Smaller download for older computers. 135 MB.',
-  },
-  {
-    id: 'parakeet-v3',
-    label: 'Multilingual',
-    hint: 'English and 24 other European languages. 515 MB.',
+    hint: 'Smallest download, for older computers. Least accurate. 135 MB.',
   },
 ];
 

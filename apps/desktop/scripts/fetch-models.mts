@@ -3,7 +3,7 @@
 //   node --experimental-strip-types scripts/fetch-models.mts <dir> [model]
 import { downloadModel } from '../src/main/transcription/models.ts';
 
-const [dir, model = 'moonshine-base-en'] = process.argv.slice(2);
+const [dir, model = 'parakeet-v3'] = process.argv.slice(2);
 if (!dir) {
   console.error('usage: fetch-models.mts <dir> [model]');
   process.exit(1);

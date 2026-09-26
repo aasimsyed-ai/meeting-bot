@@ -78,7 +78,7 @@ export const ASR_MODELS: Record<
   },
   'parakeet-v3': {
     id: 'parakeet-v3',
-    label: 'Multilingual (25 European languages)',
+    label: 'Accurate (recommended; English and 24 other European languages)',
     languages: 'English and 24 other European languages',
     engine: 'transducer',
     url: `${BASE}/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2`,

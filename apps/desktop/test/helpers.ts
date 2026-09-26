@@ -5,7 +5,8 @@ import { Services, type CaptureBackend, type ServicesDeps } from '../src/main/se
 import type { SpeechSegment, Transcriber } from '../src/main/capture/session';
 import type { CaptureSession } from '../src/main/capture/session';
 import type { Encryptor } from '../src/main/secrets';
-import type { AppEvent, PermissionStatus } from '../src/shared/types';
+import type { AppEvent, ModelId, PermissionStatus } from '../src/shared/types';
+import { DEFAULT_SETTINGS } from '../src/main/settings';
 import type { Env } from '../src/main/env';
 import { phoenixWeekly } from '@meeting-assistant/core/fixtures';
 
@@ -18,6 +19,7 @@ export const TEST_ENV: Env = {
   demoSpeed: 1000,
   claudeApiKey: null,
   testMeetingAudio: null,
+  detectInTest: false,
   aiOverride: null,
 };
 
@@ -178,7 +180,7 @@ import { requiredFiles } from '../src/main/transcription/models';
 /** Make the speech models look installed (markers only) so capture uses the transcriber. */
 export function fakeInstallModels(
   dataDir: string,
-  model: 'moonshine-base-en' = 'moonshine-base-en',
+  model: ModelId = DEFAULT_SETTINGS.transcription.model,
 ): void {
   const root = join(dataDir, 'models');
   mkdirSync(root, { recursive: true });

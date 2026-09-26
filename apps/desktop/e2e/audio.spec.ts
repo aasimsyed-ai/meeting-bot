@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { launch, onboard, type Launched } from './app';
-import { requiredFiles } from '../src/main/transcription/models';
+import { installModels, launch, onboard, type Launched } from './app';
 
 /**
  * The whole product with real speech: meeting audio -> capture session ->
@@ -26,13 +25,7 @@ test.skip(
 test('meeting audio becomes a transcript with speakers and correct notes', async () => {
   test.setTimeout(240_000);
   const dataDir = mkdtempSync(join(tmpdir(), 'ma-e2e-audio-'));
-  const root = join(dataDir, 'models');
-  mkdirSync(root, { recursive: true });
-  for (const f of requiredFiles('moonshine-base-en')) {
-    const name = f.kind === 'archive' ? f.dir! : f.fileName!;
-    cpSync(join(models!, name), join(root, name), { recursive: true, dereference: true });
-    writeFileSync(join(root, `.${f.id}.installed`), f.sha256);
-  }
+  installModels(dataDir, models!);
   l = await launch({
     dataDir,
     env: { MEETING_ASSISTANT_TEST_MEETING_AUDIO: wav!, MEETING_ASSISTANT_DEMO_SPEED: '4' },

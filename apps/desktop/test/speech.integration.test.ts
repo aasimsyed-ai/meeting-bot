@@ -1,7 +1,7 @@
 /**
  * Real audio -> transcript -> notes, with the actual speech engine.
  * Runs only when models are available:
- *   MEETING_ASSISTANT_TEST_MODELS=<dir with silero_vad.onnx, wespeaker_en_voxceleb_resnet34.onnx, sherpa-onnx-moonshine-base-en-int8/>
+ *   MEETING_ASSISTANT_TEST_MODELS=<dir with silero_vad.onnx, wespeaker_en_voxceleb_resnet34.onnx, and the speech model: parakeet-v3 by default, or MEETING_ASSISTANT_TEST_ASR_MODEL>
  *   MEETING_ASSISTANT_TEST_WAV=<16 kHz wav made by scripts/synth-meeting.mjs>
  */
 import { describe, expect, it } from 'vitest';
@@ -27,9 +27,15 @@ describe.skipIf(!models || !wav)('speech engine on synthetic meeting audio', () 
     };
     const audio = sherpa.readWave(wav!);
     expect(audio.sampleRate).toBe(16000);
-    const engine = await SpeechEngine.create(modelPaths(models!, 'moonshine-base-en'), {
-      numThreads: 2,
-    });
+    const engine = await SpeechEngine.create(
+      modelPaths(
+        models!,
+        (process.env.MEETING_ASSISTANT_TEST_ASR_MODEL || 'parakeet-v3') as 'parakeet-v3',
+      ),
+      {
+        numThreads: 2,
+      },
+    );
     const t0 = performance.now();
     const out = [];
     for (let i = 0; i < audio.samples.length; i += 1600)

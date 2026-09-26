@@ -7,7 +7,9 @@ export const DEFAULT_SETTINGS: Omit<Settings, 'ai'> & { ai: Omit<Settings['ai'],
     profile: { name: '', email: '' },
     onboardingComplete: false,
     capture: { detectMeetings: true, screenContext: true, systemAudio: true, micDeviceId: null },
-    transcription: { model: 'moonshine-base-en' },
+    // Measured on the capture harness: far fewer mistakes on names, numbers and acronyms
+    // than Moonshine, and still several times faster than real time (docs/test-results.md).
+    transcription: { model: 'parakeet-v3' },
     // The offline engine is the default. Local AI points at Ollama's default address.
     ai: { mode: 'basic', localUrl: 'http://localhost:11434/v1', localModel: '' },
     privacy: { deleteAudioAfterProcessing: true, keepMeetingsDays: 0 },
