@@ -26,6 +26,11 @@ export interface Env {
   testMeetingAudio: string | null;
   /** Test-only: run meeting detection, which tests normally leave off (capture harness). */
   detectInTest: boolean;
+  /**
+   * Test-only: access the app refuses as if the OS or browser had denied it
+   * (MEETING_ASSISTANT_TEST_DENY=mic,system,screen). Tests may change it while running.
+   */
+  testDeny: Set<'mic' | 'system' | 'screen'>;
 }
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = false): Env {
@@ -50,6 +55,16 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = fa
     aiOverride: aiOverride(source, isTest),
     testMeetingAudio: isTest ? source.MEETING_ASSISTANT_TEST_MEETING_AUDIO || null : null,
     detectInTest: isTest && source.MEETING_ASSISTANT_TEST_DETECTION === '1',
+    testDeny: new Set(
+      isTest
+        ? (source.MEETING_ASSISTANT_TEST_DENY ?? '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s): s is 'mic' | 'system' | 'screen' =>
+              ['mic', 'system', 'screen'].includes(s),
+            )
+        : [],
+    ),
   };
 }
 

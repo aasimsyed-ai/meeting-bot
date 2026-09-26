@@ -54,6 +54,8 @@ export interface SessionDeps {
   createTranscriber: () => Transcriber | null;
   onStatus: (s: CaptureStatus) => void;
   onFinished: (meetingId: string, info: { transcribed: boolean; hasAudio: boolean }) => void;
+  /** A source stopped delivering audio without saying so (for example access was removed). */
+  onChannelLost?: (channel: CaptureChannelName) => void;
 }
 
 interface ChannelState extends ChannelHealth {
@@ -570,8 +572,11 @@ export class CaptureSession {
       if (!ch.enabled) continue;
       const since = now - (ch.lastAudioAt || ch.startedAt);
       if (since > NO_AUDIO_MS && (ch.receiving || now - ch.startedAt > NO_AUDIO_MS)) {
-        if (ch.receiving || !this.problems.has(name === 'mic' ? 'mic_lost' : 'system_audio_lost'))
+        if (ch.receiving || !this.problems.has(name === 'mic' ? 'mic_lost' : 'system_audio_lost')) {
+          const wasReceiving = ch.receiving;
           this.channelEnded(name);
+          if (wasReceiving) this.deps.onChannelLost?.(name);
+        }
         ch.level = 0;
       }
     }

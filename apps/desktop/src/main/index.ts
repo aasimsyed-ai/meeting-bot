@@ -35,6 +35,8 @@ import type { AppEvent, CaptureStatus } from '../shared/types';
 import { captureHeadline } from '../shared/capture-label';
 
 const env = readEnv(process.env, app.isPackaged);
+// Test only: lets E2E tests grant or take away access while the app runs.
+if (env.appEnv === 'test') (globalThis as { __testDeny?: Set<string> }).__testDeny = env.testDeny;
 if (env.fakePermissions) {
   // Test only: Chromium's fake microphone lets CI exercise the real capture path.
   app.commandLine.appendSwitch('use-fake-device-for-media-stream');
@@ -128,6 +130,7 @@ async function main(): Promise<void> {
         rendererDir: join(__dirname, '../renderer'),
         demoSpeed: env.demoSpeed,
         testMeetingAudio: env.testMeetingAudio,
+        denied: (kind) => env.testDeny.has(kind),
         audioteeBinary: () =>
           app.isPackaged
             ? join(
@@ -147,6 +150,7 @@ async function main(): Promise<void> {
         resume: () => controller!.resume(),
         stop: () => controller!.stop(),
         retry: () => controller!.retry(),
+        channelLost: (ch) => controller!.channelLost(ch),
         probeSystemAudio: () => controller!.probeSystemAudio(),
       };
     },
@@ -159,7 +163,7 @@ async function main(): Promise<void> {
     fetcher: (url, signal) => net.fetch(url, { signal }),
     emit,
     detected: () => detector.detected,
-    screenSource: electronScreenSource(),
+    screenSource: electronScreenSource(() => env.testDeny.has('screen')),
     ownTitles: () => BrowserWindow.getAllWindows().map((w) => w.getTitle()),
     checkUpdates: () => updater.check(),
     logPath: () => log.path,

@@ -22,9 +22,23 @@ export type CaptureWindowEvent =
   | { type: 'ended'; channel: CaptureChannelName }
   | { type: 'devices-changed' };
 
+/** Test only: sources the capture page treats as refused by the OS or browser. */
+export type TestDenied = Partial<Record<CaptureChannelName, boolean>>;
+
 export type CaptureWindowCommand =
-  | { type: 'start'; mic: boolean; micDeviceId: string | null; system: boolean }
-  | { type: 'restart'; channel: CaptureChannelName; micDeviceId: string | null }
+  | {
+      type: 'start';
+      mic: boolean;
+      micDeviceId: string | null;
+      system: boolean;
+      denied?: TestDenied;
+    }
+  | {
+      type: 'restart';
+      channel: CaptureChannelName;
+      micDeviceId: string | null;
+      denied?: TestDenied;
+    }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'stop' };

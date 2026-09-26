@@ -20,6 +20,7 @@ export const TEST_ENV: Env = {
   claudeApiKey: null,
   testMeetingAudio: null,
   detectInTest: false,
+  testDeny: new Set(),
   aiOverride: null,
 };
 

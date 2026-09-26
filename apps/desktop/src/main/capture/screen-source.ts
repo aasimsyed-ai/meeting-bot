@@ -18,7 +18,7 @@ function langPath(): string {
  * Screen access through Electron's supported API (desktopCapturer), which the OS
  * permission governs. Only single still pictures of the meeting window are taken.
  */
-export function electronScreenSource(): ScreenSource {
+export function electronScreenSource(denied: () => boolean = () => false): ScreenSource {
   let worker: Promise<Worker> | null = null;
   const reader = () => {
     worker ??= import('tesseract.js').then(
@@ -36,8 +36,9 @@ export function electronScreenSource(): ScreenSource {
   return {
     async listWindows() {
       if (
-        process.platform === 'darwin' &&
-        systemPreferences.getMediaAccessStatus('screen') !== 'granted'
+        denied() ||
+        (process.platform === 'darwin' &&
+          systemPreferences.getMediaAccessStatus('screen') !== 'granted')
       )
         return 'denied';
       return (await windows({ width: 0, height: 0 })).map((s) => ({ id: s.id, title: s.name }));

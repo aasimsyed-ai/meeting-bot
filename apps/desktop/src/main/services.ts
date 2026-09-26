@@ -59,6 +59,8 @@ export interface CaptureBackend {
   stop(): Promise<void>;
   /** Start failed or lost sources again, without stopping the meeting. */
   retry(): Promise<void>;
+  /** A source went quiet without an "ended" event: try to get it back. */
+  channelLost?(channel: 'mic' | 'system'): void;
   probeSystemAudio(): Promise<boolean>;
 }
 
@@ -158,6 +160,7 @@ export class Services {
           : null,
       onStatus: (status) => deps.emit({ type: 'capture', status }),
       onFinished: (meetingId, info) => void this.afterCapture(meetingId, info),
+      onChannelLost: (channel) => this.backend.channelLost?.(channel),
     });
     this.backend = deps.createBackend(this.session);
   }

@@ -54,6 +54,8 @@ export class CaptureController {
       audioteeBinary: () => string | undefined;
       /** Test only: stream this 16 kHz WAV as meeting audio instead of the OS source. */
       testMeetingAudio?: string | null;
+      /** Test only: refuse this access, the way a denied OS or browser permission does. */
+      denied?: (kind: 'mic' | 'system') => boolean;
     },
   ) {}
 
@@ -159,6 +161,11 @@ export class CaptureController {
     }
   }
 
+  /** A source went silent without ending (for example access was removed): try to get it back. */
+  channelLost(channel: CaptureChannelName): void {
+    this.scheduleRestart(channel);
+  }
+
   /** "Try again" from the user, for example after allowing access in system settings. */
   async retry(): Promise<void> {
     const channels = this.session.failedChannels();
@@ -172,13 +179,18 @@ export class CaptureController {
     if (this.win && !this.win.isDestroyed()) return this.win;
     this.listen();
     const ses = electronSession.fromPartition(CAPTURE_PARTITION);
-    ses.setPermissionRequestHandler((_wc, permission, cb) =>
-      cb(permission === 'media' || permission === 'display-capture'),
-    );
+    ses.setPermissionRequestHandler((_wc, permission, cb, details) => {
+      const audio =
+        permission === 'media' &&
+        ((details as { mediaTypes?: string[] }).mediaTypes ?? []).includes('audio');
+      if (audio && this.opts.denied?.('mic')) return cb(false);
+      cb(permission === 'media' || permission === 'display-capture');
+    });
     ses.setPermissionCheckHandler((_wc, permission) => permission === 'media');
     // Windows and Linux: give getDisplayMedia the primary screen with loopback audio.
     ses.setDisplayMediaRequestHandler(
       (_req, cb) => {
+        if (this.opts.denied?.('system')) return cb({});
         desktopCapturer
           .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
           .then((sources) => cb(sources[0] ? { video: sources[0], audio: 'loopback' } : {}))
@@ -209,6 +221,11 @@ export class CaptureController {
 
   private async command(cmd: CaptureWindowCommand, gesture = false): Promise<void> {
     const win = await this.ensureWindow();
+    if ((cmd.type === 'start' || cmd.type === 'restart') && this.opts.denied)
+      cmd = {
+        ...cmd,
+        denied: { mic: this.opts.denied('mic'), system: this.opts.denied('system') },
+      };
     // Start runs as a user gesture so screen-audio capture is allowed.
     await win.webContents.executeJavaScript(
       `window.__capture && window.__capture.run(${JSON.stringify(cmd)})`,

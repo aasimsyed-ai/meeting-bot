@@ -66,21 +66,25 @@ function tap(stream: MediaStream, channel: CaptureChannelName, sink: AudioNode) 
   });
 }
 
-async function startMic(deviceId: string | null, sink: AudioNode) {
+const refused = () => new DOMException('Permission denied', 'NotAllowedError');
+
+async function startMic(deviceId: string | null, sink: AudioNode, denied = false) {
   try {
+    if (denied) throw refused();
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: deviceId ? { ...VOICE, deviceId: { exact: deviceId } } : VOICE,
     });
     tap(stream, 'mic', sink);
   } catch (err) {
     // The chosen microphone may have been unplugged: fall back to the default one.
-    if (deviceId) return startMic(null, sink);
+    if (deviceId && !denied) return startMic(null, sink);
     failed('mic', err);
   }
 }
 
-async function startSystem(sink: AudioNode) {
+async function startSystem(sink: AudioNode, denied = false) {
   try {
+    if (denied) throw refused();
     const display = await navigator.mediaDevices.getDisplayMedia({
       // Meeting audio is already clean. Chromium turns voice processing on by default, and on
       // this stream it is harmful: echo cancellation removes the meeting audio itself (it is
@@ -119,22 +123,29 @@ async function stopAll() {
   sink = null;
 }
 
+/** The audio graph every source feeds; rebuilt if it was closed (or this page reloaded). */
+async function graph(): Promise<AudioNode> {
+  if (ctx && sink && ctx.state !== 'closed') return sink;
+  ctx = new AudioContext({ sampleRate: 16000 });
+  await ctx.audioWorklet.addModule(new URL('./pcm-worklet.js', location.href).href);
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  gain.connect(ctx.destination);
+  sink = gain;
+  return gain;
+}
+
 async function run(cmd: CaptureWindowCommand) {
   if (cmd.type === 'start') {
     await stopAll();
-    ctx = new AudioContext({ sampleRate: 16000 });
-    await ctx.audioWorklet.addModule(new URL('./pcm-worklet.js', location.href).href);
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    gain.connect(ctx.destination);
-    sink = gain;
-    if (cmd.mic) await startMic(cmd.micDeviceId, gain);
-    if (cmd.system) await startSystem(gain);
+    const gain = await graph();
+    if (cmd.mic) await startMic(cmd.micDeviceId, gain, cmd.denied?.mic);
+    if (cmd.system) await startSystem(gain, cmd.denied?.system);
   } else if (cmd.type === 'restart') {
-    if (!ctx || !sink) return;
+    const sink = await graph();
     stopChannel(cmd.channel);
-    if (cmd.channel === 'mic') await startMic(cmd.micDeviceId, sink);
-    else await startSystem(sink);
+    if (cmd.channel === 'mic') await startMic(cmd.micDeviceId, sink, cmd.denied?.mic);
+    else await startSystem(sink, cmd.denied?.system);
   } else if (cmd.type === 'pause') {
     await ctx?.suspend();
   } else if (cmd.type === 'resume') {
