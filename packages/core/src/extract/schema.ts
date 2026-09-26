@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { MeetingContext, ScreenNote, TranscriptSegment } from '../types.ts';
+import type { EngineKind, MeetingContext, ScreenNote, TranscriptSegment } from '../types.ts';
 
 /**
  * What an extraction engine returns before validation. Every item must cite
@@ -87,7 +87,7 @@ export interface ExtractionInput {
 }
 
 export interface Extractor {
-  readonly kind: 'rules' | 'claude';
+  readonly kind: EngineKind;
   readonly model?: string;
   readonly promptVersion: string;
   extract(input: ExtractionInput, signal?: AbortSignal): Promise<RawExtraction>;

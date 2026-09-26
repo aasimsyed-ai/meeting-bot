@@ -121,7 +121,8 @@ export interface Risk {
   evidence: Evidence;
 }
 
-export type EngineKind = 'rules' | 'claude';
+/** Which engine produced the notes. Only 'claude' needs a paid account, and it is optional. */
+export type EngineKind = 'rules' | 'mock' | 'local-llm' | 'claude';
 
 export interface EngineInfo {
   kind: EngineKind;
