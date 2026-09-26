@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   Mail,
+  Monitor,
   RefreshCw,
   Trash2,
   Users,
@@ -805,6 +806,23 @@ function Transcript({ detail, highlight }: { detail: Detail; highlight: string |
           )}
         </div>
       </section>
+      {detail.screen.length > 0 && (
+        <section className="card card-body stack" style={{ gap: 10 }} aria-labelledby="on-screen">
+          <div className="row">
+            <Monitor size={16} className="muted" aria-hidden />
+            <h2 id="on-screen">On screen</h2>
+            <span className="small muted">
+              Text read from slides and shared screens. No pictures are kept.
+            </span>
+          </div>
+          {detail.screen.map((n, i) => (
+            <div key={`${n.atMs}-${i}`} className="segment">
+              <div className="ts">{formatTimestamp(n.atMs)}</div>
+              <div style={{ whiteSpace: 'pre-line' }}>{n.text}</div>
+            </div>
+          ))}
+        </section>
+      )}
       <div className="card" ref={ref}>
         {detail.segments.map((s) => (
           <div

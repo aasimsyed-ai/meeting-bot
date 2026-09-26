@@ -177,7 +177,7 @@ export function Onboarding() {
                 <Perm
                   icon={<Monitor size={16} aria-hidden />}
                   title="Screen (optional)"
-                  why="To notice which meeting you are in."
+                  why="To notice which meeting you are in and read the text on shared slides."
                   state={perms?.screen}
                   help={perms?.help.screen}
                   onAllow={() => void request('screen')}

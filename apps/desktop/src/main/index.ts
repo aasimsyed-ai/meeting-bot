@@ -24,6 +24,7 @@ import { log } from './log';
 import { Services, userMessage } from './services';
 import { Permissions } from './permissions';
 import { CaptureController } from './capture/controller';
+import { electronScreenSource } from './capture/screen-source';
 import { MeetingDetector } from './detection';
 import { UtilityTranscriber } from './transcription/client';
 import { modelPaths } from './transcription/models';
@@ -158,6 +159,8 @@ async function main(): Promise<void> {
     fetcher: (url, signal) => net.fetch(url, { signal }),
     emit,
     detected: () => detector.detected,
+    screenSource: electronScreenSource(),
+    ownTitles: () => BrowserWindow.getAllWindows().map((w) => w.getTitle()),
     checkUpdates: () => updater.check(),
     logPath: () => log.path,
     onSettingsChanged: () => syncDetector(),

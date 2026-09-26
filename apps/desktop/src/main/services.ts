@@ -13,6 +13,7 @@ import { SettingsService } from './settings';
 import { Processor } from './processing/processor';
 import { audioFiles, CaptureSession, discardAudio, type Transcriber } from './capture/session';
 import { transcribeSavedAudio } from './capture/offline';
+import { ScreenWatcher, type ScreenSource } from './capture/screen';
 import {
   downloadModel,
   DownloadCancelled,
@@ -78,6 +79,10 @@ export interface ServicesDeps {
   checkUpdates?: () => Promise<Results['app:checkUpdates']>;
   logPath?: () => string | null;
   onSettingsChanged?: () => void;
+  /** Screen access for reading slides and noticing the meeting window close. */
+  screenSource?: ScreenSource;
+  /** Titles of the app's own windows, which are never treated as meetings. */
+  ownTitles?: () => string[];
 }
 
 type Handlers = { [C in Channel]: (...args: ArgsOf<C>) => Promise<Results[C]> | Results[C] };
@@ -91,6 +96,7 @@ export class Services {
   readonly processor: Processor;
   readonly session: CaptureSession;
   readonly backend: CaptureBackend;
+  private screen: ScreenWatcher | null = null;
   private email: EmailProvider;
   private modelStatus: ModelStatus;
   private download: AbortController | null = null;
@@ -384,6 +390,7 @@ export class Services {
           micDeviceId: s.capture.micDeviceId,
           system: s.capture.systemAudio,
         });
+      if (source === 'live') this.startScreenWatch(s.capture.screenContext);
     } catch (err) {
       log.error('capture_backend_failed', { error: err instanceof Error ? err : String(err) });
       this.session.channelFailed(
@@ -395,8 +402,31 @@ export class Services {
     return this.session.status();
   }
 
+  private startScreenWatch(readText: boolean): void {
+    const source = this.deps.screenSource;
+    const meetingId = this.session.id;
+    if (!source || !meetingId) return;
+    const session = this.session;
+    this.screen = new ScreenWatcher(
+      source,
+      {
+        isActive: () => session.isActive && session.id === meetingId,
+        isPaused: () => session.status().state === 'paused',
+        elapsedMs: () => session.elapsedMs(),
+        setScreenState: (s) => session.setScreenState(s),
+        screenKeyframe: () => session.screenKeyframe(),
+        meetingWindowGone: (gone) => session.meetingWindowGone(gone),
+        save: (note) => this.repo.addScreenNote(this.principal(), meetingId, note),
+      },
+      { readText, ownTitles: this.deps.ownTitles ?? (() => []) },
+    );
+    this.screen.start();
+  }
+
   async stopCapture(): Promise<CaptureStatus> {
     if (!this.session.isActive) return this.session.status();
+    await this.screen?.stop();
+    this.screen = null;
     await this.backend.stop().catch(() => undefined);
     return this.session.stop();
   }

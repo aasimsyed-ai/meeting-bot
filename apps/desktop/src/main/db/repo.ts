@@ -961,13 +961,7 @@ export class Repo {
         }
       })(),
       recurring: notes ? this.recurring(p, meetingId, r, notes) : null,
-      screenNotes: num(
-        (
-          this.db
-            .prepare('SELECT COUNT(*) AS n FROM screen_notes WHERE meeting_id = ?')
-            .get(meetingId) as Row
-        ).n,
-      ),
+      screen: this.screenNotes(p, meetingId),
       hasAudio: false,
     };
   }

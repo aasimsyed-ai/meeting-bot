@@ -185,6 +185,16 @@ export function SettingsView() {
             onChange={(v) => void save({ capture: { systemAudio: v } })}
           />
         </Row>
+        <Row
+          title="Read slides"
+          hint="Reads the text on slides and shared screens in the meeting window, on this computer. Only the text is kept, never pictures or video."
+        >
+          <Switch
+            label="Read slides"
+            checked={settings.capture.screenContext}
+            onChange={(v) => void save({ capture: { screenContext: v } })}
+          />
+        </Row>
         <Row title="Microphone" htmlFor="mic">
           <select
             id="mic"

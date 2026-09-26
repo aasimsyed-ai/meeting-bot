@@ -294,13 +294,13 @@ describe('live capture', () => {
       await call('capture:start', {});
       session.ingest('mic', new Float32Array(1600).fill(0.1));
       session.ingest('system', new Float32Array(1600).fill(0.1));
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 32; i++) {
         vi.advanceTimersByTime(1000);
         session.ingest('mic', new Float32Array(1600));
         session.ingest('system', new Float32Array(1600).fill(0.1));
       }
       const st = session.status();
-      expect(st.problems.find((p) => p.code === 'mic_muted')?.message).toMatch(/sends no sound/);
+      expect(st.problems.find((p) => p.code === 'mic_muted')?.message).toMatch(/sent no sound/);
       expect(st.hearing).toBe('partial');
       session.ingest('mic', new Float32Array(1600).fill(0.1));
       expect(session.status().problems.map((p) => p.code)).not.toContain('mic_muted');

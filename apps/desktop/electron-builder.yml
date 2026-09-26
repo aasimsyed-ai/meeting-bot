@@ -10,6 +10,8 @@ directories:
 files:
   - out/**
   - package.json
+  # Only the compact English model is used.
+  - '!node_modules/@tesseract.js-data/eng/4.0.0/**'
 extraResources:
   - from: resources
     to: .
@@ -17,6 +19,10 @@ extraResources:
 asarUnpack:
   - node_modules/sherpa-onnx-*/**
   - node_modules/audiotee/bin/**
+  # The slide reader runs in a worker thread and loads its WebAssembly and English data from disk.
+  - node_modules/tesseract.js/**
+  - node_modules/tesseract.js-core/**
+  - node_modules/@tesseract.js-data/eng/4.0.0_best_int/**
 npmRebuild: false
 afterPack: scripts/verify-native.cjs
 publish:
@@ -54,7 +60,7 @@ mac:
   extendInfo:
     NSMicrophoneUsageDescription: Meeting Assistant uses your microphone to capture what you say in meetings, only while you are taking notes.
     NSAudioCaptureUsageDescription: Meeting Assistant listens to meeting audio so it can take notes, only while you are taking notes.
-    NSScreenCaptureUsageDescription: Meeting Assistant looks at window titles to notice when you are in a meeting.
+    NSScreenCaptureUsageDescription: Meeting Assistant looks at window titles to notice when you are in a meeting, and reads the text on shared slides while you are taking notes. Pictures are never saved.
     LSUIElement: false
 dmg:
   title: Meeting Assistant ${version}

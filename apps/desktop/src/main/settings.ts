@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: Omit<Settings, 'ai'> & { ai: Omit<Settings['ai'],
   {
     profile: { name: '', email: '' },
     onboardingComplete: false,
-    capture: { detectMeetings: true, screenContext: false, systemAudio: true, micDeviceId: null },
+    capture: { detectMeetings: true, screenContext: true, systemAudio: true, micDeviceId: null },
     transcription: { model: 'moonshine-base-en' },
     // The offline engine is the default. Local AI points at Ollama's default address.
     ai: { mode: 'basic', localUrl: 'http://localhost:11434/v1', localModel: '' },

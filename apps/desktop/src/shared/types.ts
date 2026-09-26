@@ -6,6 +6,7 @@ import type {
   Participant,
   Platform,
   RecurringDiff,
+  ScreenNote,
   TaskStatus,
   TranscriptSegment,
 } from '@meeting-assistant/core';
@@ -237,7 +238,8 @@ export interface MeetingDetail {
     previous: { id: string; title: string; startedAt: string };
     diff: RecurringDiff;
   } | null;
-  screenNotes: number;
+  /** Text read from slides or shared screens, in meeting order. */
+  screen: ScreenNote[];
   hasAudio: boolean;
 }
 

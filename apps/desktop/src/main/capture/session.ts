@@ -20,7 +20,7 @@ export const SAMPLE_RATE = 16_000;
 const NO_AUDIO_MS = 4_000;
 const SILENCE_MS = 180_000;
 /** A microphone that sends only digital zeros this long is muted or cut off by the system. */
-const MUTED_MS = 10_000;
+const MUTED_MS = 30_000;
 
 /** A finished piece of speech from the speech engine. */
 export interface SpeechSegment {
@@ -163,6 +163,10 @@ export class CaptureSession {
       return grace ? 'starting' : 'none';
     }
     return live.length < wanted.length || this.problems.has('mic_muted') ? 'partial' : 'ok';
+  }
+
+  elapsedMs(): number {
+    return this.elapsed();
   }
 
   private elapsed(): number {
@@ -579,7 +583,7 @@ export class CaptureSession {
     ) {
       this.problem(
         'mic_muted',
-        'Your microphone is on but sends no sound. It may be muted, or access may have been turned off.',
+        'Your microphone has sent no sound for a while. If you are talking, it may be muted or its access turned off.',
         { label: 'Open microphone settings', kind: 'open_mic_settings' },
       );
     }
