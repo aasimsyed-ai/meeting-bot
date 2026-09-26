@@ -1,5 +1,6 @@
 import { meeting, script } from './acme.ts';
 import type { MeetingFixture } from './types.ts';
+import { capturedTeamSync } from './captured.ts';
 
 /**
  * DIFFICULT SET. Written for the capture validation phase to probe the line between
@@ -244,4 +245,5 @@ export const HARD_FIXTURES: MeetingFixture[] = [
   hardSarcasm,
   hardOffers,
   hardOverruled,
+  capturedTeamSync,
 ];

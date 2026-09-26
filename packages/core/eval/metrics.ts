@@ -154,6 +154,15 @@ export function scoreFixture(
     }
   }
 
+  for (const group of t.neverDecisions ?? [])
+    for (const d of confirmed)
+      if (matchesKeywords(d.text, [group]))
+        violations.push(`discussion shown as a decision: "${d.text}"`);
+  for (const group of t.neverQuestions ?? [])
+    for (const x of notes.openQuestions)
+      if (matchesKeywords(x.question, [group]))
+        violations.push(`answered or non-question shown as open: "${x.question}"`);
+
   const generated = [
     notes.tldr,
     ...notes.topics.flatMap((x) => [x.title, x.summary]),

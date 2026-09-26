@@ -81,6 +81,13 @@ const HANDOVER_RE = /^(?:take(?:\s+over)?|pick up|cover|handle)\s+/i;
 const CANCEL_RE =
   /\b(?:forget (?:about )?|(?:let's |we can |i'll |we'll )?(?:drop|cancel|scrap|skip|scratch)\s+(?!off\b|by\b|in\b))(?:the\s+|that\s+)?([a-z][\w\s-]{2,60}?)(?:\s+(?:then|anymore|for now|altogether))?[.!]*$/i;
 
+/** A new requirement from outside the team: "they now want", "the client now needs". */
+const requirementRe =
+  /\b(?:they|the client|the customer|legal|management|leadership|the board|finance|security)\s+now\s+(?:wants?|needs?|requires?|expects?|asks? for)\s+(.+)/i;
+/** The team takes a change on: "that changes the plan", "then let's plan for it". */
+const ACCEPT_CHANGE_RE =
+  /\b(?:that changes the plan|(?:then )?let's plan for (?:it|that)|we(?:'ll| will) (?:plan for|make it work|fit it in)|(?:okay|ok|fine),? (?:then )?(?:we'll|we will|let's) do (?:it|that))\b/i;
+
 /** A turn that is only agreement: "Agreed." "Perfect." */
 const AGREE_ONLY_RE =
   /^(?:agreed|decided|confirmed|settled|great|perfect|ok(?:ay)?|alright|all right|good|sounds good)[.!]*$/i;
@@ -603,7 +610,7 @@ function extractDecisions(units: Unit[]): RawDecision[] {
   // "What if we ...?" even when the first word is misheard ("Where if we ...?", "So if we ...?").
   const ifWeRe = /^(?:\w+\s+)?if we\s+([^,?]+)\?$/i;
   const proposalRe =
-    /\b(?:we should|we could|i suggest(?: that)?(?: we)?|i propose(?: that)?(?: we)?|how about(?: we)?|what if we|why don't we|i think we should|i'd suggest|i recommend(?: that)?(?: we)?|(?:then )?we(?:'re| are) going to(?= \w)|(?:then )?we(?:'ll| will)(?= (?:push|move|shift|delay|postpone|pull in|bring forward|switch|change|use|launch|ship|deploy|go live|keep|freeze|cap|adopt|drop|cancel)\b)|let's(?! (?:see|talk|discuss|think|check|look|revisit|take a|circle|start|get started|move on|keep going|keep that|keep it|wrap|kick|begin|jump|go around|do a quick|hear|go through|review|dig|focus|pick this up|table|park|leave it|meet|also make sure|find out)\b))\s+(?!see\b|talk\b|discuss\b|think\b|look\b)(.+)/i;
+    /\b(?:we should|we could|i suggest(?: that)?(?: we)?|i propose(?: that)?(?: we)?|how about(?: we)?|what if we|why don't we|i think we should|i'd suggest|i recommend(?: that)?(?: we)?|(?:then )?we(?:'re| are) going to(?= \w)|(?:then )?we(?:'ll| will)(?= (?:push|move|shift|delay|postpone|pull in|bring forward|switch|change|use|launch|ship|deploy|go live|keep|freeze|cap|adopt|drop|cancel)\b)|let's(?! (?:see|talk|discuss|think|check|look|revisit|take a|circle|start|get started|move on|keep going|keep that|keep it|wrap|kick|begin|jump|go around|do a quick|hear|go through|review|dig|focus|pick this up|table|park|leave it|meet|also make sure|find out|not (?:read|worry|overthink|get ahead|panic|jump|assume|forget))\b))\s+(?!see\b|talk\b|discuss\b|think\b|look\b)(.+)/i;
 
   const proposals: { text: string; unit: Unit }[] = [];
   const latestProposal = (u: Unit, window: number, filter?: (p: { text: string }) => boolean) =>
@@ -644,6 +651,29 @@ function extractDecisions(units: Unit[]): RawDecision[] {
         'confirmed',
         prop ? [prop.unit.segId, u.segId] : [u.segId],
       );
+      continue;
+    }
+
+    // "They now want dark mode in the first release": a changed requirement the team took on.
+    const rc = requirementRe.exec(u.text);
+    if (rc && !isQuestion(u) && !NEGATION_RE.test(u.text)) {
+      // Keep the new requirement, not the history ("..., before it was planned for later").
+      const object = rc[1]!
+        .replace(/[,;]\s*(?:before|previously|originally|until now|it used to)\b.*$/i, '')
+        .replace(/[.!?]+$/, '')
+        .trim();
+      const later = units.slice(i + 1, i + 7);
+      const at = later.findIndex((n) => ACCEPT_CHANGE_RE.test(n.text));
+      // Only pushback before the team takes it on counts against it.
+      const objected = later
+        .slice(0, at < 0 ? later.length : at)
+        .some((n) => n.speaker !== u.speaker && DISAGREE_RE.test(n.text));
+      if (contentWords(object).length >= 2)
+        add(
+          `Requirement change: ${object}`,
+          at >= 0 && !objected ? 'confirmed' : 'possible',
+          at >= 0 ? [u.segId, later[at]!.segId] : [u.segId],
+        );
       continue;
     }
 
@@ -752,12 +782,19 @@ function extractDecisions(units: Unit[]): RawDecision[] {
 const NON_ANSWER_RE =
   /\b(?:i don't know|i do not know|not sure|no idea|good question|we'll (?:need to )?(?:find out|figure (?:it|that) out)|let's take (?:that|it) offline|tbd|to be determined|(?:still )?to be decided|nobody knows|unclear|haven't decided|not decided|not yet|we'll see|need to check|i'll have to check|let me check|nobody has decided)\b/i;
 const EXPLICIT_OPEN_RE =
-  /\b(?:open question|still (?:need to|have to) (?:figure out|decide|determine|confirm|check|find out|work out|understand)|(?:we )?(?:don't|do not) know (?:yet )?(?:who|when|whether|if|how)|to be determined|to be decided|unclear (?:who|when|whether|how)|not (?:sure|clear) (?:who|when|whether|if|how)|nobody has (?:decided|confirmed)|we (?:still )?haven't (?:decided|figured out|confirmed)|one thing we still haven't)\b/i;
+  /\b(?:open question|still (?:need to|have to) (?:figure out|decide|determine|confirm|check|find out|work out|understand)|(?:we )?(?:don't|do not) know (?:yet )?(?:who|when|whether|if|how)|to be determined|to be decided|unclear (?:who|when|whether|how)|not (?:sure|clear) (?:who|when|whether|if|how)|nobody has (?:decided|confirmed)|we (?:still )?(?:haven't|have not) (?:decided|figured out|confirmed)|one thing we still (?:haven't|have not))\b/i;
 
 function extractQuestions(units: Unit[]): RawQuestion[] {
   const out: RawQuestion[] = [];
+  const questions: Unit[] = [];
   const add = (q: string, ids: string[]) => {
-    let question = normalizeWhitespace(q).replace(LEAD_INTERJECTION, '');
+    let question = normalizeWhitespace(q)
+      .replace(LEAD_INTERJECTION, '')
+      // "One thing we still have not figured out, who approves ...": keep the question.
+      .replace(
+        /^[^,?]*\b(?:figured out|decided|open question|not sure)\b[^,?]*,\s*(?=(?:who|when|what|which|how|whether|where|why|do|does|is|are|should|can)\b)/i,
+        '',
+      );
     if (contentWords(question).length < 1 || words(question).length < 4) return;
     question = capitalize(question.replace(/[.!]+$/, ''));
     if (!question.endsWith('?')) question += '?';
@@ -779,16 +816,44 @@ function extractQuestions(units: Unit[]): RawQuestion[] {
       if (words(body).length < 3) continue;
       const replies = units.slice(i + 1, i + 3).filter((n) => n.speaker !== u.speaker);
       const first = replies[0];
-      const unanswered = first ? NON_ANSWER_RE.test(first.text) : i >= units.length - 2;
+      // "Good question. It is only internal traffic." is an answer after a polite lead-in.
+      const next = first ? units[first.index + 1] : undefined;
+      const answeredAfterLeadIn =
+        !!first &&
+        /^(?:good|great|fair|interesting) question[.!]*$/i.test(first.text.trim()) &&
+        !!next &&
+        next.speaker === first.speaker &&
+        !isQuestion(next) &&
+        !NON_ANSWER_RE.test(next.text) &&
+        // In the same breath, or about the same thing (not a new topic).
+        (next.segId === first.segId ||
+          contentWords(next.text).some((w) => contentWords(body).includes(w)));
+      // "One thing we still have not figured out. Who approves ...?" is open, whatever follows.
+      const prev = units[i - 1];
+      const flaggedOpen =
+        !!prev &&
+        prev.speaker === u.speaker &&
+        EXPLICIT_OPEN_RE.test(prev.text) &&
+        !/\b(?:who|when|whether|how|what|which)\b/i.test(prev.text);
+      const unanswered =
+        flaggedOpen ||
+        (first ? NON_ANSWER_RE.test(first.text) && !answeredAfterLeadIn : i >= units.length - 2);
       // A follow-up question in the same breath ("Is that me or someone else?") belongs to the one before it.
       const sameSegmentQuestion = out.some((q) => q.segmentIds.includes(u.segId));
       if (unanswered && !sameSegmentQuestion) add(body, first ? [u.segId, first.segId] : [u.segId]);
+      questions.push(u);
       continue;
     }
     if (EXPLICIT_OPEN_RE.test(u.text)) {
       // Only statements that name the open question; bare "not decided yet" replies are handled above.
       const m = /\b(?:who|when|whether|how|what|which)\b.+/i.exec(u.text);
-      if (m) add(m[0], [u.segId]);
+      if (!m) continue;
+      // "I do not know who owns that now": about a question just asked, so name that one.
+      const vague =
+        contentWords(m[0].replace(/\b(?:that|this|it|them|those|now)\b/gi, '')).length < 2;
+      const recent = [...questions].reverse().find((q) => u.index - q.index <= 4);
+      if (vague && recent) add(recent.text.replace(LEAD_INTERJECTION, ''), [recent.segId, u.segId]);
+      else if (!vague) add(m[0], [u.segId]);
     }
   }
   return out;
@@ -848,7 +913,7 @@ function titleFrom(text: string): string {
 
 /** Words that say nothing about a topic on their own. */
 const NOT_A_TOPIC =
-  /^(?:\d+(?:st|nd|rd|th)|(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth)|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|check|send|make|done|work|working|time|start|sounds|agreed)$/;
+  /^(?:\d+(?:st|nd|rd|th)|(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth)|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|check|send|make|done|work|working|time|start|sounds|agreed|either|else|anything|nothing|everyone|anyone|really|little|thing|things|point)$/;
 
 /** Fallback title: words people kept coming back to. Never contractions or dates. */
 function keywordTitle(units: Unit[]): string {
@@ -857,6 +922,22 @@ function keywordTitle(units: Unit[]): string {
     for (const w of contentWords(u.text))
       if (w.length > 3 && !/^\d+$/.test(w) && !w.includes("'") && !NOT_A_TOPIC.test(w))
         freq.set(w, (freq.get(w) ?? 0) + 1);
+  // Two-word phrases people repeat ("dark mode", "design system") make the best titles.
+  const pairs = new Map<string, number>();
+  for (const u of units) {
+    const ws = words(u.text);
+    for (let k = 0; k + 1 < ws.length; k++) {
+      const [a, b] = [ws[k]!, ws[k + 1]!];
+      if (!freq.has(a) || !freq.has(b)) continue;
+      pairs.set(`${a} ${b}`, (pairs.get(`${a} ${b}`) ?? 0) + 1);
+    }
+  }
+  const phrases = [...pairs.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 2)
+    .map(([p]) => p);
+  if (phrases.length) return capitalize(phrases.join(' and '));
   const top = [...freq.entries()]
     .filter(([, n]) => n >= 2)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -873,7 +954,7 @@ function extractTopics(units: Unit[]): RawTopic[] {
     const current = blocks[blocks.length - 1]!;
     if (t && !looksLikeInjection(u.text) && contentWords(t[1]!).length >= 1) {
       // A short untitled lead-in (greetings) belongs to the first real topic.
-      if (!current.title && current.units.length < 4) current.title = titleFrom(t[1]!);
+      if (!current.title && current.units.length < 6) current.title = titleFrom(t[1]!);
       else blocks.push({ title: titleFrom(t[1]!), units: [] });
     } else if (current.units.length >= 60) {
       blocks.push({ title: null, units: [] });

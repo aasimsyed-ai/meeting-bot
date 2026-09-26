@@ -251,6 +251,54 @@ describe('ASR repair', () => {
   });
 });
 
+describe('rules extractor: open questions (found by the ten-minute capture)', () => {
+  it('keeps a question that was flagged as open, and drops the lead-in', () => {
+    const r = run([
+      [
+        'Carol King',
+        'One thing we still have not figured out, who approves the new text on the pricing page?',
+      ],
+      ['Bob Smith', 'Last time it was marketing, but they changed their team.'],
+      ['Alice Johnson', 'I honestly do not know who owns that now.'],
+    ]);
+    expect(r.openQuestions.map((q) => q.question)).toEqual([
+      'Who approves the new text on the pricing page?',
+    ]);
+  });
+
+  it('treats "Good question." followed by an answer as answered', () => {
+    const r = run([
+      ['Carol King', 'Is that real users or mostly our own testing?'],
+      ['Bob Smith', 'Good question. It is only internal testing traffic on staging.'],
+    ]);
+    expect(r.openQuestions).toEqual([]);
+  });
+
+  it('does not make "let\'s not read too much into it" a decision', () => {
+    const r = run([
+      ['Alice Johnson', "Then let's not read too much into the numbers until the release."],
+      ['Bob Smith', 'Agreed.'],
+    ]);
+    expect(r.decisions).toEqual([]);
+  });
+
+  it('records a requirement change the team took on', () => {
+    const r = run([
+      [
+        'Alice Johnson',
+        'They now want dark mode in the first release, before it was planned for later.',
+      ],
+      ['Bob Smith', 'Okay, that changes the plan a bit.'],
+    ]);
+    expect(r.decisions).toEqual([
+      expect.objectContaining({
+        text: 'Requirement change: dark mode in the first release',
+        status: 'confirmed',
+      }),
+    ]);
+  });
+});
+
 describe('rules extractor: topics', () => {
   it('folds a greeting into the first announced topic instead of making a junk topic', () => {
     const r = run([

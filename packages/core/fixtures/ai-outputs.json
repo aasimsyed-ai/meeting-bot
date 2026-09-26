@@ -9,28 +9,19 @@
         {
           "title": "Deployment plan",
           "summary": "Bob finished the last feature on Friday. I was hoping we could deploy this Friday.",
-          "segmentIds": [
-            "s0001",
-            "s0002"
-          ]
+          "segmentIds": ["s0001", "s0002"]
         }
       ],
       "decisions": [
         {
           "text": "Deploy this Friday",
           "status": "possible",
-          "segmentIds": [
-            "s0002"
-          ]
+          "segmentIds": ["s0002"]
         },
         {
           "text": "Move the deployment to Monday the twenty-eighth",
           "status": "confirmed",
-          "segmentIds": [
-            "s0008",
-            "s0009",
-            "s0012"
-          ]
+          "segmentIds": ["s0008", "s0009", "s0012"]
         }
       ],
       "actionItems": [
@@ -40,10 +31,7 @@
           "deadlinePhrase": "by Thursday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0013",
-            "s0014"
-          ]
+          "segmentIds": ["s0013", "s0014"]
         },
         {
           "task": "Fix the migration script so it runs in under ten minutes",
@@ -51,25 +39,19 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0015"
-          ]
+          "segmentIds": ["s0015"]
         }
       ],
       "openQuestions": [
         {
           "question": "Who gives the final approval for the deployment?",
-          "segmentIds": [
-            "s0016"
-          ]
+          "segmentIds": ["s0016"]
         }
       ],
       "risks": [
         {
           "text": "If the firewall review slips, the Monday deployment is at risk",
-          "segmentIds": [
-            "s0018"
-          ]
+          "segmentIds": ["s0018"]
         }
       ]
     }
@@ -84,11 +66,7 @@
         {
           "title": "Today, i'll, thanks",
           "summary": "Morning everyone, let's do a quick standup. Yesterday I fixed the login timeout bug and merged it.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [],
@@ -99,9 +77,7 @@
           "deadlinePhrase": "Today",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0002"
-          ]
+          "segmentIds": ["s0002"]
         },
         {
           "task": "Share the updated checklist in the team channel after this call",
@@ -109,9 +85,7 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0005"
-          ]
+          "segmentIds": ["s0005"]
         },
         {
           "task": "Chase the access request with IT",
@@ -119,19 +93,14 @@
           "deadlinePhrase": "today",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0008",
-            "s0009"
-          ]
+          "segmentIds": ["s0008", "s0009"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "I'm still blocked on access to the production audit logs",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ]
     }
@@ -146,21 +115,14 @@
         {
           "title": "Pilot, fifth, october",
           "summary": "Today we want to agree on the scope and the start date for the Globex pilot. On our side the main goal is to get the reporting module in front of our finance team.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [
         {
           "text": "Start on October fifth",
           "status": "confirmed",
-          "segmentIds": [
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0005", "s0006"]
         }
       ],
       "actionItems": [
@@ -170,9 +132,7 @@
           "deadlinePhrase": "by the end of the week",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         },
         {
           "task": "Send Eva the revised proposal with the updated seat count",
@@ -180,25 +140,19 @@
           "deadlinePhrase": "by Wednesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0009"
-          ]
+          "segmentIds": ["s0009"]
         }
       ],
       "openQuestions": [
         {
           "question": "How pricing works if we add more seats during the pilot?",
-          "segmentIds": [
-            "s0010"
-          ]
+          "segmentIds": ["s0010"]
         }
       ],
       "risks": [
         {
           "text": "Our security team, they might delay the single sign-on setup",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ]
     }
@@ -213,27 +167,19 @@
         {
           "title": "Session cache",
           "summary": "The current in-memory cache loses all sessions on every deploy. We keep the in-memory cache and add sticky sessions, or we move sessions to Redis.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [
         {
           "text": "Use Redis for the session cache",
           "status": "confirmed",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         },
         {
           "text": "Plan for a replica",
           "status": "possible",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ],
       "actionItems": [
@@ -243,10 +189,7 @@
           "deadlinePhrase": "by next Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0009",
-            "s0010"
-          ]
+          "segmentIds": ["s0009", "s0010"]
         },
         {
           "task": "Review the Redis TLS configuration",
@@ -254,26 +197,19 @@
           "deadlinePhrase": "by Monday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0011"
-          ]
+          "segmentIds": ["s0011"]
         }
       ],
       "openQuestions": [
         {
           "question": "Do we need a multi-region setup for this?",
-          "segmentIds": [
-            "s0013",
-            "s0014"
-          ]
+          "segmentIds": ["s0013", "s0014"]
         }
       ],
       "risks": [
         {
           "text": "A single Redis node becomes a single point of failure",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ]
     }
@@ -288,22 +224,14 @@
         {
           "title": "Certificate, expiry, monitoring",
           "summary": "Let's review this morning's payment API outage. David, can you walk us through the timeline?",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [
         {
           "text": "Add expiry monitoring for all public certificates",
           "status": "confirmed",
-          "segmentIds": [
-            "s0007",
-            "s0008",
-            "s0010"
-          ]
+          "segmentIds": ["s0007", "s0008", "s0010"]
         }
       ],
       "actionItems": [
@@ -313,9 +241,7 @@
           "deadlinePhrase": "by tomorrow",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0011"
-          ]
+          "segmentIds": ["s0011"]
         },
         {
           "task": "Write the postmortem",
@@ -323,9 +249,7 @@
           "deadlinePhrase": "by the end of the week",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         },
         {
           "task": "Notify the affected customers",
@@ -333,18 +257,14 @@
           "deadlinePhrase": "today",
           "priority": "high",
           "confidence": "medium",
-          "segmentIds": [
-            "s0013"
-          ]
+          "segmentIds": ["s0013"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "Two other certificates expire next month, and they were also renewed by hand",
-          "segmentIds": [
-            "s0015"
-          ]
+          "segmentIds": ["s0015"]
         }
       ]
     }
@@ -359,10 +279,7 @@
         {
           "title": "Thanks, that's, charts",
           "summary": "Bob is going to show us the new dashboard today. This is just a showcase, no decisions needed.",
-          "segmentIds": [
-            "s0001",
-            "s0002"
-          ]
+          "segmentIds": ["s0001", "s0002"]
         }
       ],
       "decisions": [],
@@ -381,13 +298,7 @@
         {
           "title": "Sprint, check, load",
           "summary": "A few loose ends from last sprint first. Someone should look into the flaky integration tests at some point.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005"]
         }
       ],
       "decisions": [],
@@ -398,9 +309,7 @@
           "deadlinePhrase": "by the end of the month",
           "priority": "medium",
           "confidence": "low",
-          "segmentIds": [
-            "s0004"
-          ]
+          "segmentIds": ["s0004"]
         },
         {
           "task": "Handle the backup restore check",
@@ -408,9 +317,7 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0010"
-          ]
+          "segmentIds": ["s0010"]
         }
       ],
       "openQuestions": [],
@@ -427,67 +334,42 @@
         {
           "title": "Mailspring, postwave, nine",
           "summary": "We have to pick an email delivery vendor in this meeting. The two options are Mailspring and Postwave.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         },
         {
           "title": "Launch date",
           "summary": "We decided last week to launch on October first. With the vendor change we need two extra weeks for the migration.",
-          "segmentIds": [
-            "s0010",
-            "s0011",
-            "s0012",
-            "s0013",
-            "s0014"
-          ]
+          "segmentIds": ["s0010", "s0011", "s0012", "s0013", "s0014"]
         }
       ],
       "decisions": [
         {
           "text": "Go with Postwave instead of Mailspring",
           "status": "confirmed",
-          "segmentIds": [
-            "s0008",
-            "s0009"
-          ]
+          "segmentIds": ["s0008", "s0009"]
         },
         {
           "text": "Last week to launch on October first",
           "status": "confirmed",
-          "segmentIds": [
-            "s0010"
-          ]
+          "segmentIds": ["s0010"]
         },
         {
           "text": "Postwave, launching October fifteenth",
           "status": "confirmed",
-          "segmentIds": [
-            "s0012",
-            "s0013",
-            "s0015"
-          ]
+          "segmentIds": ["s0012", "s0013", "s0015"]
         }
       ],
       "actionItems": [],
       "openQuestions": [
         {
           "question": "Who will own the Postwave contract?",
-          "segmentIds": [
-            "s0017",
-            "s0018"
-          ]
+          "segmentIds": ["s0017", "s0018"]
         }
       ],
       "risks": [
         {
           "text": "If Postwave's onboarding takes longer than a week, even the fifteenth is tight",
-          "segmentIds": [
-            "s0016"
-          ]
+          "segmentIds": ["s0016"]
         }
       ]
     }
@@ -502,129 +384,69 @@
         {
           "title": "Hiring plan",
           "summary": "Okay, let's move on to the hiring plan. For the hiring plan, the dashboard shows a small increase in usage.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         },
         {
           "title": "It's, people, talked",
           "summary": "We've seen fewer tickets about this lately. For the hiring plan, that lines up with what support has been hearing.",
-          "segmentIds": [
-            "s0031",
-            "s0032",
-            "s0033",
-            "s0034"
-          ]
+          "segmentIds": ["s0031", "s0032", "s0033", "s0034"]
         },
         {
           "title": "Last, demo, everyone",
           "summary": "Everyone seemed happy with the last demo. For the hiring plan, we had a good conversation with the partners about it.",
-          "segmentIds": [
-            "s0061",
-            "s0062",
-            "s0063",
-            "s0064"
-          ]
+          "segmentIds": ["s0061", "s0062", "s0063", "s0064"]
         },
         {
           "title": "Q4 roadmap",
           "summary": "Okay, let's move on to the Q4 roadmap. For the Q4 roadmap, i don't have much to add there.",
-          "segmentIds": [
-            "s0081",
-            "s0082",
-            "s0083",
-            "s0084"
-          ]
+          "segmentIds": ["s0081", "s0082", "s0083", "s0084"]
         },
         {
           "title": "Last, it's, august",
           "summary": "Most of the feedback so far has been positive. For the Q4 roadmap, there's a lot of interest from the sales side.",
-          "segmentIds": [
-            "s0111",
-            "s0112",
-            "s0113",
-            "s0114"
-          ]
+          "segmentIds": ["s0111", "s0112", "s0113", "s0114"]
         },
         {
           "title": "Last, conversation, good",
           "summary": "The details are in the shared document. For the Q4 roadmap, there isn't a lot of change on this one.",
-          "segmentIds": [
-            "s0141",
-            "s0142",
-            "s0143",
-            "s0144"
-          ]
+          "segmentIds": ["s0141", "s0142", "s0143", "s0144"]
         },
         {
           "title": "Customer escalations",
           "summary": "Okay, let's move on to the customer escalations. For the customer escalations, overall it's moving in the right direction.",
-          "segmentIds": [
-            "s0162",
-            "s0163",
-            "s0164",
-            "s0165"
-          ]
+          "segmentIds": ["s0162", "s0163", "s0164", "s0165"]
         },
         {
           "title": "It's, direction, last",
           "summary": "Most of the feedback so far has been positive. For the customer escalations, we looked at this during the last review as well.",
-          "segmentIds": [
-            "s0192",
-            "s0193",
-            "s0194",
-            "s0195"
-          ]
+          "segmentIds": ["s0192", "s0193", "s0194", "s0195"]
         },
         {
           "title": "Details, document, shared",
           "summary": "Overall it's moving in the right direction. For the customer escalations, i don't have much to add there.",
-          "segmentIds": [
-            "s0222",
-            "s0223",
-            "s0224",
-            "s0225"
-          ]
+          "segmentIds": ["s0222", "s0223", "s0224", "s0225"]
         },
         {
           "title": "Infrastructure costs",
           "summary": "Okay, let's move on to the infrastructure costs. For the infrastructure costs, we looked at this during the last review as well.",
-          "segmentIds": [
-            "s0244",
-            "s0245",
-            "s0246",
-            "s0247"
-          ]
+          "segmentIds": ["s0244", "s0245", "s0246", "s0247"]
         }
       ],
       "decisions": [
         {
           "text": "Move the reporting revamp to Q1",
           "status": "confirmed",
-          "segmentIds": [
-            "s0160",
-            "s0161"
-          ]
+          "segmentIds": ["s0160", "s0161"]
         },
         {
           "text": "Cap the staging cluster at twenty nodes",
           "status": "confirmed",
-          "segmentIds": [
-            "s0323"
-          ]
+          "segmentIds": ["s0323"]
         },
         {
           "text": "Ship the mobile app on October eighth",
           "status": "confirmed",
-          "segmentIds": [
-            "s0486",
-            "s0487",
-            "s0489",
-            "s0490"
-          ]
+          "segmentIds": ["s0486", "s0487", "s0489", "s0490"]
         }
       ],
       "actionItems": [
@@ -634,9 +456,7 @@
           "deadlinePhrase": "by Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0080"
-          ]
+          "segmentIds": ["s0080"]
         },
         {
           "task": "Call the Initech account manager",
@@ -644,9 +464,7 @@
           "deadlinePhrase": "tomorrow",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0241"
-          ]
+          "segmentIds": ["s0241"]
         },
         {
           "task": "Send the audit evidence package",
@@ -654,9 +472,7 @@
           "deadlinePhrase": "by October ninth",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0404"
-          ]
+          "segmentIds": ["s0404"]
         },
         {
           "task": "Export the access logs for the auditors",
@@ -664,10 +480,7 @@
           "deadlinePhrase": "by Monday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0405",
-            "s0406"
-          ]
+          "segmentIds": ["s0405", "s0406"]
         },
         {
           "task": "Update the API reference",
@@ -675,9 +488,7 @@
           "deadlinePhrase": "by the end of the month",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0570"
-          ]
+          "segmentIds": ["s0570"]
         },
         {
           "task": "Book the venue for the offsite",
@@ -685,46 +496,31 @@
           "deadlinePhrase": "by next Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0652"
-          ]
+          "segmentIds": ["s0652"]
         }
       ],
       "openQuestions": [
         {
           "question": "Who should own escalations on weekends?",
-          "segmentIds": [
-            "s0242",
-            "s0243"
-          ]
+          "segmentIds": ["s0242", "s0243"]
         },
         {
           "question": "Do we need a separate changelog for partners?",
-          "segmentIds": [
-            "s0571",
-            "s0572"
-          ]
+          "segmentIds": ["s0571", "s0572"]
         },
         {
           "question": "When is the offsite budget approved?",
-          "segmentIds": [
-            "s0653",
-            "s0654"
-          ]
+          "segmentIds": ["s0653", "s0654"]
         }
       ],
       "risks": [
         {
           "text": "There's a risk the reserved instance discount expires before we renew",
-          "segmentIds": [
-            "s0324"
-          ]
+          "segmentIds": ["s0324"]
         },
         {
           "text": "Wait, the app store review takes a week, so October first is too tight and puts the release at risk",
-          "segmentIds": [
-            "s0488"
-          ]
+          "segmentIds": ["s0488"]
         }
       ]
     }
@@ -739,14 +535,7 @@
         {
           "title": "I'll, budget, cluster",
           "summary": "ok so um yeah the budget for q4 were uh we're about ten percent over on cloud spend yeah that's mostly the new gpu instances we spun up for the test cluster",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005", "s0006"]
         }
       ],
       "decisions": [],
@@ -757,10 +546,7 @@
           "deadlinePhrase": "by tomorrow",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0005", "s0006"]
         },
         {
           "task": "Send Alice the budget numbers",
@@ -768,18 +554,14 @@
           "deadlinePhrase": "by friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "There's also a risk the gpu quota runs out next week if we don't clean up",
-          "segmentIds": [
-            "s0011"
-          ]
+          "segmentIds": ["s0011"]
         }
       ]
     }
@@ -794,21 +576,14 @@
         {
           "title": "I'll, mobile, scope",
           "summary": "We want to scope the penetration test for the customer portal. Typically we cover the web app, the public APIs and the login flow.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [
         {
           "text": "Leave mobile out of scope for now",
           "status": "confirmed",
-          "segmentIds": [
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0003", "s0004"]
         }
       ],
       "actionItems": [
@@ -818,9 +593,7 @@
           "deadlinePhrase": "by Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0005"
-          ]
+          "segmentIds": ["s0005"]
         },
         {
           "task": "Set up a staging environment with test accounts",
@@ -828,26 +601,19 @@
           "deadlinePhrase": "by next Wednesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0006"
-          ]
+          "segmentIds": ["s0006"]
         }
       ],
       "openQuestions": [
         {
           "question": "When do you want to start?",
-          "segmentIds": [
-            "s0010",
-            "s0011"
-          ]
+          "segmentIds": ["s0010", "s0011"]
         }
       ],
       "risks": [
         {
           "text": "One concern: if the test runs during the release freeze, fixes will have to wait",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ]
     }
@@ -862,21 +628,14 @@
         {
           "title": "Certificate renewal for the customer portal",
           "summary": "First item is the certificate renewal for the customer portal. I'll renew the SSL certificate for the customer portal by Friday.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         }
       ],
       "decisions": [
         {
           "text": "Keep thirty days of snapshots instead of fourteen",
           "status": "confirmed",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ],
       "actionItems": [
@@ -886,9 +645,7 @@
           "deadlinePhrase": "by Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0002"
-          ]
+          "segmentIds": ["s0002"]
         },
         {
           "task": "Update the retention policy document",
@@ -896,18 +653,13 @@
           "deadlinePhrase": "by Monday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ],
       "openQuestions": [
         {
           "question": "Who is going to test the restore process?",
-          "segmentIds": [
-            "s0010",
-            "s0011"
-          ]
+          "segmentIds": ["s0010", "s0011"]
         }
       ],
       "risks": []
@@ -923,30 +675,19 @@
         {
           "title": "Open items",
           "summary": "I'll upgrade the Kubernetes cluster to version one thirty-one by Friday. I'll rotate the database credentials by Wednesday.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005"]
         },
         {
           "title": "It next week",
           "summary": "Decision: we'll freeze infrastructure changes during the October release week.",
-          "segmentIds": [
-            "s0007",
-            "s0008"
-          ]
+          "segmentIds": ["s0007", "s0008"]
         }
       ],
       "decisions": [
         {
           "text": "Freeze infrastructure changes during the October release week",
           "status": "confirmed",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ],
       "actionItems": [
@@ -956,9 +697,7 @@
           "deadlinePhrase": "by Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0002"
-          ]
+          "segmentIds": ["s0002"]
         },
         {
           "task": "Rotate the database credentials",
@@ -966,9 +705,7 @@
           "deadlinePhrase": "by Wednesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0003"
-          ]
+          "segmentIds": ["s0003"]
         },
         {
           "task": "Put together a storage cost report",
@@ -976,19 +713,13 @@
           "deadlinePhrase": "by next Monday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0004", "s0005"]
         }
       ],
       "openQuestions": [
         {
           "question": "Do we have a plan for the logging migration?",
-          "segmentIds": [
-            "s0006",
-            "s0007"
-          ]
+          "segmentIds": ["s0006", "s0007"]
         }
       ],
       "risks": []
@@ -1004,22 +735,14 @@
         {
           "title": "Storage, cold, i'll",
           "summary": "The Kubernetes upgrade is done, it finished on Thursday. I'll finish rotating the database credentials by this Friday instead.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         }
       ],
       "decisions": [
         {
           "text": "Move logs older than ninety days to cold storage",
           "status": "confirmed",
-          "segmentIds": [
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0005", "s0006"]
         }
       ],
       "actionItems": [
@@ -1029,9 +752,7 @@
           "deadlinePhrase": "by this Friday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0003"
-          ]
+          "segmentIds": ["s0003"]
         },
         {
           "task": "Set up the lifecycle rule for the log bucket",
@@ -1039,17 +760,13 @@
           "deadlinePhrase": "by Wednesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ],
       "openQuestions": [
         {
           "question": "Which tool to use?",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ],
       "risks": []
@@ -1065,11 +782,7 @@
         {
           "title": "Launch, i'll, final",
           "summary": "Welcome everyone, this is the Q4 launch planning. I'd like a quick update from each team.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003"]
         }
       ],
       "decisions": [],
@@ -1080,9 +793,7 @@
           "deadlinePhrase": "by Thursday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0003"
-          ]
+          "segmentIds": ["s0003"]
         },
         {
           "task": "Backfill the last twelve months of data",
@@ -1090,9 +801,7 @@
           "deadlinePhrase": "by the end of next week",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0004"
-          ]
+          "segmentIds": ["s0004"]
         },
         {
           "task": "Run a training session for the team",
@@ -1100,10 +809,7 @@
           "deadlinePhrase": "next Tuesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0005", "s0006"]
         },
         {
           "task": "Make sure the final build is ready",
@@ -1111,10 +817,7 @@
           "deadlinePhrase": "by October twentieth",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0009",
-            "s0010"
-          ]
+          "segmentIds": ["s0009", "s0010"]
         },
         {
           "task": "Send Irene the list of languages",
@@ -1122,33 +825,23 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0014",
-            "s0015"
-          ]
+          "segmentIds": ["s0014", "s0015"]
         }
       ],
       "openQuestions": [
         {
           "question": "Will pricing change at launch?",
-          "segmentIds": [
-            "s0011",
-            "s0012"
-          ]
+          "segmentIds": ["s0011", "s0012"]
         }
       ],
       "risks": [
         {
           "text": "Security sign-off is the last blocker",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         },
         {
           "text": "I'm worried the marketing site won't be translated in time for the European launch",
-          "segmentIds": [
-            "s0013"
-          ]
+          "segmentIds": ["s0013"]
         }
       ]
     }
@@ -1163,21 +856,14 @@
         {
           "title": "Warehouse scanner rollout",
           "summary": "The main item today is the warehouse scanner rollout. We've installed twelve out of forty so far.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         }
       ],
       "decisions": [
         {
           "text": "Pause the rollout in bay four until the firmware is fixed",
           "status": "confirmed",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ],
       "actionItems": [
@@ -1187,10 +873,7 @@
           "deadlinePhrase": "by Tuesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0004", "s0005"]
         },
         {
           "task": "Finish installing the remaining scanners",
@@ -1198,26 +881,19 @@
           "deadlinePhrase": "by the end of next week",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0006"
-          ]
+          "segmentIds": ["s0006"]
         }
       ],
       "openQuestions": [
         {
           "question": "Who's going to train the night shift on the new scanners?",
-          "segmentIds": [
-            "s0008",
-            "s0009"
-          ]
+          "segmentIds": ["s0008", "s0009"]
         }
       ],
       "risks": [
         {
           "text": "The holiday volume starts in three weeks, so we can't slip much",
-          "segmentIds": [
-            "s0010"
-          ]
+          "segmentIds": ["s0010"]
         }
       ]
     }
@@ -1232,21 +908,14 @@
         {
           "title": "Fresh, start, i'll",
           "summary": "Where did we land on the theme? We tested three concepts and people liked Fresh Start the most.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         }
       ],
       "decisions": [
         {
           "text": "Go with Fresh Start",
           "status": "confirmed",
-          "segmentIds": [
-            "s0005"
-          ]
+          "segmentIds": ["s0005"]
         }
       ],
       "actionItems": [
@@ -1256,9 +925,7 @@
           "deadlinePhrase": "by next Thursday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0006"
-          ]
+          "segmentIds": ["s0006"]
         },
         {
           "task": "Email the top ten partners",
@@ -1266,9 +933,7 @@
           "deadlinePhrase": "before the launch",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         },
         {
           "task": "Loop in legal before we publish anything",
@@ -1276,10 +941,7 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0009",
-            "s0010"
-          ]
+          "segmentIds": ["s0009", "s0010"]
         },
         {
           "task": "Send legal the draft once Grace is done",
@@ -1287,25 +949,19 @@
           "deadlinePhrase": null,
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0010"
-          ]
+          "segmentIds": ["s0010"]
         }
       ],
       "openQuestions": [
         {
           "question": "Who signs off on the ad spend this time?",
-          "segmentIds": [
-            "s0011"
-          ]
+          "segmentIds": ["s0011"]
         }
       ],
       "risks": [
         {
           "text": "If approval takes two weeks we'll miss the launch window",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ]
     }
@@ -1320,30 +976,19 @@
         {
           "title": "Second, role, backend",
           "summary": "We interviewed two candidates for the backend role this week. The second candidate was much stronger on system design.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004"]
         }
       ],
       "decisions": [
         {
           "text": "Extend an offer to the second candidate",
           "status": "confirmed",
-          "segmentIds": [
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0004", "s0005"]
         },
         {
           "text": "Hold off on a second role until Q1",
           "status": "confirmed",
-          "segmentIds": [
-            "s0010",
-            "s0011"
-          ]
+          "segmentIds": ["s0010", "s0011"]
         }
       ],
       "actionItems": [
@@ -1353,9 +998,7 @@
           "deadlinePhrase": "by Wednesday",
           "priority": "medium",
           "confidence": "medium",
-          "segmentIds": [
-            "s0006"
-          ]
+          "segmentIds": ["s0006"]
         },
         {
           "task": "Call the two formal references",
@@ -1363,18 +1006,14 @@
           "deadlinePhrase": "tomorrow morning",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "One thing that worries me is the start date overlapping with the holidays",
-          "segmentIds": [
-            "s0012"
-          ]
+          "segmentIds": ["s0012"]
         }
       ]
     }
@@ -1389,23 +1028,14 @@
         {
           "title": "Again, call, credit",
           "summary": "ok so the initech account is escalating again, third time this month. the export job keeps timing out on their largest workspace.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005",
-            "s0006"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005", "s0006"]
         }
       ],
       "decisions": [
         {
           "text": "Last time to offer a one month credit",
           "status": "confirmed",
-          "segmentIds": [
-            "s0004"
-          ]
+          "segmentIds": ["s0004"]
         }
       ],
       "actionItems": [
@@ -1415,9 +1045,7 @@
           "deadlinePhrase": "this afternoon",
           "priority": "medium",
           "confidence": "medium",
-          "segmentIds": [
-            "s0003"
-          ]
+          "segmentIds": ["s0003"]
         },
         {
           "task": "File the ticket and look at the timeout",
@@ -1425,18 +1053,14 @@
           "deadlinePhrase": "today",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "They churn at renewal in november if this keeps happening",
-          "segmentIds": [
-            "s0008"
-          ]
+          "segmentIds": ["s0008"]
         }
       ]
     }
@@ -1451,13 +1075,7 @@
         {
           "title": "Cutover, export, anything",
           "summary": "The last piece is the data export, which is slower than I hoped. Can you send me the draft plan by Monday?",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005"]
         }
       ],
       "decisions": [],
@@ -1468,10 +1086,7 @@
           "deadlinePhrase": "by Monday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0003",
-            "s0004"
-          ]
+          "segmentIds": ["s0003", "s0004"]
         },
         {
           "task": "Review it and we can decide the cutover date",
@@ -1479,18 +1094,14 @@
           "deadlinePhrase": "on Tuesday",
           "priority": "medium",
           "confidence": "high",
-          "segmentIds": [
-            "s0005"
-          ]
+          "segmentIds": ["s0005"]
         }
       ],
       "openQuestions": [],
       "risks": [
         {
           "text": "Is that the export may not be ready before the cutover",
-          "segmentIds": [
-            "s0006"
-          ]
+          "segmentIds": ["s0006"]
         }
       ]
     }
@@ -1505,22 +1116,14 @@
         {
           "title": "Board deck",
           "summary": "I'll be presenting the sales numbers, so I want the pipeline slide simpler. We could maybe add a slide on churn, but I think there is no need this time.",
-          "segmentIds": [
-            "s0001",
-            "s0002",
-            "s0003",
-            "s0004",
-            "s0005"
-          ]
+          "segmentIds": ["s0001", "s0002", "s0003", "s0004", "s0005"]
         }
       ],
       "decisions": [
         {
           "text": "We're dropping the pricing slide",
           "status": "confirmed",
-          "segmentIds": [
-            "s0004"
-          ]
+          "segmentIds": ["s0004"]
         }
       ],
       "actionItems": [
@@ -1530,18 +1133,13 @@
           "deadlinePhrase": "by Friday end of day",
           "priority": "high",
           "confidence": "high",
-          "segmentIds": [
-            "s0007"
-          ]
+          "segmentIds": ["s0007"]
         }
       ],
       "openQuestions": [
         {
           "question": "Do we need legal to review the forward-looking statements?",
-          "segmentIds": [
-            "s0008",
-            "s0009"
-          ]
+          "segmentIds": ["s0008", "s0009"]
         }
       ],
       "risks": []

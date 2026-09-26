@@ -25,6 +25,10 @@ export interface GroundTruth {
   decisions: ExpectedItem[];
   /** Must never appear as a confirmed decision (superseded or never agreed). */
   notDecisions?: string[][];
+  /** Each group: none of these words may appear in any confirmed decision. */
+  neverDecisions?: string[][];
+  /** Each group: none of these words may appear in any open question (answered or not a question). */
+  neverQuestions?: string[][];
   actionItems: ExpectedAction[];
   openQuestions: ExpectedItem[];
   risks: ExpectedItem[];
