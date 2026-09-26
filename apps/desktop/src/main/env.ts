@@ -24,6 +24,8 @@ export interface Env {
   aiOverride: AiProviderConfig | null;
   /** Test-only: a 16 kHz WAV streamed in real time as meeting audio. */
   testMeetingAudio: string | null;
+  /** Test-only: run meeting detection, which tests normally leave off (capture harness). */
+  detectInTest: boolean;
 }
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = false): Env {
@@ -47,6 +49,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env, isPackaged = fa
     claudeApiKey: isTest ? null : source.ANTHROPIC_API_KEY || null,
     aiOverride: aiOverride(source, isTest),
     testMeetingAudio: isTest ? source.MEETING_ASSISTANT_TEST_MEETING_AUDIO || null : null,
+    detectInTest: isTest && source.MEETING_ASSISTANT_TEST_DETECTION === '1',
   };
 }
 

@@ -1,0 +1,63 @@
+{
+  "id": "deployment-standup",
+  "about": "The four-line dialogue from the capture validation brief. Sarah is the person using the app (her voice goes into the microphone); Alice and Bob are remote (their voices come through the meeting audio).",
+  "windowTitle": "Project Phoenix standup | Meeting | Microsoft Teams",
+  "user": {
+    "name": "Sarah Lee",
+    "email": "sarah.lee@acme.example.test"
+  },
+  "voices": {
+    "Alice": 10,
+    "Bob": 450,
+    "Sarah": 200
+  },
+  "lines": [
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Let's move the deployment to Monday."
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "I'll update the firewall rule by Friday."
+    },
+    {
+      "speaker": "Sarah",
+      "channel": "mic",
+      "text": "I'll finish QA before Monday."
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Agreed. Deployment is Monday."
+    }
+  ],
+  "slides": [
+    {
+      "fromLine": 0,
+      "lines": ["Project Phoenix", "Deployment Date: Monday", "Owner: Bob"]
+    }
+  ],
+  "expected": {
+    "decisions": [
+      {
+        "match": "deploy.*monday",
+        "status": "confirmed"
+      }
+    ],
+    "tasks": [
+      {
+        "match": "firewall",
+        "owner": "Bob",
+        "weekday": "Friday"
+      },
+      {
+        "match": "finish qa",
+        "owner": "Sarah Lee",
+        "weekday": "Monday"
+      }
+    ],
+    "screen": ["Deployment Date: Monday", "Owner: Bob"]
+  }
+}

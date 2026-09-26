@@ -173,7 +173,12 @@ async function main(): Promise<void> {
   buildMenu();
   const syncDetector = () => {
     const s = services.settings.get();
-    if (s.capture.detectMeetings && s.onboardingComplete && env.appEnv !== 'test') detector.start();
+    if (
+      s.capture.detectMeetings &&
+      s.onboardingComplete &&
+      (env.appEnv !== 'test' || env.detectInTest)
+    )
+      detector.start();
     else detector.stop();
   };
   syncDetector();

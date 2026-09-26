@@ -165,7 +165,7 @@ describe('screen watcher (slides, never video)', () => {
   });
 
   it('helpers: text cleanup, same-text check, picture difference', () => {
-    expect(cleanScreenText('  Project   Phoenix \n|\n ~ \nOwner: Bob\n')).toBe(
+    expect(cleanScreenText('  Project   Phoenix \n|\n ~ \nOwner: Bob _\n')).toBe(
       'Project Phoenix\nOwner: Bob',
     );
     expect(sameText('Deployment Date: Monday', 'Deployment date Monday')).toBe(true);

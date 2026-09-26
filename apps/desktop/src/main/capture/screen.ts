@@ -60,12 +60,20 @@ export function signatureFromBgra(bitmap: Buffer | Uint8Array): Signature {
 
 /** Tidy text read from the screen: keep lines that look like words, cap the length. */
 export function cleanScreenText(raw: string): string {
-  return raw
-    .split('\n')
-    .map((l) => l.replace(/\s+/g, ' ').trim())
-    .filter((l) => l.length >= 3 && /[A-Za-z]{2}/.test(l))
-    .join('\n')
-    .slice(0, MAX_TEXT);
+  return (
+    raw
+      .split('\n')
+      // Collapse spaces and drop stray symbols the reader sees at line ends (a cursor, a border).
+      .map((l) =>
+        l
+          .replace(/\s+/g, ' ')
+          .replace(/(?:\s+[^\p{L}\p{N}\s]{1,2})+$/u, '')
+          .trim(),
+      )
+      .filter((l) => l.length >= 3 && /[A-Za-z]{2}/.test(l))
+      .join('\n')
+      .slice(0, MAX_TEXT)
+  );
 }
 
 const words = (t: string) => new Set(t.toLowerCase().match(/[a-z0-9]+/g) ?? []);
