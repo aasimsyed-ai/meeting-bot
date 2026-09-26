@@ -21,7 +21,7 @@ import {
   createExtractor,
   type AiProviderId,
 } from '../src/extract/provider.ts';
-import type { Extractor } from '../src/extract/schema.ts';
+import { EMPTY_EXTRACTION, type Extractor } from '../src/extract/schema.ts';
 import { aggregate, RULES_THRESHOLDS, scoreFixture, type FixtureScore } from './metrics.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -54,14 +54,32 @@ async function main() {
   const extractor = makeExtractor();
   if (!extractor) return;
   const scores: FixtureScore[] = [];
+  let errors = 0;
   const started = Date.now();
   console.log(`Evaluating ${FIXTURES.length} ${setName} meetings with the ${engineArg} engine\n`);
   for (const fx of FIXTURES) {
     const t0 = Date.now();
-    const result = await analyzeMeeting(
-      { meeting: fx.meeting, segments: fx.segments, screen: fx.screen },
-      { extractor, now: () => new Date('2026-09-25T12:00:00-04:00') },
-    );
+    let result;
+    try {
+      result = await analyzeMeeting(
+        { meeting: fx.meeting, segments: fx.segments, screen: fx.screen },
+        { extractor, now: () => new Date('2026-09-25T12:00:00-04:00') },
+      );
+    } catch (err) {
+      // A real model can fail on a meeting (bad JSON, timeout). Score it as empty notes
+      // rather than stopping, so the report shows the failure rate honestly.
+      errors++;
+      console.log(
+        `${fx.id.padEnd(32)} FAILED: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      result = await analyzeMeeting(
+        { meeting: fx.meeting, segments: fx.segments },
+        {
+          extractor: { ...extractor, extract: async () => ({ ...EMPTY_EXTRACTION }) },
+          now: () => new Date('2026-09-25T12:00:00-04:00'),
+        },
+      );
+    }
     const s = scoreFixture(fx, result.notes, result.email);
     scores.push(s);
     const flag = s.violations.length ? ' ⚠' : '';
@@ -78,6 +96,7 @@ async function main() {
   console.log('\nAggregate');
   for (const [k, v] of Object.entries(agg))
     console.log(`  ${k.padEnd(26)} ${k === 'violations' ? v : pct(v)}`);
+  console.log(`  failed meetings            ${errors} of ${FIXTURES.length}`);
   console.log(`  total time                 ${Date.now() - started} ms`);
 
   const failedGates =
@@ -98,6 +117,7 @@ async function main() {
         promptVersion: extractor.promptVersion,
         date: new Date().toISOString(),
         aggregate: agg,
+        failedMeetings: errors,
         scores,
       },
       null,

@@ -211,7 +211,7 @@ describe('local AI server provider (OpenAI-compatible, e.g. Ollama)', () => {
       .generate({ system: '', user: '', task: 'extract' })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(AiError);
-    expect((err as AiError).code).toBe('offline');
+    expect((err as AiError).code).toBe('unreachable');
   });
 });
 

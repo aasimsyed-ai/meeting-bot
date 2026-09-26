@@ -14,6 +14,7 @@ import type { Extractor } from './schema.ts';
  *   MEETING_ASSISTANT_LLM_BASE_URL  local-llm: e.g. http://localhost:11434/v1 (Ollama)
  *   MEETING_ASSISTANT_LLM_MODEL     local-llm: e.g. qwen2.5:7b-instruct
  *   MEETING_ASSISTANT_LLM_API_KEY   local-llm: only if the server requires one
+ *   MEETING_ASSISTANT_LLM_MAX_CHARS local-llm: transcript characters per request (default 24000)
  *   ANTHROPIC_API_KEY               claude: optional, the user's own key
  */
 
@@ -24,6 +25,8 @@ export interface AiProviderConfig {
   baseUrl?: string;
   model?: string;
   apiKey?: string;
+  /** Characters per request before a long meeting is split. Local models have small contexts. */
+  maxChunkChars?: number;
   claudeApiKey?: string;
 }
 
@@ -39,6 +42,7 @@ export function aiConfigFromEnv(env: Record<string, string | undefined>): AiProv
     baseUrl: env.MEETING_ASSISTANT_LLM_BASE_URL || undefined,
     model: env.MEETING_ASSISTANT_LLM_MODEL || undefined,
     apiKey: env.MEETING_ASSISTANT_LLM_API_KEY || undefined,
+    maxChunkChars: Number(env.MEETING_ASSISTANT_LLM_MAX_CHARS) || undefined,
     claudeApiKey: env.ANTHROPIC_API_KEY || undefined,
   };
 }
@@ -78,7 +82,7 @@ export function createExtractor(
             model: cfg.model,
             apiKey: cfg.apiKey,
           }),
-          { cache: opts.cache },
+          { cache: opts.cache, maxChunkChars: cfg.maxChunkChars ?? 24_000 },
         ),
         fallback: rules,
       };

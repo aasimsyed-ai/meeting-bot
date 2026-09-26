@@ -65,7 +65,7 @@ export class OpenAiCompatibleProvider implements LlmProvider {
     } catch (err) {
       if (signal?.aborted) throw new AiError('cancelled', undefined, { cause: err });
       if (timeout.aborted) throw new AiError('timeout', undefined, { cause: err });
-      throw new AiError('offline', `Could not reach ${url}`, { cause: err });
+      throw new AiError('unreachable', url, { cause: err });
     }
     if (!res.ok) throw httpError(res.status, await res.text().catch(() => ''));
 
