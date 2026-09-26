@@ -66,7 +66,7 @@ jobs:
       - name: End-to-end tests
         if: runner.os != 'Linux'
         run: pnpm exec playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report-${{ matrix.os }}
@@ -92,7 +92,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .models
           key: speech-models-${{ hashFiles('apps/desktop/src/main/transcription/models.ts') }}-tts-v1
@@ -147,7 +147,7 @@ jobs:
           # No certificates in CI: builds are unsigned (see docs/deployment.md).
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: installer-${{ matrix.os }}
           path: |
@@ -169,7 +169,7 @@ jobs:
           esac
           export MEETING_ASSISTANT_E2E_EXECUTABLE="$exe"
           if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a pnpm exec playwright test; else pnpm exec playwright test; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: packaged-playwright-report-${{ matrix.os }}

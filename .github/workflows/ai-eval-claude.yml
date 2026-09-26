@@ -26,7 +26,7 @@ jobs:
         run: pnpm --filter @meeting-assistant/core eval -- --engine claude --holdout --verbose
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: claude-eval-results
           path: packages/core/eval/results
