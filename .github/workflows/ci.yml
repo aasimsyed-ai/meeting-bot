@@ -32,6 +32,8 @@ jobs:
         run: pnpm eval
       - name: AI evaluation (held-out set)
         run: pnpm --filter @meeting-assistant/core eval:holdout
+      - name: AI evaluation through the AI provider path (mock provider, free, no network)
+        run: pnpm --filter @meeting-assistant/core eval -- --engine mock
       - name: Dependency audit (production, high and critical)
         run: pnpm audit --prod --audit-level high
       - run: pnpm --filter @meeting-assistant/desktop build

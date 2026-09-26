@@ -1,0 +1,49 @@
+name: AI evaluation (free local model)
+
+# Manual. Runs an open-source model with Ollama on the GitHub runner (free for this
+# public repository) and scores it on the evaluation meetings. No key, no paid service.
+# CPU only, so small models are practical; expect 20 to 60 minutes.
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Ollama model to evaluate
+        required: true
+        default: qwen2.5:3b-instruct
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      MODEL: ${{ inputs.model }}
+      MEETING_ASSISTANT_LLM_BASE_URL: http://localhost:11434/v1
+      MEETING_ASSISTANT_LLM_MODEL: ${{ inputs.model }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Start Ollama with a context window large enough for a meeting
+        run: |
+          sudo systemctl stop ollama 2>/dev/null || true
+          OLLAMA_CONTEXT_LENGTH=16384 nohup ollama serve > "$RUNNER_TEMP/ollama.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:11434/api/tags >/dev/null && break; sleep 1; done
+          ollama pull "$MODEL"
+      - name: Development set
+        run: pnpm --filter @meeting-assistant/core eval -- --engine local-llm --verbose
+      - name: Held-out set
+        run: pnpm --filter @meeting-assistant/core eval -- --engine local-llm --holdout --verbose
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: local-model-eval-results
+          path: packages/core/eval/results

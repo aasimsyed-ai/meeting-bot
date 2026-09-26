@@ -1,6 +1,8 @@
-name: AI evaluation (Claude)
+name: AI evaluation (optional Claude, own key)
 
-# Manual only: it calls the paid Claude API for every evaluation meeting.
+# Optional and manual. Nothing in development, tests or CI needs it. It only runs a real
+# evaluation if someone chooses to add an ANTHROPIC_API_KEY secret; otherwise it reports NOT RUN.
+# The free alternative is ai-eval-local.yml (open model on the runner).
 on:
   workflow_dispatch:
 
