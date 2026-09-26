@@ -15,9 +15,12 @@ export async function launch(
   opts: { dataDir?: string; env?: Record<string, string> } = {},
 ): Promise<Launched> {
   const dataDir = opts.dataDir ?? mkdtempSync(join(tmpdir(), 'ma-e2e-'));
-  const args = ['.'];
+  // MEETING_ASSISTANT_E2E_EXECUTABLE runs the same tests against a packaged app.
+  const executablePath = process.env.MEETING_ASSISTANT_E2E_EXECUTABLE || undefined;
+  const args = executablePath ? [] : ['.'];
   if (process.platform === 'linux') args.push('--no-sandbox');
   const app = await electron.launch({
+    ...(executablePath ? { executablePath } : {}),
     args,
     cwd: join(__dirname, '..'),
     env: {

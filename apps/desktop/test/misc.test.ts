@@ -30,6 +30,7 @@ import {
 } from '../src/main/transcription/models';
 import { fakeEncryptor } from './helpers';
 import type { EmailDraftRow } from '../src/shared/types';
+import { createIpcHandler } from '../src/main/ipc-handler';
 
 describe('meeting detection', () => {
   it.each([
@@ -218,6 +219,46 @@ describe('IPC validation', () => {
         { status: 'completed', deadlineDate: '2026-10-01' },
       ]).success,
     ).toBe(true);
+  });
+});
+
+describe('IPC entry point', () => {
+  const main = { id: 'main-window' };
+  const calls: unknown[][] = [];
+  const handle = createIpcHandler<{ id: string }>({
+    isTrusted: (sender) => sender === main,
+    handlers: {
+      'meetings:get': (...args: unknown[]) => {
+        calls.push(args);
+        if (args[0] === 'mtg_boom') throw new Error('SQLITE_CORRUPT at /home/alice/secret.db');
+        return { ok: true };
+      },
+    },
+    log: { warn: () => undefined, error: () => undefined },
+    userMessage: () => ({ message: 'Something went wrong. Please try again.', code: 'internal' }),
+  });
+
+  it('refuses calls from any window other than the main window', async () => {
+    expect(await handle({ id: 'capture-window' }, 'meetings:get', ['mtg_1'])).toEqual(
+      expect.objectContaining({ __ipcError: true, code: 'forbidden' }),
+    );
+    expect(calls).toEqual([]);
+  });
+
+  it('refuses unknown channels and invalid arguments before any handler runs', async () => {
+    expect(await handle(main, 'fs:readFile', ['/etc/passwd'])).toEqual(
+      expect.objectContaining({ code: 'invalid' }),
+    );
+    expect(await handle(main, 'meetings:get', ['../../etc/passwd'])).toEqual(
+      expect.objectContaining({ code: 'invalid' }),
+    );
+    expect(calls).toEqual([]);
+  });
+
+  it('runs valid calls and never leaks internal error details', async () => {
+    expect(await handle(main, 'meetings:get', ['mtg_1'])).toEqual({ ok: true });
+    const failed = (await handle(main, 'meetings:get', ['mtg_boom'])) as { message: string };
+    expect(failed.message).not.toMatch(/SQLITE|secret|alice/);
   });
 });
 

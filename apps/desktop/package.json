@@ -1,6 +1,7 @@
 {
   "name": "@meeting-assistant/desktop",
   "productName": "Meeting Assistant",
+  "desktopName": "meeting-assistant.desktop",
   "version": "0.1.0",
   "private": true,
   "description": "Turns any meeting into actionable notes. Works with Teams, Zoom, Google Meet, Slack Huddles and more.",

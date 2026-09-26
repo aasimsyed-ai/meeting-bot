@@ -406,8 +406,10 @@ export function composeTldr(
   meeting: MeetingContext,
 ): string {
   const parts: string[] = [];
-  const topics = notes.topics.slice(0, 3).map((t) => t.title.toLowerCase());
-  if (topics.length) parts.push(`The meeting covered ${joinList(topics)}.`);
+  // Titles keep their capitals ("Project Phoenix"), so no "The meeting covered ..." sentence.
+  const topics = notes.topics.slice(0, 3).map((t) => t.title);
+  if (topics.length)
+    parts.push(`${topics.length === 1 ? 'Topic' : 'Topics'}: ${joinList(topics)}.`);
   const confirmed = notes.decisions.filter((d) => d.status === 'confirmed');
   if (confirmed.length === 1) parts.push(`Decision: ${lowerFirst(confirmed[0]!.text)}.`);
   else if (confirmed.length > 1)

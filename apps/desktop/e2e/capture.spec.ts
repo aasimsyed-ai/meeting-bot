@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, onboard, shot, type Launched } from './app';
 
 let l: Launched | null = null;
+
 test.afterEach(async () => {
   await l?.app.close().catch(() => undefined);
   l = null;
@@ -25,14 +27,18 @@ test('live capture uses the real microphone path and explains what is missing', 
     win.getByText('The speech engine is not downloaded yet.', { exact: false }),
   ).toBeVisible();
   // Windows/Linux: Chromium's fake devices also fake the loopback stream, so meeting audio flows.
-  // macOS: meeting audio comes from AudioTee, which needs a permission CI cannot grant; the app must say so.
+  // macOS: meeting audio comes from AudioTee, which needs a permission CI cannot grant. Either
+  // audio flows, or the meter and a notice both say plainly that it does not.
   const meetingMeter = win.locator('.meter', { hasText: 'Meeting audio' });
   if (process.platform === 'darwin') {
-    await expect(
-      meetingMeter.or(
-        win.getByText(/Meeting audio (could not be captured|is no longer being captured)/),
-      ),
-    ).toBeVisible();
+    await expect(async () => {
+      const state = await meetingMeter.innerText();
+      if (state.includes('Listening')) return;
+      expect(state).toMatch(/No audio|Not available/);
+      await expect(win.locator('.notice-text', { hasText: /meeting audio/i }).first()).toBeVisible({
+        timeout: 1000,
+      });
+    }).toPass({ timeout: 20_000 });
   } else {
     await expect(meetingMeter).toContainText('Listening', { timeout: 15_000 });
   }
@@ -66,8 +72,20 @@ test('a crash mid-meeting is detected and the notes can be recovered', async () 
   await l.win.getByRole('button', { name: /Try a sample meeting/ }).click();
   await expect(l.win.locator('.transcript-live')).toContainText('firewall', { timeout: 20_000 });
   const dataDir = l.dataDir;
-  // Simulate a crash: kill the process without any shutdown.
-  l.app.process().kill('SIGKILL');
+  // Simulate a crash: kill the app's main process without any shutdown. On Windows the process
+  // Playwright returns is not the app's main process, so ask Electron for the real one.
+  const mainPid = await l.app.evaluate(() => process.pid);
+  const proc = l.app.process();
+  const exited = new Promise((r) => proc.once('exit', r));
+  if (mainPid && mainPid !== proc.pid) {
+    try {
+      process.kill(mainPid);
+    } catch {
+      execFileSync('taskkill', ['/F', '/PID', String(mainPid)], { stdio: 'ignore' });
+    }
+  }
+  proc.kill('SIGKILL');
+  await exited;
   await new Promise((r) => setTimeout(r, 1000));
 
   l = await launch({ dataDir });

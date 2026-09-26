@@ -28,8 +28,8 @@ import { MeetingDetector } from './detection';
 import { UtilityTranscriber } from './transcription/client';
 import { modelPaths } from './transcription/models';
 import { setupUpdater } from './updater';
+import { createIpcHandler } from './ipc-handler';
 import { APP_CHANNELS } from '../shared/channels';
-import { IPC_SCHEMAS, type Channel } from '../shared/ipc';
 import type { AppEvent, CaptureStatus } from '../shared/types';
 
 const env = readEnv(process.env, app.isPackaged);
@@ -47,6 +47,8 @@ else if (env.appEnv !== 'production')
   app.setPath('userData', `${app.getPath('userData')}-${env.appEnv}`);
 
 if (!app.requestSingleInstanceLock()) {
+  // Another instance owns this data folder; Electron has asked it to show its window.
+  console.error('Meeting Assistant is already running. Showing the open window instead.');
   app.quit();
 } else {
   void main();
@@ -232,27 +234,16 @@ function hardenSessions(): void {
 }
 
 function registerIpc(): void {
-  const handlers = services.handlers() as Record<string, (...args: unknown[]) => unknown>;
+  const handle = createIpcHandler<IpcMainInvokeEvent['sender']>({
+    isTrusted: (sender) => !!mainWindow && sender === mainWindow.webContents,
+    handlers: services.handlers() as Record<string, (...args: unknown[]) => unknown>,
+    log,
+    userMessage,
+  });
   ipcMain.handle(
     APP_CHANNELS.invoke,
-    async (event: IpcMainInvokeEvent, channel: unknown, args: unknown) => {
-      // Only our own main window may call the API.
-      if (!mainWindow || event.sender !== mainWindow.webContents)
-        return { __ipcError: true, message: 'Not allowed.', code: 'forbidden' };
-      if (typeof channel !== 'string' || !(channel in IPC_SCHEMAS))
-        return { __ipcError: true, message: 'Unknown request.', code: 'invalid' };
-      const parsed = IPC_SCHEMAS[channel as Channel].safeParse(args);
-      if (!parsed.success) {
-        log.warn('ipc_invalid_args', { channel });
-        return { __ipcError: true, message: 'That request was not valid.', code: 'invalid' };
-      }
-      try {
-        return await handlers[channel]!(...(parsed.data as unknown[]));
-      } catch (err) {
-        log.error('ipc_failed', { channel, error: err instanceof Error ? err : String(err) });
-        return { __ipcError: true, ...userMessage(err) };
-      }
-    },
+    (event: IpcMainInvokeEvent, channel: unknown, args: unknown) =>
+      handle(event.sender, channel, args),
   );
 }
 

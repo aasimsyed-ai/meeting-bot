@@ -100,9 +100,9 @@ export function Tasks() {
                   <span className="sr-only">Done</span>
                 </th>
                 <th>Task</th>
-                <th style={{ width: 170 }}>Owner</th>
+                <th style={{ width: 160 }}>Owner</th>
                 <th style={{ width: 150 }}>Due</th>
-                <th style={{ width: 130 }}>Status</th>
+                <th style={{ width: 150 }}>Status</th>
               </tr>
             </thead>
             <tbody>

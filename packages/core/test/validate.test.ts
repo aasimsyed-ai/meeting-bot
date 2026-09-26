@@ -206,6 +206,18 @@ describe('validateExtraction', () => {
     expect(notes.tldr).toMatch(/1 action item/);
   });
 
+  it('keeps topic names as written in the built summary', () => {
+    const notes = validateExtraction(
+      {
+        ...empty,
+        topics: [{ title: 'Project Phoenix deployment', summary: '', segmentIds: ['s0001'] }],
+        actionItems: [action({})],
+      },
+      ctx,
+    );
+    expect(notes.tldr).toMatch(/^Topic: Project Phoenix deployment\./);
+  });
+
   it('tolerates malformed engine output', () => {
     const junk = {
       tldr: null,

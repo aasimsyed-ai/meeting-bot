@@ -428,10 +428,15 @@ export class CaptureSession {
     const ch = channel === 'mic' ? this.mic : this.system;
     if (!ch.enabled) return;
     ch.receiving = false;
+    const never = ch.samples === 0;
     const msg =
       channel === 'mic'
-        ? 'Your microphone stopped sending audio.'
-        : 'Meeting audio is no longer being captured.';
+        ? never
+          ? 'No sound is coming from your microphone.'
+          : 'Your microphone stopped sending audio.'
+        : never
+          ? 'No meeting audio is coming through. Check that the meeting sound is on and that Meeting Assistant is allowed to capture it.'
+          : 'Meeting audio is no longer being captured.';
     ch.problem = msg;
     this.problem(channel === 'mic' ? 'mic_lost' : 'system_audio_lost', msg, {
       label: 'Check sound settings',
