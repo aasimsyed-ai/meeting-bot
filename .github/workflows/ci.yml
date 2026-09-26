@@ -118,6 +118,18 @@ jobs:
         env:
           MEETING_ASSISTANT_TEST_MODELS: ${{ env.MODELS }}
           MEETING_ASSISTANT_TEST_WAV: ${{ env.MODELS }}/phoenix.wav
+      - name: Capture harness tools (virtual audio devices, window manager, compositor)
+        run: sudo apt-get update -q && sudo apt-get install -y -q pulseaudio pulseaudio-utils openbox xcompmgr
+      - name: Capture harness (fake meeting app, real OS audio and window paths)
+        run: ../../tests/capture/run.sh "$MODELS"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: capture-harness
+          path: |
+            .harness/results
+            apps/desktop/test-results
+          if-no-files-found: ignore
 
   package:
     name: Installer (${{ matrix.os }})
