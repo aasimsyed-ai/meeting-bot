@@ -36,6 +36,8 @@ curl -sSL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vit
 tests/capture/run.sh .models deployment-standup
 ```
 
+CI runs `deployment-standup` and `device-changes` on every push. `team-sync-10min` takes about twelve minutes, so it is run by hand (`tests/capture/run.sh .models team-sync-10min`).
+
 Results (transcript, slide text, decisions, tasks with owners and weekdays, the email draft) are written to `.harness/results/<scenario>.json`. The E2E drives the app exactly as a user would: onboarding, the "meeting detected" card, **Take notes**, the "meeting window has closed" notice, **Stop**, naming speakers, reviewing the email. The only shortcut is that speech models are copied in instead of downloaded.
 
 ## Limits

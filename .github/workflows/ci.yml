@@ -121,7 +121,8 @@ jobs:
       - name: Capture harness tools (virtual audio devices, window manager, compositor)
         run: sudo apt-get update -q && sudo apt-get install -y -q pulseaudio pulseaudio-utils openbox xcompmgr
       - name: Capture harness (fake meeting app, real OS audio and window paths)
-        run: ../../tests/capture/run.sh "$MODELS"
+        # The ten-minute meeting (team-sync-10min) is run by hand; see tests/capture/README.md.
+        run: ../../tests/capture/run.sh "$MODELS" deployment-standup device-changes
       - uses: actions/upload-artifact@v7
         if: always()
         with:
