@@ -28,6 +28,8 @@ const VOICE = {
   channelCount: 1,
 };
 
+const RAW = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
 function failed(channel: CaptureChannelName, err: unknown) {
   const name = err instanceof DOMException ? err.name : '';
   const reason =
@@ -80,7 +82,11 @@ async function startMic(deviceId: string | null, sink: AudioNode) {
 async function startSystem(sink: AudioNode) {
   try {
     const display = await navigator.mediaDevices.getDisplayMedia({
-      audio: true,
+      // Meeting audio is already clean. Chromium turns voice processing on by default, and on
+      // this stream it is harmful: echo cancellation removes the meeting audio itself (it is
+      // the "echo" of what the speakers play), and gain control turns down the system's
+      // output-monitor volume, which some systems remember (see docs/bug-log.md).
+      audio: RAW,
       video: { width: 16, height: 16, frameRate: 1 },
     });
     for (const t of display.getVideoTracks()) t.stop();
