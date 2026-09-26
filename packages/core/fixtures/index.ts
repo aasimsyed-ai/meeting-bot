@@ -80,3 +80,4 @@ export const RECURRING_EXPECTATION = {
     stillOpen: [['logging']],
   },
 };
+export { RECORDED_AI_OUTPUTS } from './ai-outputs.ts';

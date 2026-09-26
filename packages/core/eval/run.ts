@@ -1,49 +1,57 @@
 /**
  * AI evaluation against the Acme ground-truth meetings.
  *
- *   pnpm eval                  offline engine (always available)
- *   pnpm eval -- --engine claude   Claude engine (needs ANTHROPIC_API_KEY; costs money)
+ *   pnpm eval                             offline engine (default, free)
+ *   pnpm eval -- --engine mock            full AI path with the deterministic mock provider (free)
+ *   pnpm eval -- --engine local-llm       a local model server, e.g. Ollama (free; needs
+ *                                         MEETING_ASSISTANT_LLM_BASE_URL and _MODEL)
+ *   pnpm eval -- --engine claude          optional paid API (needs ANTHROPIC_API_KEY)
  *
- * Writes eval/results/<engine>.json and prints a summary table.
+ * Writes eval/results/<engine>-<set>.json and prints a summary table.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ALL_FIXTURES } from '../fixtures/index.ts';
+import { ALL_FIXTURES, RECORDED_AI_OUTPUTS } from '../fixtures/index.ts';
 import { HOLDOUT_FIXTURES } from '../fixtures/holdout.ts';
 import { analyzeMeeting } from '../src/pipeline.ts';
-import { RulesExtractor } from '../src/extract/rules.ts';
+import {
+  AI_PROVIDERS,
+  aiConfigFromEnv,
+  createExtractor,
+  type AiProviderId,
+} from '../src/extract/provider.ts';
 import type { Extractor } from '../src/extract/schema.ts';
 import { aggregate, RULES_THRESHOLDS, scoreFixture, type FixtureScore } from './metrics.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const engineArg = process.argv.includes('--engine')
-  ? process.argv[process.argv.indexOf('--engine') + 1]
-  : 'rules';
+const engineArg = (
+  process.argv.includes('--engine') ? process.argv[process.argv.indexOf('--engine') + 1] : 'rules'
+) as AiProviderId;
 const verbose = process.argv.includes('--verbose');
 const holdout = process.argv.includes('--holdout');
 const FIXTURES = holdout ? HOLDOUT_FIXTURES : ALL_FIXTURES;
 const setName = holdout ? 'holdout' : 'dev';
 
-async function makeExtractor(): Promise<Extractor | null> {
-  if (engineArg === 'rules') return new RulesExtractor();
-  if (engineArg === 'claude') {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log(
-        'NOT RUN: the Claude evaluation needs ANTHROPIC_API_KEY. It calls the paid API for 16 meetings.',
-      );
-      return null;
-    }
-    const { ClaudeExtractor } = await import('../src/extract/claude.ts');
-    return new ClaudeExtractor({ apiKey: process.env.ANTHROPIC_API_KEY });
+function makeExtractor(): Extractor | null {
+  if (!AI_PROVIDERS.includes(engineArg)) throw new Error(`Unknown engine: ${engineArg}`);
+  const choice = createExtractor(
+    { ...aiConfigFromEnv(process.env), provider: engineArg },
+    { recorded: RECORDED_AI_OUTPUTS },
+  );
+  if (choice.unavailable) {
+    console.log(
+      `NOT RUN: ${choice.unavailable.replace(' Notes were made with the offline engine.', '')}`,
+    );
+    return null;
   }
-  throw new Error(`Unknown engine: ${engineArg}`);
+  return choice.extractor;
 }
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
 async function main() {
-  const extractor = await makeExtractor();
+  const extractor = makeExtractor();
   if (!extractor) return;
   const scores: FixtureScore[] = [];
   const started = Date.now();
@@ -73,7 +81,7 @@ async function main() {
   console.log(`  total time                 ${Date.now() - started} ms`);
 
   const failedGates =
-    engineArg === 'rules' && !holdout
+    (engineArg === 'rules' || engineArg === 'mock') && !holdout
       ? Object.entries(RULES_THRESHOLDS).filter(
           ([k, min]) => (agg as unknown as Record<string, number>)[k]! < min!,
         )

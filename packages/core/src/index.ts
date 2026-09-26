@@ -14,3 +14,21 @@ export * from './search.ts';
 export * from './qa.ts';
 export * from './recurring.ts';
 export * from './access.ts';
+export {
+  LlmExtractor,
+  LLM_PROMPT_VERSION,
+  parseProviderOutput,
+  type LlmProvider,
+  type LlmRequest,
+  type ExtractionCache,
+} from './extract/llm.ts';
+export { MockLlmProvider, transcriptFingerprint, type RecordedOutput } from './extract/mock.ts';
+export { OpenAiCompatibleProvider } from './extract/openai-compatible.ts';
+export {
+  aiConfigFromEnv,
+  createExtractor,
+  AI_PROVIDERS,
+  type AiProviderId,
+  type AiProviderConfig,
+  type ProviderChoice,
+} from './extract/provider.ts';
