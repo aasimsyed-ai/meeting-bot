@@ -9,6 +9,7 @@ import {
   tick,
   type Harness,
 } from './helpers';
+import { TEST_ENV } from './helpers';
 import type { CaptureStatus } from '../src/shared/types';
 
 let h: Harness;
@@ -20,6 +21,59 @@ const call = <T>(name: string, ...args: unknown[]): Promise<T> =>
       ...args,
     ),
   ) as Promise<T>;
+
+describe('choosing the notes engine (free by default)', () => {
+  async function runSample(): Promise<{
+    engine: string;
+    warnings: string[];
+    owners: (string | null)[];
+  }> {
+    const started = await call<CaptureStatus>('capture:start', { source: 'demo' });
+    const id = started.meetingId!;
+    await call<CaptureStatus>('capture:stop');
+    await waitFor(() =>
+      h.events.some((e) => e.type === 'processing' && e.meetingId === id && e.info === null),
+    );
+    const d = await call<{
+      notes: {
+        engine: { kind: string };
+        warnings: string[];
+        actionItems: { owner: string | null }[];
+      };
+    }>('meetings:get', id);
+    return {
+      engine: d.notes.engine.kind,
+      warnings: d.notes.warnings,
+      owners: d.notes.actionItems.map((a) => a.owner),
+    };
+  }
+
+  it('runs the full AI path with the mock provider, no network or key', async () => {
+    h = makeHarness({ env: { ...TEST_ENV, aiOverride: { provider: 'mock' } } });
+    const r = await runSample();
+    expect(r.engine).toBe('mock');
+    expect(r.owners).toEqual(['David Wilson', 'Bob Smith']);
+  });
+
+  it('falls back to the offline engine when the local AI server is not running', async () => {
+    h = makeHarness();
+    await call('settings:update', {
+      ai: { mode: 'local', localUrl: 'http://127.0.0.1:1/v1', localModel: 'llama3.1:8b' },
+    });
+    const r = await runSample();
+    expect(r.engine).toBe('rules');
+    expect(r.warnings.join(' ')).toMatch(/made on this device instead/);
+    expect(r.owners).toEqual(['David Wilson', 'Bob Smith']);
+  });
+
+  it('never needs a Claude key: choosing Claude without one uses the offline engine', async () => {
+    h = makeHarness();
+    await call('settings:update', { ai: { mode: 'claude' } });
+    const r = await runSample();
+    expect(r.engine).toBe('rules');
+    expect(r.warnings.join(' ')).toMatch(/requires provider credentials/);
+  });
+});
 
 describe('sample meeting end to end (no microphone)', () => {
   it('captures, stops, analyzes and drafts an email', async () => {
