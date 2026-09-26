@@ -17,7 +17,7 @@ flowchart TD
   SESSION -->|Stop| PROC["Processor (idempotent jobs)"]
   PROC --> CORE
   subgraph CORE["@meeting-assistant/core"]
-    N[Normalize] --> X["Extract<br/>Claude or offline rules"] --> V["Validate<br/>evidence, owners, deadlines, injection"] --> E[Compose email]
+    N[Normalize] --> X["Extract<br/>offline rules, or mock / local / cloud model"] --> V["Validate<br/>evidence, owners, deadlines, injection"] --> E[Compose email]
   end
   CORE --> DB
   DB --> UI["React UI<br/>Home, Meetings, Tasks, Search, Settings"]
@@ -45,11 +45,11 @@ flowchart TD
 ## AI pipeline
 
 1. Normalize: clean text, repair timestamps, drop duplicates, remove microphone echo of meeting audio.
-2. Extract: one schema-constrained call (Claude) or the offline rules engine. Every item cites segment ids.
+2. Extract: the offline rules engine (default) or one schema-constrained model call through a provider (mock, local model server, or optional Claude; see [ai-providers.md](ai-providers.md)). Every item cites segment ids.
 3. Validate: drop items without evidence or built from injected instructions; clear owners not grounded in names or speaker labels; keep a deadline only if its phrase is in the evidence, then normalize it in the meeting's time zone; demote superseded decisions; replace an ungrounded TL;DR.
 4. Compose the email from validated notes (no model involved).
 
-Long meetings are chunked (cached per part) and merged with a small synthesis call. If Claude is unavailable, the rules engine runs instead and the notes say so.
+Long meetings are chunked (cached per part) and merged with a small synthesis call. If a model is unavailable or returns bad output, the rules engine runs instead and the notes say so.
 
 ## Security boundaries
 

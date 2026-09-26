@@ -115,3 +115,11 @@ A sandboxed preload can only `require` a few built-in modules, so a shared chunk
 **Found.** The heartbeat showed the old instance still alive: on Windows the process Playwright returns is not the app's main process, so the test never crashed the app. Once the test killed the real main process, the relaunch got the lock at once (5.1 s test, same as Linux) and the recovery path never ran.
 
 **Decision.** Use Electron's single-instance lock as is. The recovery code was removed rather than kept "just in case", because code that ends processes should not ship on a disproven premise. A launch that is refused the lock says so on stderr.
+
+## ADR-015: Free-first AI providers
+
+**Decision.** The notes engine is an `Extractor`: the offline rules engine by default, or `LlmExtractor` with a provider. Providers: a deterministic mock (tests and development), any OpenAI-compatible server (free local models through Ollama, llama.cpp, LM Studio or vLLM), and Claude as an optional extra. All share one prompt, schema check, chunking, cache and the same validator, and any failure falls back to the offline engine.
+
+**Why.** The product must work end to end with no paid service. A missing key means a local or mock implementation, never a blocked project. Tests of the AI path must be deterministic and free, so the mock replays recorded reference outputs and can be scripted to return hostile or broken output.
+
+**Trade-off.** The offline engine is conservative, and real model quality (local or cloud) is not measured yet. Local models need a few GB of disk and a reasonably fast computer.

@@ -18,6 +18,10 @@ A local-first desktop app (Electron) that turns any meeting (Teams, Zoom, Google
 | `apps/desktop/src/preload`  | Two sandboxed bridges (main window, hidden capture window).                                                          |
 | `apps/desktop/e2e`          | Playwright tests that drive the real Electron app.                                                                   |
 
+## Free-first rule
+
+No paid API key, service or certificate during development unless the user explicitly approves it. Prefer open-source, local models, local transcription, mock providers and synthetic data. Missing credentials mean a mock or local implementation, never a blocked project. Before proposing any paid service, state what it is, why it is needed, the free alternative, the estimated cost, and whether it is MVP or production only. Production-only items live in `docs/release-prerequisites.md`.
+
 ## Key decisions (details in architecture-decisions.md)
 
 - Electron 44 + electron-vite 5 + electron-builder. Vite pinned to 7 (electron-vite 5 does not support Vite 8). TypeScript 6.0 (typescript-eslint caps at <6.1).
@@ -26,7 +30,7 @@ A local-first desktop app (Electron) that turns any meeting (Teams, Zoom, Google
 - **Inside Electron, call sherpa with `enableExternalBuffer = false`** (`vad.front(false)`, `extractor.compute(stream, false)`). Electron's V8 forbids external buffers; default calls fail with "External buffers are not allowed".
 - Speaker labels: live online clustering (cosine 0.72) plus an end-of-meeting average-linkage pass (0.75) that relabels meeting-audio segments. Microphone channel = "You" (one person per mic).
 - Meeting audio: Windows/Linux via Chromium loopback (`setDisplayMediaRequestHandler` with `audio: 'loopback'`, hidden capture window, start runs as a user gesture). macOS 14.2+ via AudioTee (Core Audio taps). Electron's own macOS loopback with a custom picker is broken upstream (electron/electron#52738).
-- AI: one structured pass. Claude (`claude-opus-5`, `client.beta.messages.parse` + `betaZodOutputFormat`, `fallbacks: 'default'` with beta `server-side-fallback-2026-07-01`, adaptive thinking) or the offline rules engine. The validator (`core/src/validate.ts`) is the hallucination guard for both. Email is composed by code from validated notes.
+- AI: `Extractor` is the offline rules engine (default) or `LlmExtractor(provider)` with providers mock, local-llm (OpenAI-compatible, e.g. Ollama) and optional Claude (`docs/ai-providers.md`). Env override `MEETING_ASSISTANT_AI_PROVIDER`; tests only allow rules or mock. Claude details: (`claude-opus-5`, `client.beta.messages.parse` + `betaZodOutputFormat`, `fallbacks: 'default'` with beta `server-side-fallback-2026-07-01`, adaptive thinking) or the offline rules engine. The validator (`core/src/validate.ts`) is the hallucination guard for both. Email is composed by code from validated notes.
 - Email: default opens a `mailto:` draft in the user's mail app; mock provider in tests writes `test-outbox/`. Never report "sent" unless a provider really sent.
 - Sandboxed preloads must be single files. The two preloads share no modules (capture preload inlines its channel names; a test checks they match). electron-vite's `isolatedEntries` crashes without a TTY (5.0.0), so it is not used.
 - Windows E2E: `electronApp.process()` is not the app's main process; to simulate a crash, kill `await app.evaluate(() => process.pid)` (ADR-014).
@@ -44,9 +48,9 @@ A local-first desktop app (Electron) that turns any meeting (Teams, Zoom, Google
 ## Known limitations (keep current)
 
 - Windows and macOS have not been run on real hardware by the team; CI runs unit and E2E tests on GitHub's Windows and macOS runners.
-- Installers are unsigned (no certificates). macOS auto-update needs signing.
+- Installers are unsigned development builds; signing is a release-stage task (`docs/release-prerequisites.md`).
 - One person per microphone: in-room meetings on a shared mic are all labelled "You".
 - Offline engine is conservative; on the held-out set (first run) decision recall was 60% and action precision 82%. The held-out set is no longer blind (#18).
-- Claude engine is wired and unit-tested with a fake client, but has not been evaluated against the real API (no key in development).
+- Real models not measured yet: a free local model is the next step; Claude is optional and requires provider credentials.
 - No calendar integration: participants and recipients come from the user.
 - Screen-context OCR is designed (ADR-010) but not built.

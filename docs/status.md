@@ -15,7 +15,7 @@ Meeting Assistant is a **working beta**. On a computer, the whole flow works: st
 | No open P0 bugs                                | Yes                                                                                                                 |
 | No open P1 bugs                                | Yes                                                                                                                 |
 | Real-device validation                         | NOT TESTED — REQUIRES REAL ACCOUNT/DEVICE/CREDENTIAL ([#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)) |
-| Signed installers and auto-update              | NOT TESTED — REQUIRES REAL ACCOUNT/DEVICE/CREDENTIAL ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)) |
+| Signed installers and auto-update              | Release-stage task; development builds are unsigned ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16))  |
 | Security review                                | Internal review and tests done; no external review                                                                  |
 | Documentation                                  | Done                                                                                                                |
 
@@ -32,6 +32,10 @@ Meeting Assistant is a **working beta**. On a computer, the whole flow works: st
 - Prompt-injection defense, access checks, hardened Electron windows, log redaction.
 - Installers built for all three platforms; the packaged app passes the E2E suite on all three platforms in CI (and locally on Linux, including real audio).
 
+## Development is free-first
+
+No paid key, service or certificate is needed to build, test or use the product. The default notes engine is offline; a free local model server is supported; tests use a deterministic mock AI. Production-only items (code signing, optional cloud AI, direct email sending) are release prerequisites, listed with costs in [release-prerequisites.md](release-prerequisites.md). Signing happens at release time.
+
 ## Known limitations
 
 See [platform support](platform-support.md) and the open issues. The main ones:
@@ -46,6 +50,5 @@ See [platform support](platform-support.md) and the open issues. The main ones:
 ## Next steps
 
 1. Run the manual real-device checklist on Windows and macOS with each meeting app ([#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)).
-2. Get signing certificates and publish a signed beta ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)).
-3. Add an Anthropic API key secret and run the Claude evaluation ([#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)).
-4. Build a fresh held-out set from consented real meetings ([#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)).
+2. Measure a free local model (Ollama) on the evaluation sets ([ai-providers.md](ai-providers.md)).
+3. Build a fresh held-out set from consented real meetings ([#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)).

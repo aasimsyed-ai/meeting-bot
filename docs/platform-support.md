@@ -33,4 +33,4 @@ Detection reads window titles, which apps change from time to time. When detecti
 - **In-room meetings.** Everyone on one laptop microphone is labelled "You" ([#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19)).
 - **Sleep.** Notes pause when the computer sleeps, and the app offers to resume on wake.
 - **Crash.** Audio and transcript are saved as they arrive; the next launch offers to recover the meeting. Tested by killing the main process on Linux, macOS and Windows CI runners.
-- **Unsigned builds.** Windows SmartScreen and macOS Gatekeeper warn until installers are signed ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)).
+- **Unsigned builds.** Development installers are unsigned, so Windows SmartScreen and macOS Gatekeeper warn. Signing is a release-stage task ([release-prerequisites.md](release-prerequisites.md)).

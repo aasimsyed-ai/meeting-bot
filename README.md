@@ -42,12 +42,12 @@ Details and what has and has not been tested: [docs/platform-support.md](docs/pl
 ```
 apps/desktop      Electron app: capture, speech engine, storage, UI, email, tray
 packages/core     Meeting intelligence in plain TypeScript: transcript cleanup,
-                  extraction (offline rules or Claude), validation, email, search, Q&A
+                  extraction (offline rules, or a local or cloud model), validation, email, search, Q&A
 ```
 
 1. A hidden window captures the microphone and meeting audio (macOS: AudioTee) as 16 kHz audio.
 2. A separate process runs on-device speech recognition (sherpa-onnx: Silero VAD, Moonshine, WeSpeaker) and saves lines as they are spoken.
-3. At Stop, the transcript goes through one structured extraction pass (offline rules by default, Claude optionally), then a validator that drops anything without evidence.
+3. At Stop, the transcript goes through one structured extraction pass (offline rules by default; a local model server or Claude optionally), then a validator that drops anything without evidence.
 4. Everything is stored in SQLite with full-text search, in your user data folder.
 
 More: [docs/architecture.md](docs/architecture.md), decisions in [docs/architecture-decisions.md](docs/architecture-decisions.md).
@@ -66,7 +66,7 @@ pnpm dev                 # run the app
 
 In the app, choose **Explore with sample meetings** to look around, or **Try a sample meeting** on Home to watch notes being taken without a microphone. For real meetings, download the speech engine when asked (one time).
 
-Optional Cloud AI: add your own Claude API key under Settings. The transcript is then sent to Anthropic for that meeting's notes; the offline engine is used if Claude is unavailable.
+No paid service is needed. Notes are made by the offline engine by default. For AI-written notes at no cost, point Settings → Local AI server at a local model such as Ollama; Claude with your own key is also supported but optional. Details: [docs/ai-providers.md](docs/ai-providers.md).
 
 ## Testing
 
@@ -85,22 +85,24 @@ What each layer covers and the manual real-device checklist: [docs/test-plan.md]
 pnpm package       # installers for the current OS in apps/desktop/release/<version>/
 ```
 
-CI builds Windows, macOS and Linux installers on every push. Signing, releases and auto-update: [docs/deployment.md](docs/deployment.md).
+CI builds unsigned Windows, macOS and Linux installers on every push. Signing is a release-stage task; what it will need is in [docs/release-prerequisites.md](docs/release-prerequisites.md). Releases and auto-update: [docs/deployment.md](docs/deployment.md).
 
 ## Documentation
 
-|                                                                                   |                                                     |
-| --------------------------------------------------------------------------------- | --------------------------------------------------- |
-| [Status](docs/status.md)                                                          | What works, what does not, release readiness        |
-| [Product requirements](docs/product-requirements.md)                              | What the product must do and where each item stands |
-| [Project plan](docs/project-plan.md)                                              | Milestones and backlog                              |
-| [Architecture](docs/architecture.md), [decisions](docs/architecture-decisions.md) | How it is built and why                             |
-| [Security and privacy](docs/security.md)                                          | Data, hardening, AI safety                          |
-| [Test plan](docs/test-plan.md), [results](docs/test-results.md)                   | How it is tested and the numbers                    |
-| [Bug log](docs/bug-log.md), [risk register](docs/risk-register.md)                | Known bugs and risks                                |
-| [Platform support](docs/platform-support.md), [deployment](docs/deployment.md)    | Where it runs and how it ships                      |
-| [Open-source dependencies](docs/open-source-dependencies.md)                      | What we reuse and the licenses                      |
-| [Project memory](docs/project-memory.md)                                          | Durable facts for contributors                      |
+|                                                                                   |                                                          |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| [Status](docs/status.md)                                                          | What works, what does not, release readiness             |
+| [Product requirements](docs/product-requirements.md)                              | What the product must do and where each item stands      |
+| [Project plan](docs/project-plan.md)                                              | Milestones and backlog                                   |
+| [Architecture](docs/architecture.md), [decisions](docs/architecture-decisions.md) | How it is built and why                                  |
+| [Security and privacy](docs/security.md)                                          | Data, hardening, AI safety                               |
+| [Test plan](docs/test-plan.md), [results](docs/test-results.md)                   | How it is tested and the numbers                         |
+| [Bug log](docs/bug-log.md), [risk register](docs/risk-register.md)                | Known bugs and risks                                     |
+| [Platform support](docs/platform-support.md), [deployment](docs/deployment.md)    | Where it runs and how it ships                           |
+| [Open-source dependencies](docs/open-source-dependencies.md)                      | What we reuse and the licenses                           |
+| [AI engines](docs/ai-providers.md)                                                | Offline, mock, local model and optional Claude           |
+| [Release prerequisites](docs/release-prerequisites.md)                            | Production-only items: signing, costs, free alternatives |
+| [Project memory](docs/project-memory.md)                                          | Durable facts for contributors                           |
 
 ## Privacy and consent
 

@@ -2,13 +2,13 @@
 
 ## Milestones
 
-| Milestone                       | Goal                                                                | Status                          |
-| ------------------------------- | ------------------------------------------------------------------- | ------------------------------- |
-| M1 Core intelligence            | Transcript to validated notes, offline and with Claude; evaluation  | DONE                            |
-| M2 Desktop app                  | Capture, speech, storage, UI, email, tasks, search, memory, samples | DONE                            |
-| M3 Quality and delivery         | E2E on three OSes, real speech in CI, installers, docs              | TESTING                         |
-| M4 Private beta on real devices | Manual pass on Windows and macOS with real meetings; signed builds  | BLOCKED (devices, certificates) |
-| M5 Public release               | Signed, notarized, auto-updating release with release notes         | BACKLOG                         |
+| Milestone                       | Goal                                                                           | Status                 |
+| ------------------------------- | ------------------------------------------------------------------------------ | ---------------------- |
+| M1 Core intelligence            | Transcript to validated notes, offline and through any AI provider; evaluation | DONE                   |
+| M2 Desktop app                  | Capture, speech, storage, UI, email, tasks, search, memory, samples            | DONE                   |
+| M3 Quality and delivery         | E2E on three OSes, real speech in CI, installers, docs                         | TESTING                |
+| M4 Private beta on real devices | Manual pass on Windows and macOS with real meetings; unsigned builds           | BLOCKED (real devices) |
+| M5 Public release               | Signed, notarized, auto-updating release (signing happens here)                | BACKLOG                |
 
 ## Definition of Ready
 
@@ -49,19 +49,21 @@ Statuses: BACKLOG, READY, IN_PROGRESS, BLOCKED, IN_REVIEW, TESTING, FAILED, FIXI
 | MA-15 | Sample meetings (Acme Demo Corporation)                                            | P1  | Load and remove; profile restored                                                        |
 | MA-16 | CI on three OSes, real speech job, installers, packaged-app E2E                    | P0  | Workflows green                                                                          |
 | MA-18 | Automated tests for the IPC sender check and error reduction                       | P3  | Refused senders, channels and arguments never reach a handler; errors carry no internals |
+| MA-19 | AI provider abstraction: offline, mock, free local model server, optional Claude   | P0  | Works end to end with no paid service; mock path in CI; provider errors fall back        |
 | MA-17 | Documentation set                                                                  | P1  | README and docs in this folder                                                           |
 
 ### Open
 
-| ID    | Item                                                           | Pri | Status  | Issue                                                        |
-| ----- | -------------------------------------------------------------- | --- | ------- | ------------------------------------------------------------ |
-| MA-21 | Real-device validation on Windows and macOS with real meetings | P1  | BLOCKED | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15) |
-| MA-22 | Code signing and notarization                                  | P1  | BLOCKED | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16) |
-| MA-23 | Claude engine evaluated with the real API                      | P2  | BLOCKED | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17) |
-| MA-24 | Fresh held-out evaluation set                                  | P2  | READY   | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18) |
-| MA-25 | Speaker quality on real calls; in-room meetings                | P2  | BACKLOG | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19) |
-| MA-26 | Meeting audio on macOS 13 and older; Linux desktops            | P2  | BACKLOG | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20) |
-| MA-27 | Gmail and Outlook sending                                      | P2  | BACKLOG | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21) |
-| MA-28 | Screen context (OCR of slides)                                 | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22) |
-| MA-29 | Calendar integration and "Prepare me"                          | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23) |
-| MA-30 | Model attributions in the app; mirror models on own releases   | P2  | READY   | Release checklist                                            |
+| ID    | Item                                                             | Pri | Status  | Issue                                                                                                              |
+| ----- | ---------------------------------------------------------------- | --- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| MA-21 | Real-device validation on Windows and macOS with real meetings   | P1  | BLOCKED | [#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)                                                       |
+| MA-22 | Code signing and notarization (release stage, M5)                | P1  | BACKLOG | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16), [release-prerequisites.md](release-prerequisites.md) |
+| MA-23 | Optional Claude engine evaluated (requires provider credentials) | P3  | BACKLOG | [#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)                                                       |
+| MA-32 | Measure a free local model (Ollama) on the evaluation sets       | P2  | READY   | [ai-providers.md](ai-providers.md)                                                                                 |
+| MA-24 | Fresh held-out evaluation set                                    | P2  | READY   | [#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)                                                       |
+| MA-25 | Speaker quality on real calls; in-room meetings                  | P2  | BACKLOG | [#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19)                                                       |
+| MA-26 | Meeting audio on macOS 13 and older; Linux desktops              | P2  | BACKLOG | [#20](https://github.com/aasimsyed-ai/meeting-bot/issues/20)                                                       |
+| MA-27 | Gmail and Outlook sending                                        | P2  | BACKLOG | [#21](https://github.com/aasimsyed-ai/meeting-bot/issues/21)                                                       |
+| MA-28 | Screen context (OCR of slides)                                   | P2  | BACKLOG | [#22](https://github.com/aasimsyed-ai/meeting-bot/issues/22)                                                       |
+| MA-29 | Calendar integration and "Prepare me"                            | P3  | BACKLOG | [#23](https://github.com/aasimsyed-ai/meeting-bot/issues/23)                                                       |
+| MA-30 | Model attributions in the app; mirror models on own releases     | P2  | READY   | Release checklist                                                                                                  |

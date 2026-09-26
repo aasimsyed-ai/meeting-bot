@@ -40,34 +40,19 @@ Native pieces that must stay outside the asar archive: `sherpa-onnx-*` (speech e
 4. `.github/workflows/release.yml` builds all three platforms and uploads them to a **draft** GitHub release.
 5. Review the draft, write the notes, then publish it. Auto-update only sees published releases.
 
-## Code signing and notarization
+## Code signing and notarization (release stage only)
 
-Not set up yet: no certificates are available to the project ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)). Unsigned builds work, but:
+Development and CI use **unsigned development builds**; no certificates are needed or requested now. Unsigned builds work, but Windows SmartScreen warns on install, macOS Gatekeeper blocks the first launch until the user allows it, and macOS auto-update needs a signed app. Builds are never described as signed.
 
-- Windows SmartScreen warns on first install.
-- macOS Gatekeeper blocks the app until the user allows it in System Settings, and macOS auto-update does not work for unsigned apps.
-
-To enable, add these repository secrets. `release.yml` already passes them to electron-builder, which signs (and on macOS notarizes) when they are present.
-
-| Secret                        | What                                                |
-| ----------------------------- | --------------------------------------------------- |
-| `MAC_CERTIFICATE_P12_BASE64`  | Developer ID Application certificate (.p12), base64 |
-| `MAC_CERTIFICATE_PASSWORD`    | Its password                                        |
-| `APPLE_ID`                    | Apple ID used for notarization                      |
-| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for that Apple ID             |
-| `APPLE_TEAM_ID`               | Apple developer team ID                             |
-| `WIN_CERTIFICATE_P12_BASE64`  | Windows code signing certificate (.pfx), base64     |
-| `WIN_CERTIFICATE_PASSWORD`    | Its password                                        |
-
-Then verify on real machines: install, first-run permission prompts, an update from one signed version to the next. **NOT TESTED — REQUIRES REAL ACCOUNT/DEVICE/CREDENTIAL.**
+Exactly what signing will require for Windows and macOS, the costs, and the checks to run are in [release-prerequisites.md](release-prerequisites.md). `release.yml` already signs automatically when those secrets exist and skips signing when they do not.
 
 ## Auto-update
 
 Packaged builds use `electron-updater` against GitHub releases: a check 30 seconds after start and every 6 hours, download in the background, install on quit. The app shows when an update is ready. Development and test builds never check. End-to-end update has not been tested yet because it needs two signed, published releases.
 
-## Optional: Claude evaluation in CI
+## AI evaluation in CI
 
-Add `ANTHROPIC_API_KEY` as a repository secret, then run the "AI evaluation (Claude)" workflow by hand. It calls the paid API for 21 meetings (16 development, 5 held-out) and uploads the results.
+CI runs the offline engine and the mock AI path on every push, for free. Evaluating a real model is optional and never required: a local model server works for free (see [ai-providers.md](ai-providers.md)), and the manual "AI evaluation (optional external provider)" workflow only runs if someone chooses to add their own key. Without one it reports NOT RUN.
 
 ## Release checklist
 
@@ -75,7 +60,7 @@ Add `ANTHROPIC_API_KEY` as a repository secret, then run the "AI evaluation (Cla
 - [ ] `pnpm eval` and `eval:holdout` pass; numbers copied into `docs/test-results.md`
 - [ ] No open P0 or P1 bugs
 - [ ] Manual real-device pass ([test plan](test-plan.md#real-device-validation-manual)) on Windows and macOS
-- [ ] Installers signed and notarized
+- [ ] Installers signed and notarized (release stage, see [release-prerequisites.md](release-prerequisites.md))
 - [ ] Model licenses confirmed and attributions shown in the app
 - [ ] `docs/status.md` and README updated
 - [ ] Draft release reviewed, then published

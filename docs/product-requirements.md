@@ -40,16 +40,17 @@ Status: **Done** (built and tested), **Partial** (works with stated limits), **N
 
 ### Notes
 
-| Requirement                                                                       | Status  | Notes                                                                                                                                        |
-| --------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| TL;DR and topics                                                                  | Done    |                                                                                                                                              |
-| Decisions: confirmed, possible, discussed only                                    | Done    | A proposal is confirmed only when someone else agrees; replaced decisions are demoted                                                        |
-| Action items: task, owner, deadline as said, date, priority, confidence, evidence | Done    | Dates in the meeting's time zone; ambiguous ones marked "Needs review"                                                                       |
-| Open questions and risks                                                          | Done    |                                                                                                                                              |
-| "Why?" for every item                                                             | Done    | Shows the transcript lines it came from                                                                                                      |
-| Never invent owners, dates or items                                               | Done    | Validator drops or flags anything without evidence                                                                                           |
-| Prompt injection is shown, never acted on                                         | Done    |                                                                                                                                              |
-| Cloud AI for higher quality (optional)                                            | Partial | Claude integration built and unit-tested; not yet evaluated with the real API ([#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)) |
+| Requirement                                                                       | Status  | Notes                                                                                                                                                     |
+| --------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TL;DR and topics                                                                  | Done    |                                                                                                                                                           |
+| Decisions: confirmed, possible, discussed only                                    | Done    | A proposal is confirmed only when someone else agrees; replaced decisions are demoted                                                                     |
+| Action items: task, owner, deadline as said, date, priority, confidence, evidence | Done    | Dates in the meeting's time zone; ambiguous ones marked "Needs review"                                                                                    |
+| Open questions and risks                                                          | Done    |                                                                                                                                                           |
+| "Why?" for every item                                                             | Done    | Shows the transcript lines it came from                                                                                                                   |
+| Never invent owners, dates or items                                               | Done    | Validator drops or flags anything without evidence                                                                                                        |
+| Prompt injection is shown, never acted on                                         | Done    |                                                                                                                                                           |
+| Free local AI model (Ollama etc.)                                                 | Done    | Built and tested with a local HTTP server; quality with real local models not measured yet                                                                |
+| Cloud AI (optional, never required)                                               | Partial | Claude provider built and unit-tested; real API NOT TESTED — REQUIRES PROVIDER CREDENTIALS ([#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)) |
 
 ### Follow-up
 
@@ -72,15 +73,15 @@ Status: **Done** (built and tested), **Partial** (works with stated limits), **N
 
 ### Trust, privacy and quality
 
-| Requirement                                                              | Status  | Notes                                                                                |
-| ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------ |
-| Local by default; clear about anything that leaves the computer          | Done    | See [security.md](security.md)                                                       |
-| Retention and deletion (meeting, transcript only, everything, automatic) | Done    |                                                                                      |
-| Access control and tenant isolation                                      | Done    | Enforced in the data layer; single-user app today                                    |
-| Audit log without content                                                | Done    |                                                                                      |
-| Accessibility: keyboard, screen readers, contrast                        | Done    | axe-core checks in E2E; keyboard-only test                                           |
-| Sample meetings to explore without a real meeting                        | Done    | Acme Demo Corporation, removable                                                     |
-| Installers for Windows, macOS, Linux; auto-update                        | Partial | Built in CI, unsigned ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)) |
+| Requirement                                                              | Status  | Notes                                                                                                                     |
+| ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Local by default; clear about anything that leaves the computer          | Done    | See [security.md](security.md)                                                                                            |
+| Retention and deletion (meeting, transcript only, everything, automatic) | Done    |                                                                                                                           |
+| Access control and tenant isolation                                      | Done    | Enforced in the data layer; single-user app today                                                                         |
+| Audit log without content                                                | Done    |                                                                                                                           |
+| Accessibility: keyboard, screen readers, contrast                        | Done    | axe-core checks in E2E; keyboard-only test                                                                                |
+| Sample meetings to explore without a real meeting                        | Done    | Acme Demo Corporation, removable                                                                                          |
+| Installers for Windows, macOS, Linux; auto-update                        | Partial | Unsigned development builds in CI; signing is a release-stage task ([release-prerequisites.md](release-prerequisites.md)) |
 
 ## Non-goals for now
 

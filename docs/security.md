@@ -20,7 +20,8 @@ Data is not encrypted at rest beyond the OS account's own protection (for exampl
 
 - **Nothing by default.** Speech recognition and the offline notes engine run on the device.
 - **Model downloads**, once, from the sherpa-onnx GitHub releases (verified by hash).
-- **Cloud AI (optional, off by default).** Only when the user adds their own Claude API key and chooses Cloud AI: the cleaned transcript and meeting title go to the Anthropic API for that meeting's notes. The Settings screen says this plainly.
+- **Local AI server (optional).** Talks only to the address the user sets, normally a model running on the same computer.
+- **Cloud AI (optional, off by default, never required).** Only when the user adds their own Claude API key and chooses Claude: the cleaned transcript and meeting title go to the Anthropic API for that meeting's notes. The Settings screen says this plainly.
 - **Email** is never sent by the app. It opens a draft in the user's own mail app (or copies the text). The user presses Send there.
 - **Update checks** against GitHub releases in packaged builds (30 seconds after start, then every 6 hours).
 
@@ -70,11 +71,11 @@ User input is reduced to quoted, stemmed literal terms before reaching SQLite FT
 
 ## Known gaps
 
-| Gap                                             | Tracking                                                     |
-| ----------------------------------------------- | ------------------------------------------------------------ |
-| Installers are unsigned                         | [#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16) |
-| No database encryption beyond the OS account    | Risk register                                                |
-| No external security review or penetration test | Required before a public release                             |
+| Gap                                             | Tracking                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| Installers are unsigned (development builds)    | Release stage: [release-prerequisites.md](release-prerequisites.md) |
+| No database encryption beyond the OS account    | Risk register                                                       |
+| No external security review or penetration test | Required before a public release                                    |
 
 ## Reporting a problem
 
