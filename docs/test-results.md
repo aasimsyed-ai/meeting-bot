@@ -39,7 +39,7 @@ How to read this honestly:
 - The **first held-out run** is the best estimate for unseen meetings: precise, but it missed 2 of 5 decisions and produced 2 false action items out of 11.
 - The held-out set is no longer blind after the fixes it prompted ([#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)).
 - Zero hallucinations and zero violations hold on every set: nothing appeared without evidence, and the prompt-injection meeting produced no action and no email to the attacker's address.
-- The mock AI path reproduces the expected notes for every development meeting in CI. Real models (a free local model, or optional Claude) have not been measured; see [ai-providers.md](ai-providers.md).
+- The mock AI path reproduces the expected notes for every development meeting in CI. A small free local model (qwen2.5 3B, CPU only) was measured once and scored below the offline engine, with zero hallucinations; numbers in [ai-providers.md](ai-providers.md#local-model-results-qwen25-3b-free). Larger local models and the optional Claude engine have not been measured.
 
 ## Real speech
 
@@ -94,6 +94,6 @@ Each needs something this project does not have yet. Status for all: **NOT TESTE
 - macOS system audio with the permission granted (CI runners cannot grant it).
 - Signed and notarized installers; auto-update between two releases ([#16](https://github.com/aasimsyed-ai/meeting-bot/issues/16)). Release-stage task.
 - The optional Claude engine against the real API ([#17](https://github.com/aasimsyed-ai/meeting-bot/issues/17)): NOT TESTED — REQUIRES PROVIDER CREDENTIALS. Not needed for the MVP.
-- A local model server (free) on the evaluation sets: not run yet.
+- Larger local models (7B and up) on the evaluation sets: not run yet. A 3B model has been measured.
 - Opening the email draft in real mail apps (Outlook, Apple Mail, Gmail in a browser).
 - Long real meetings (60 to 120 minutes) on a low-end laptop.

@@ -50,5 +50,5 @@ See [platform support](platform-support.md) and the open issues. The main ones:
 ## Next steps
 
 1. Run the manual real-device checklist on Windows and macOS with each meeting app ([#15](https://github.com/aasimsyed-ai/meeting-bot/issues/15)).
-2. Measure a free local model (Ollama) on the evaluation sets ([ai-providers.md](ai-providers.md)).
+2. Measure a larger free local model (7B) on the evaluation sets; the 3B model scored below the offline engine ([ai-providers.md](ai-providers.md#local-model-results-qwen25-3b-free)).
 3. Build a fresh held-out set from consented real meetings ([#18](https://github.com/aasimsyed-ai/meeting-bot/issues/18)).

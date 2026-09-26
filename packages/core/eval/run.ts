@@ -99,12 +99,12 @@ async function main() {
   console.log(`  failed meetings            ${errors} of ${FIXTURES.length}`);
   console.log(`  total time                 ${Date.now() - started} ms`);
 
-  const failedGates =
-    (engineArg === 'rules' || engineArg === 'mock') && !holdout
-      ? Object.entries(RULES_THRESHOLDS).filter(
-          ([k, min]) => (agg as unknown as Record<string, number>)[k]! < min!,
-        )
-      : [];
+  const gated = (engineArg === 'rules' || engineArg === 'mock') && !holdout;
+  const failedGates = gated
+    ? Object.entries(RULES_THRESHOLDS).filter(
+        ([k, min]) => (agg as unknown as Record<string, number>)[k]! < min!,
+      )
+    : [];
   if (agg.violations > 0) failedGates.push(['violations', 0]);
   mkdirSync(join(here, 'results'), { recursive: true });
   writeFileSync(
@@ -128,7 +128,11 @@ async function main() {
     console.log(`\nQUALITY GATE FAILED: ${failedGates.map(([k]) => k).join(', ')}`);
     process.exitCode = 1;
   } else {
-    console.log('\nQuality gate passed.');
+    console.log(
+      gated
+        ? '\nQuality gate passed.'
+        : '\nSafety check passed (no forbidden items). Quality thresholds apply only to the offline engine and the mock on the development set.',
+    );
   }
 }
 
