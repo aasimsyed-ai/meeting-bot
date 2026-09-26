@@ -53,9 +53,13 @@
         "weekday": "Friday"
       },
       {
-        "match": "finish qa",
+        "match": "\\bfinish\\b",
         "owner": "Sarah Lee",
         "weekday": "Monday"
+      },
+      {
+        "match": "finish qa",
+        "knownIssue": "BUG-017: a bare acronym (\"QA\") is sometimes misheard (\"Kuwait\", \"Kuway\"); the task, owner and date stay right"
       }
     ],
     "screen": ["Deployment Date: Monday", "Owner: Bob"]

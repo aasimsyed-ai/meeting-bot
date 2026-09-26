@@ -110,6 +110,12 @@ export function EmailReview({ meetingId, onClose }: { meetingId: string; onClose
               they should receive these notes.
             </Notice>
           )}
+          {/Speaker \d+/.test(draft.body) && (
+            <Notice tone="warning">
+              Some people are still called “Speaker 1”, “Speaker 2” and so on. Name them on the
+              Transcript tab so the email says who they are.
+            </Notice>
+          )}
           {draft.warnings
             .filter((w) => !w.startsWith('External recipients'))
             .map((w) => (

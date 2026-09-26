@@ -17,11 +17,17 @@ pactl list short sinks | grep -q meeting_out ||
   pactl load-module module-null-sink sink_name=meeting_out sink_properties=device.description=Meeting_speakers >/dev/null
 pactl list short sinks | grep -q mic_feed ||
   pactl load-module module-null-sink sink_name=mic_feed sink_properties=device.description=Mic_feed >/dev/null
+# A built-in "laptop microphone" (silent), so unplugging the virtual headset microphone
+# falls back to it, the way a real laptop does.
+pactl list short sinks | grep -q laptop_feed ||
+  pactl load-module module-null-sink sink_name=laptop_feed sink_properties=device.description=Laptop_feed >/dev/null
+pactl list short sources | grep -q laptop_mic ||
+  pactl load-module module-remap-source master=laptop_feed.monitor source_name=laptop_mic source_properties=device.description=Laptop_microphone >/dev/null
 pactl list short sources | grep -q virtual_mic ||
   pactl load-module module-remap-source master=mic_feed.monitor source_name=virtual_mic source_properties=device.description=Virtual_microphone >/dev/null
 # Start every run at full volume: a program with automatic gain control can lower a
 # monitor's volume, and PulseAudio remembers it between runs.
-for src in meeting_out.monitor mic_feed.monitor virtual_mic; do pactl set-source-volume "$src" 100%; done
+for src in meeting_out.monitor mic_feed.monitor virtual_mic laptop_mic; do pactl set-source-volume "$src" 100%; done
 pactl set-sink-volume meeting_out 100%
 pactl set-sink-volume mic_feed 100%
 pactl set-default-sink meeting_out

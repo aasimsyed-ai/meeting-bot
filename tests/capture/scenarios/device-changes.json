@@ -1,0 +1,72 @@
+{
+  "id": "device-changes",
+  "about": "About a minute of planning talk, used to change devices mid-meeting: the app window is minimized, the microphone is unplugged and plugged back in, and the speakers switch to headphones. Sarah (the user) is on the microphone; Alice and Bob are remote.",
+  "windowTitle": "Website launch sync | Meeting | Microsoft Teams",
+  "user": { "name": "Sarah Lee", "email": "sarah.lee@acme.example.test" },
+  "voices": { "Alice": 10, "Bob": 450, "Sarah": 200 },
+  "gapSeconds": 1.2,
+  "lines": [
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Thanks for joining. This is the website launch sync."
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "The new landing page is finished and it passed review yesterday."
+    },
+    {
+      "speaker": "Sarah",
+      "channel": "mic",
+      "text": "Great. I still need to check the pricing table on mobile."
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Sarah, can you check the pricing table by Wednesday?"
+    },
+    {
+      "speaker": "Sarah",
+      "channel": "mic",
+      "text": "Yes, I'll check the pricing table by Wednesday."
+    },
+    {
+      "speaker": "Bob",
+      "channel": "meeting",
+      "text": "I'll send the press release to the marketing team by Thursday."
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Let's launch the website on the fifteenth."
+    },
+    { "speaker": "Bob", "channel": "meeting", "text": "The fifteenth works for me." },
+    {
+      "speaker": "Sarah",
+      "channel": "mic",
+      "text": "It works for me too. I'll update the help center articles before the launch."
+    },
+    {
+      "speaker": "Alice",
+      "channel": "meeting",
+      "text": "Perfect. We are launching on the fifteenth. Thanks, everyone."
+    }
+  ],
+  "slides": [
+    {
+      "fromLine": 1,
+      "lines": ["Website launch", "Landing page: done", "Pricing table: in review"]
+    },
+    { "fromLine": 6, "lines": ["Launch plan", "Launch date: the 15th", "Press release: Bob"] }
+  ],
+  "expected": {
+    "decisions": [{ "match": "launch.*(fifteenth|15)", "status": "confirmed" }],
+    "tasks": [
+      { "match": "pricing table", "owner": "Sarah Lee", "weekday": "Wednesday" },
+      { "match": "press release", "owner": "Bob", "weekday": "Thursday" },
+      { "match": "help center", "owner": "Sarah Lee" }
+    ],
+    "screen": ["Launch date"]
+  }
+}
