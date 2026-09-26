@@ -8,7 +8,13 @@ import { formatDate, formatDue, formatDuration, formatElapsed, greeting } from '
 import { useQuery, useTicker } from '../lib/hooks';
 import { Empty, LevelMeter, Notice, Skeleton, useToast } from '../components/ui';
 import { ModelNotice } from './shared';
-import type { CaptureProblem, CaptureStatus, ChannelHealth } from '../../shared/types';
+import type {
+  CaptureProblem,
+  CaptureStatus,
+  ChannelHealth,
+  ScreenHealth,
+} from '../../shared/types';
+import { captureHeadline } from '../../shared/capture-label';
 
 const PLATFORMS: Platform[] = ['teams', 'zoom', 'meet', 'slack', 'other'];
 
@@ -261,8 +267,39 @@ function channelState(c: ChannelHealth, demo: boolean): string {
   return c.problem ? 'No audio' : 'Waiting for audio…';
 }
 
-function problemAction(p: CaptureProblem, onResume: () => void) {
-  if (!p.action) return undefined;
+const SCREEN_STATE: Record<ScreenHealth['state'], string> = {
+  off: 'Off',
+  looking: 'Looking for the meeting window',
+  reading: 'Reading slides',
+  denied: 'Needs permission',
+  unavailable: 'Not available',
+};
+
+function screenState(s: ScreenHealth, demo: boolean): string {
+  if (demo) return 'Simulated';
+  if (s.state === 'reading' && s.keyframes > 0) return `Reading slides (${s.keyframes} saved)`;
+  return SCREEN_STATE[s.state];
+}
+
+/** Problems a "Try again" can fix without stopping the meeting. */
+const RETRYABLE = new Set<CaptureProblem['code']>([
+  'mic_denied',
+  'mic_lost',
+  'mic_muted',
+  'system_audio_unavailable',
+  'system_audio_lost',
+]);
+
+function problemAction(
+  p: CaptureProblem,
+  handlers: { resume: () => void; retry: () => void; stop: () => void },
+) {
+  const retry = RETRYABLE.has(p.code) ? (
+    <button className="btn btn-sm" onClick={handlers.retry}>
+      Try again
+    </button>
+  ) : null;
+  if (!p.action) return retry ?? undefined;
   const run = () => {
     switch (p.action!.kind) {
       case 'open_mic_settings':
@@ -274,13 +311,20 @@ function problemAction(p: CaptureProblem, onResume: () => void) {
       case 'download_models':
         return void call('models:download');
       case 'resume':
-        return onResume();
+        return handlers.resume();
+      case 'retry_audio':
+        return handlers.retry();
+      case 'stop':
+        return handlers.stop();
     }
   };
   return (
-    <button className="btn btn-sm" onClick={run}>
-      {p.action.label}
-    </button>
+    <span className="row" style={{ gap: 6 }}>
+      <button className="btn btn-sm" onClick={run}>
+        {p.action.label}
+      </button>
+      {retry}
+    </span>
   );
 }
 
@@ -295,6 +339,7 @@ export function LiveMeeting() {
   const paused = capture.state === 'paused';
   const demo = capture.source === 'demo';
   const mac = navigator.userAgent.includes('Mac');
+  const headline = demo ? { text: 'Taking notes', tone: 'rec' } : captureHeadline(capture);
 
   const act = async (fn: () => Promise<CaptureStatus>) => {
     try {
@@ -323,9 +368,9 @@ export function LiveMeeting() {
       )}
       <section className="card live" aria-labelledby="live-title">
         <div className="live-header">
-          <span className={`rec-dot${paused ? ' paused' : ''}`} aria-hidden />
+          <span className={`rec-dot ${headline.tone}`} aria-hidden />
           <div className="live-state" aria-live="polite">
-            {capture.state === 'stopping' ? 'Finishing up…' : paused ? 'Paused' : 'Taking notes'}
+            {headline.text}
           </div>
           <span className="spacer" />
           <span className="badge">
@@ -378,12 +423,30 @@ export function LiveMeeting() {
             level={demo ? 0.5 : capture.system.level}
             state={channelState(capture.system, demo)}
           />
+          <div className="meter">
+            <div className="row small">
+              <span style={{ fontWeight: 600 }}>Screen</span>
+              <span className="spacer" />
+              <span className="muted">{screenState(capture.screen, demo)}</span>
+            </div>
+            <div className="small muted">Text on slides only, never video.</div>
+          </div>
         </div>
+        {capture.hearing === 'none' && !demo && capture.state === 'capturing' && (
+          <Notice tone="warning">
+            No audio is coming in, so nothing is being written down right now. Check the notices
+            below, or stop and start again.
+          </Notice>
+        )}
         {capture.problems.map((p) => (
           <Notice
             key={p.code}
             tone={p.code === 'silence' || p.code === 'models_missing' ? 'info' : 'warning'}
-            action={problemAction(p, () => void act(() => call('capture:resume')))}
+            action={problemAction(p, {
+              resume: () => void act(() => call('capture:resume')),
+              retry: () => void act(() => call('capture:retryAudio')),
+              stop: () => void stop(),
+            })}
           >
             {p.message}
           </Notice>

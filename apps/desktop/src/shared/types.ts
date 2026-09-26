@@ -106,7 +106,9 @@ export type ProblemCode =
   | 'screen_denied'
   | 'models_missing'
   | 'transcriber_failed'
-  | 'asleep';
+  | 'asleep'
+  | 'mic_muted'
+  | 'meeting_ended';
 
 export interface CaptureProblem {
   code: ProblemCode;
@@ -118,8 +120,23 @@ export interface CaptureProblem {
       | 'open_screen_settings'
       | 'open_audio_settings'
       | 'download_models'
-      | 'resume';
+      | 'resume'
+      | 'retry_audio'
+      | 'stop';
   };
+}
+
+export type Hearing = 'ok' | 'partial' | 'none' | 'starting';
+
+export interface ScreenHealth {
+  enabled: boolean;
+  /**
+   * off: turned off in Settings. looking: no meeting window found yet. reading: watching the
+   * meeting window for new slides. denied: no screen permission. unavailable: cannot read here.
+   */
+  state: 'off' | 'looking' | 'reading' | 'denied' | 'unavailable';
+  /** Slides or screens whose text was saved. */
+  keyframes: number;
 }
 
 export interface CaptureStatus {
@@ -132,7 +149,12 @@ export interface CaptureStatus {
   elapsedMs: number;
   mic: ChannelHealth;
   system: ChannelHealth;
-  screen: { enabled: boolean; keyframes: number };
+  /**
+   * Whether audio is actually arriving: 'ok' all sources, 'partial' at least one,
+   * 'none' nothing (the app must not claim to be taking notes), 'starting' first seconds.
+   */
+  hearing: Hearing;
+  screen: ScreenHealth;
   segmentsCount: number;
   lastLines: { speaker: string; text: string; startMs: number }[];
   problems: CaptureProblem[];

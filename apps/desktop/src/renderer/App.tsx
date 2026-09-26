@@ -12,6 +12,7 @@ import {
 import { call, platform } from './api';
 import { match, navigate, useRoute } from './lib/router';
 import { formatElapsed } from './lib/format';
+import { captureHeadline } from '../shared/capture-label';
 import { useAppEvent, useTicker } from './lib/hooks';
 import { ToastProvider, useToast } from './components/ui';
 import { Home } from './views/Home';
@@ -224,6 +225,8 @@ function CapturePill() {
   const elapsed =
     capture.elapsedMs + (capture.state === 'capturing' ? Date.now() - lastStatusAt(capture) : 0);
   const paused = capture.state === 'paused';
+  const headline =
+    capture.source === 'demo' ? { text: 'Taking notes', tone: 'rec' } : captureHeadline(capture);
   const stop = async () => {
     const s = await call('capture:stop');
     setCapture(s);
@@ -233,8 +236,8 @@ function CapturePill() {
   return (
     <div className="capture-pill" aria-live="polite">
       <div className="status">
-        <span className={`rec-dot${paused ? ' paused' : ''}`} aria-hidden />
-        {capture.state === 'stopping' ? 'Finishing…' : paused ? 'Paused' : 'Taking notes'}
+        <span className={`rec-dot ${headline.tone}`} aria-hidden />
+        {headline.text}
         <span className="time">{formatElapsed(elapsed)}</span>
       </div>
       <div className="row">

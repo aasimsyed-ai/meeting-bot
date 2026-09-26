@@ -39,6 +39,9 @@ export class CaptureController {
   private audiotee: AudioTeeLike | null = null;
   private demoTimers: NodeJS.Timeout[] = [];
   private listening = false;
+  private live: { micDeviceId: string | null; audioTee: boolean } | null = null;
+  private restartTimers = new Map<CaptureChannelName, NodeJS.Timeout>();
+  private restartAttempts = new Map<CaptureChannelName, number>();
 
   constructor(
     private readonly session: CaptureSession,
@@ -102,9 +105,66 @@ export class CaptureController {
         );
       }
     } else if (evt.type === 'ended') {
+      // Unplugged, switched or taken away: say so, then try to get it back.
       this.session.channelEnded(evt.channel);
-    } else if (evt.type === 'started' && evt.channel === 'system') {
-      this.permissions.markSystemAudio(true);
+      this.scheduleRestart(evt.channel);
+    } else if (evt.type === 'started') {
+      this.restartAttempts.delete(evt.channel);
+      this.session.channelStarted(evt.channel);
+      if (evt.channel === 'system') this.permissions.markSystemAudio(true);
+    } else if (evt.type === 'devices-changed') {
+      // Headphones or a microphone came or went: retry anything that is not working now.
+      for (const ch of this.session.failedChannels()) {
+        this.restartAttempts.delete(ch);
+        void this.restart(ch);
+      }
+    }
+  }
+
+  /** Automatic retries after a source ends: 1 s, 3 s, 10 s, 30 s, then every minute. */
+  private scheduleRestart(channel: CaptureChannelName): void {
+    if (!this.live || this.restartTimers.has(channel)) return;
+    const n = this.restartAttempts.get(channel) ?? 0;
+    this.restartAttempts.set(channel, n + 1);
+    const delay = [1000, 3000, 10_000, 30_000][n] ?? 60_000;
+    this.restartTimers.set(
+      channel,
+      setTimeout(() => {
+        this.restartTimers.delete(channel);
+        if (!this.live || !this.session.failedChannels().includes(channel)) return;
+        void this.restart(channel).then(() => {
+          if (this.session.failedChannels().includes(channel)) this.scheduleRestart(channel);
+        });
+      }, delay),
+    );
+  }
+
+  /** Start one source again without touching the other or the meeting. */
+  private async restart(channel: CaptureChannelName): Promise<void> {
+    if (!this.live) return;
+    log.info('capture_channel_restart', { channel });
+    try {
+      if (channel === 'system' && this.live.audioTee) {
+        await this.audiotee?.stop().catch(() => undefined);
+        this.audiotee = null;
+        await this.startAudioTee();
+      } else {
+        await this.command({ type: 'restart', channel, micDeviceId: this.live.micDeviceId }, true);
+      }
+    } catch (err) {
+      log.warn('capture_channel_restart_failed', {
+        channel,
+        error: err instanceof Error ? err : String(err),
+      });
+    }
+  }
+
+  /** "Try again" from the user, for example after allowing access in system settings. */
+  async retry(): Promise<void> {
+    const channels = this.session.failedChannels();
+    for (const ch of channels) {
+      this.restartAttempts.delete(ch);
+      if (this.session.reopen(ch)) await this.restart(ch);
     }
   }
 
@@ -166,10 +226,12 @@ export class CaptureController {
         { type: 'start', mic: opts.mic, micDeviceId: opts.micDeviceId, system: false },
         true,
       );
+      this.live = { micDeviceId: opts.micDeviceId, audioTee: false };
       this.streamTestAudio(this.opts.testMeetingAudio);
       return;
     }
     const useAudioTee = opts.system && process.platform === 'darwin';
+    this.live = { micDeviceId: opts.micDeviceId, audioTee: useAudioTee };
     if (opts.system && process.platform === 'darwin' && !macSupportsSystemAudio()) {
       this.session.channelFailed(
         'system',
@@ -306,6 +368,10 @@ export class CaptureController {
   async stop(): Promise<void> {
     for (const t of this.demoTimers) clearTimeout(t);
     this.demoTimers = [];
+    this.live = null;
+    for (const t of this.restartTimers.values()) clearTimeout(t);
+    this.restartTimers.clear();
+    this.restartAttempts.clear();
     if (this.audiotee) {
       await this.audiotee.stop().catch(() => undefined);
       this.audiotee = null;

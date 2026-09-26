@@ -31,6 +31,7 @@ import { setupUpdater } from './updater';
 import { createIpcHandler } from './ipc-handler';
 import { APP_CHANNELS } from '../shared/channels';
 import type { AppEvent, CaptureStatus } from '../shared/types';
+import { captureHeadline } from '../shared/capture-label';
 
 const env = readEnv(process.env, app.isPackaged);
 if (env.fakePermissions) {
@@ -144,6 +145,7 @@ async function main(): Promise<void> {
         pause: () => controller!.pause(),
         resume: () => controller!.resume(),
         stop: () => controller!.stop(),
+        retry: () => controller!.retry(),
         probeSystemAudio: () => controller!.probeSystemAudio(),
       };
     },
@@ -307,8 +309,14 @@ function notify(title: string, body: string, onClick?: () => void): void {
 // ------------------------------------------------------------------ capture status, tray and shortcuts
 
 let lastState: CaptureStatus['state'] = 'idle';
+let lastHeadline = '';
 
 function onCaptureStatus(s: CaptureStatus): void {
+  const headline = captureHeadline(s).text;
+  if (headline !== lastHeadline) {
+    lastHeadline = headline;
+    updateTray(s);
+  }
   if (s.state === lastState) return;
   lastState = s.state;
   const active = s.state === 'capturing' || s.state === 'paused';
@@ -365,15 +373,20 @@ function updateTray(s: CaptureStatus): void {
     if (process.platform === 'darwin') icon.setTemplateImage(true);
     tray.setImage(icon);
   }
+  const headline = captureHeadline(s);
   tray.setToolTip(
-    capturing
-      ? 'Meeting Assistant: taking notes'
-      : paused
-        ? 'Meeting Assistant: paused'
-        : 'Meeting Assistant',
+    s.state === 'idle' ? 'Meeting Assistant' : `Meeting Assistant: ${headline.text.toLowerCase()}`,
   );
   if (process.platform === 'darwin')
-    tray.setTitle(capturing ? ' ● Notes' : paused ? ' Paused' : '');
+    tray.setTitle(
+      !capturing && !paused
+        ? ''
+        : headline.tone === 'warn'
+          ? ' ! No audio'
+          : capturing
+            ? ' ● Notes'
+            : ' Paused',
+    );
   const h = services.handlers();
   tray.setContextMenu(
     Menu.buildFromTemplate([

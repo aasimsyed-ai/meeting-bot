@@ -693,9 +693,15 @@ a {
   flex-shrink: 0;
 }
 
-.rec-dot.paused {
+.rec-dot.paused,
+.rec-dot.idle {
   animation: none;
   background: var(--muted);
+}
+
+.rec-dot.warn {
+  animation: none;
+  background: var(--warning);
 }
 
 @keyframes pulse {
@@ -803,7 +809,7 @@ a {
 
 .meters {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
 }
 

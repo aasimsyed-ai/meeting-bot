@@ -56,6 +56,8 @@ export interface CaptureBackend {
   pause(): Promise<void>;
   resume(): Promise<void>;
   stop(): Promise<void>;
+  /** Start failed or lost sources again, without stopping the meeting. */
+  retry(): Promise<void>;
   probeSystemAudio(): Promise<boolean>;
 }
 
@@ -484,6 +486,10 @@ export class Services {
         return this.session.resume();
       },
       'capture:stop': () => this.stopCapture(),
+      'capture:retryAudio': async () => {
+        await this.backend.retry().catch(() => undefined);
+        return this.session.status();
+      },
       'capture:status': () => this.session.status(),
       'detection:current': () => this.deps.detected?.() ?? null,
 

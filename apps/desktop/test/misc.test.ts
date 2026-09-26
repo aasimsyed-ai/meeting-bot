@@ -1,3 +1,4 @@
+import { captureHeadline } from '../src/shared/capture-label';
 import {
   mkdtempSync,
   readFileSync,
@@ -398,5 +399,19 @@ describe('speech model download', () => {
       expect(f.url).toMatch(/^https:\/\/github\.com\/k2-fsa\/sherpa-onnx\/releases\/download\//);
     }
     expect(modelsReady(mkdtempSync(join(tmpdir(), 'ma-empty-')), 'moonshine-base-en')).toBe(false);
+  });
+});
+
+describe('capture headline (live screen, sidebar and tray)', () => {
+  it('only says "Taking notes" when audio is really arriving', () => {
+    expect(captureHeadline({ state: 'capturing', hearing: 'ok' }).text).toBe('Taking notes');
+    expect(captureHeadline({ state: 'capturing', hearing: 'partial' }).text).toBe('Taking notes');
+    expect(captureHeadline({ state: 'capturing', hearing: 'none' })).toEqual({
+      text: 'Not hearing anything',
+      tone: 'warn',
+    });
+    expect(captureHeadline({ state: 'capturing', hearing: 'starting' }).text).toBe('Starting…');
+    expect(captureHeadline({ state: 'paused', hearing: 'none' }).text).toBe('Paused');
+    expect(captureHeadline({ state: 'idle', hearing: 'ok' }).text).toBe('Not taking notes');
   });
 });

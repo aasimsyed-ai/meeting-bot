@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   fakeInstallModels,
   FakeTranscriber,
@@ -245,6 +245,80 @@ describe('live capture', () => {
     expect(h.services.session.status().problems.map((p) => p.code)).toContain('transcriber_failed');
     h.services.session.ingest('mic', new Float32Array(1600).fill(0.1));
     expect(h.transcribers[0]!.pushed.mic).toBe(0);
+  });
+
+  it('never claims to hear the meeting when no audio is arriving', async () => {
+    h = makeHarness();
+    fakeInstallModels(h.dir);
+    const session = h.services.session;
+    await call('capture:start', {});
+    expect(session.status().hearing).toBe('starting');
+    session.channelFailed('mic', 'mic_denied', 'Microphone access is off.');
+    session.channelEnded('system');
+    expect(session.status().state).toBe('capturing');
+    expect(session.status().hearing).toBe('none');
+
+    // Case E: access allowed afterwards, then "Try again" without stopping the meeting.
+    const after = await call<CaptureStatus>('capture:retryAudio');
+    expect(h.backend().calls).toContain('retry');
+    expect(after.mic.enabled).toBe(true);
+    expect(after.problems.map((p) => p.code)).not.toContain('mic_denied');
+    session.ingest('mic', new Float32Array(1600).fill(0.1));
+    expect(session.status().hearing).toBe('partial');
+    session.ingest('system', new Float32Array(1600).fill(0.1));
+    expect(session.status().hearing).toBe('ok');
+    expect(existsSync(join(h.dir, 'audio', after.meetingId!, 'mic.pcm'))).toBe(true);
+  });
+
+  it('clears the notice when an unplugged source comes back', async () => {
+    h = makeHarness();
+    fakeInstallModels(h.dir);
+    const session = h.services.session;
+    await call('capture:start', {});
+    session.ingest('mic', new Float32Array(1600).fill(0.1));
+    session.channelEnded('mic');
+    expect(session.status().problems.map((p) => p.code)).toContain('mic_lost');
+    expect(session.failedChannels()).toEqual(['mic']);
+    session.channelStarted('mic');
+    session.ingest('mic', new Float32Array(1600).fill(0.1));
+    expect(session.status().problems.map((p) => p.code)).not.toContain('mic_lost');
+    expect(session.failedChannels()).toEqual([]);
+  });
+
+  it('notices a microphone that only sends silence (muted or access removed)', async () => {
+    h = makeHarness();
+    fakeInstallModels(h.dir);
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    try {
+      const session = h.services.session;
+      await call('capture:start', {});
+      session.ingest('mic', new Float32Array(1600).fill(0.1));
+      session.ingest('system', new Float32Array(1600).fill(0.1));
+      for (let i = 0; i < 12; i++) {
+        vi.advanceTimersByTime(1000);
+        session.ingest('mic', new Float32Array(1600));
+        session.ingest('system', new Float32Array(1600).fill(0.1));
+      }
+      const st = session.status();
+      expect(st.problems.find((p) => p.code === 'mic_muted')?.message).toMatch(/sends no sound/);
+      expect(st.hearing).toBe('partial');
+      session.ingest('mic', new Float32Array(1600).fill(0.1));
+      expect(session.status().problems.map((p) => p.code)).not.toContain('mic_muted');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('suggests stopping when the meeting window closes, but never stops by itself', async () => {
+    h = makeHarness();
+    fakeInstallModels(h.dir);
+    await call('capture:start', {});
+    h.services.session.meetingWindowGone(true);
+    const st = h.services.session.status();
+    expect(st.state).toBe('capturing');
+    expect(st.problems.find((p) => p.code === 'meeting_ended')?.action?.kind).toBe('stop');
+    h.services.session.meetingWindowGone(false);
+    expect(h.services.session.status().problems).toEqual([]);
   });
 });
 

@@ -18,7 +18,8 @@ declare global {
 
 const bridge = window.captureBridge;
 let ctx: AudioContext | null = null;
-let streams: MediaStream[] = [];
+let sink: AudioNode | null = null;
+let streams: { channel: CaptureChannelName; stream: MediaStream }[] = [];
 
 const VOICE = {
   echoCancellation: true,
@@ -54,7 +55,7 @@ function tap(stream: MediaStream, channel: CaptureChannelName, sink: AudioNode) 
   node.connect(sink);
   for (const track of stream.getAudioTracks())
     track.addEventListener('ended', () => bridge.event({ type: 'ended', channel }));
-  streams.push(stream);
+  streams.push({ channel, stream });
   bridge.event({
     type: 'started',
     channel,
@@ -99,11 +100,17 @@ async function startSystem(sink: AudioNode) {
   }
 }
 
+function stopChannel(channel: CaptureChannelName | null) {
+  for (const s of streams)
+    if (channel === null || s.channel === channel) for (const t of s.stream.getTracks()) t.stop();
+  streams = streams.filter((s) => channel !== null && s.channel !== channel);
+}
+
 async function stopAll() {
-  for (const s of streams) for (const t of s.getTracks()) t.stop();
-  streams = [];
+  stopChannel(null);
   if (ctx) await ctx.close().catch(() => undefined);
   ctx = null;
+  sink = null;
 }
 
 async function run(cmd: CaptureWindowCommand) {
@@ -111,11 +118,17 @@ async function run(cmd: CaptureWindowCommand) {
     await stopAll();
     ctx = new AudioContext({ sampleRate: 16000 });
     await ctx.audioWorklet.addModule(new URL('./pcm-worklet.js', location.href).href);
-    const sink = ctx.createGain();
-    sink.gain.value = 0;
-    sink.connect(ctx.destination);
-    if (cmd.mic) await startMic(cmd.micDeviceId, sink);
-    if (cmd.system) await startSystem(sink);
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(ctx.destination);
+    sink = gain;
+    if (cmd.mic) await startMic(cmd.micDeviceId, gain);
+    if (cmd.system) await startSystem(gain);
+  } else if (cmd.type === 'restart') {
+    if (!ctx || !sink) return;
+    stopChannel(cmd.channel);
+    if (cmd.channel === 'mic') await startMic(cmd.micDeviceId, sink);
+    else await startSystem(sink);
   } else if (cmd.type === 'pause') {
     await ctx?.suspend();
   } else if (cmd.type === 'resume') {

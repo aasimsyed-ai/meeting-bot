@@ -8,7 +8,9 @@ import type {
   CaptureSource,
   CaptureStatus,
   ChannelHealth,
+  Hearing,
   ProblemCode,
+  ScreenHealth,
 } from '../../shared/types';
 import type { CaptureChannelName } from '../../shared/ipc';
 import { log } from '../log';
@@ -17,6 +19,8 @@ import { labelFor } from './labels';
 export const SAMPLE_RATE = 16_000;
 const NO_AUDIO_MS = 4_000;
 const SILENCE_MS = 180_000;
+/** A microphone that sends only digital zeros this long is muted or cut off by the system. */
+const MUTED_MS = 10_000;
 
 /** A finished piece of speech from the speech engine. */
 export interface SpeechSegment {
@@ -55,6 +59,7 @@ export interface SessionDeps {
 interface ChannelState extends ChannelHealth {
   lastAudioAt: number;
   lastLoudAt: number;
+  lastNonZeroAt: number;
   samples: number;
   fd: number | null;
   startedAt: number;
@@ -67,6 +72,7 @@ const emptyChannel = (): ChannelState => ({
   problem: null,
   lastAudioAt: 0,
   lastLoudAt: 0,
+  lastNonZeroAt: 0,
   samples: 0,
   fd: null,
   startedAt: 0,
@@ -90,6 +96,7 @@ export class CaptureSession {
   private system = emptyChannel();
   private screenFrames = 0;
   private screenEnabled = false;
+  private screenState: ScreenHealth['state'] = 'off';
   private problems = new Map<ProblemCode, CaptureProblem>();
   private transcriber: Transcriber | null = null;
   private transcriberReady = false;
@@ -130,11 +137,32 @@ export class CaptureSession {
       elapsedMs: this.elapsed(),
       mic: pub(this.mic),
       system: pub(this.system),
-      screen: { enabled: this.screenEnabled, keyframes: this.screenFrames },
+      hearing: this.hearing(),
+      screen: {
+        enabled: this.screenEnabled,
+        state: this.screenEnabled ? this.screenState : 'off',
+        keyframes: this.screenFrames,
+      },
       segmentsCount: this.segmentsCount,
       lastLines: this.lastLines,
       problems: [...this.problems.values()],
     };
+  }
+
+  /** What the app can honestly say about the audio it is getting right now. */
+  private hearing(): Hearing {
+    if (this.source !== 'live' || this.state === 'idle') return 'ok';
+    const channels = [this.mic, this.system];
+    const wanted = channels.filter((c) => c.enabled || c.problem);
+    const live = channels.filter((c) => c.enabled && c.receiving);
+    if (live.length === 0) {
+      const grace =
+        channels.some((c) => c.enabled) &&
+        !channels.some((c) => c.problem) &&
+        Date.now() - Math.max(this.mic.startedAt, this.system.startedAt) < NO_AUDIO_MS;
+      return grace ? 'starting' : 'none';
+    }
+    return live.length < wanted.length || this.problems.has('mic_muted') ? 'partial' : 'ok';
   }
 
   private elapsed(): number {
@@ -180,6 +208,7 @@ export class CaptureSession {
     this.mic = { ...emptyChannel(), enabled: opts.mic && this.source === 'live' };
     this.system = { ...emptyChannel(), enabled: opts.system && this.source === 'live' };
     this.screenEnabled = opts.screen && this.source === 'live';
+    this.screenState = 'looking';
     this.screenFrames = 0;
     this.segmentsCount = 0;
     this.lastLines = [];
@@ -348,6 +377,10 @@ export class CaptureSession {
     }
     let sum = 0;
     for (let i = 0; i < samples.length; i++) sum += samples[i]! * samples[i]!;
+    if (sum > 0) {
+      ch.lastNonZeroAt = now;
+      if (channel === 'mic' && this.problems.delete('mic_muted')) this.emit(true);
+    }
     const rms = Math.sqrt(sum / samples.length);
     const db = 20 * Math.log10(rms + 1e-9);
     const level = Math.max(0, Math.min(1, (db + 60) / 60));
@@ -403,6 +436,80 @@ export class CaptureSession {
   screenKeyframe(): void {
     this.screenFrames++;
     this.emit();
+  }
+
+  setScreenState(state: ScreenHealth['state']): void {
+    if (!this.screenEnabled || state === this.screenState) return;
+    this.screenState = state;
+    if (state === 'denied')
+      this.problem(
+        'screen_denied',
+        'Slides and shared screens are not being read, because screen access is off. Audio notes are not affected.',
+        { label: 'Open screen settings', kind: 'open_screen_settings' },
+      );
+    else this.problems.delete('screen_denied');
+    this.emit(true);
+  }
+
+  /** Meeting-window watcher: the meeting seems to be over. Never stops by itself. */
+  meetingWindowGone(gone: boolean): void {
+    if (this.state !== 'capturing' && this.state !== 'paused') return;
+    if (gone === this.problems.has('meeting_ended')) return;
+    if (gone)
+      this.problem(
+        'meeting_ended',
+        'The meeting window has closed. If the meeting is over, stop taking notes.',
+        { label: 'Stop', kind: 'stop' },
+      );
+    else this.problems.delete('meeting_ended');
+    this.emit(true);
+  }
+
+  /** A source came back (after an unplug, a device change or a retry). */
+  channelStarted(channel: CaptureChannelName): void {
+    const ch = channel === 'mic' ? this.mic : this.system;
+    if (this.source !== 'live' || this.state === 'idle' || this.state === 'stopping') return;
+    // A source that failed earlier was still wanted; one the user turned off was not.
+    if (!ch.enabled && !ch.problem) return;
+    ch.enabled = true;
+    this.ensureFile(channel);
+    ch.problem = null;
+    ch.lastAudioAt = Date.now();
+    ch.startedAt = Date.now();
+    for (const code of channelCodes(channel)) this.problems.delete(code);
+    this.emit(true);
+  }
+
+  /** Turn a failed source back on so it can be retried without stopping the meeting. */
+  reopen(channel: CaptureChannelName): boolean {
+    if (this.source !== 'live' || (this.state !== 'capturing' && this.state !== 'paused'))
+      return false;
+    const ch = channel === 'mic' ? this.mic : this.system;
+    if (ch.enabled && ch.receiving) return false;
+    ch.enabled = true;
+    ch.receiving = false;
+    ch.problem = null;
+    ch.startedAt = Date.now();
+    ch.lastAudioAt = 0;
+    this.ensureFile(channel);
+    for (const code of channelCodes(channel)) this.problems.delete(code);
+    this.emit(true);
+    return true;
+  }
+
+  private ensureFile(channel: CaptureChannelName): void {
+    const ch = channel === 'mic' ? this.mic : this.system;
+    if (ch.fd !== null) return;
+    mkdirSync(this.audioDir(), { recursive: true });
+    ch.fd = openSync(join(this.audioDir(), `${channel}.pcm`), 'a', 0o600);
+  }
+
+  /** Sources worth retrying: ones the user wanted that failed or went quiet. */
+  failedChannels(): CaptureChannelName[] {
+    return (['mic', 'system'] as const).filter((n) => {
+      const ch = n === 'mic' ? this.mic : this.system;
+      return !ch.receiving && ch.problem !== null;
+    });
   }
 
   /** Report a capture failure in plain language (from the capture window, AudioTee, permissions). */
@@ -463,6 +570,18 @@ export class CaptureSession {
           this.channelEnded(name);
         ch.level = 0;
       }
+    }
+    if (
+      this.mic.enabled &&
+      this.mic.receiving &&
+      now - (this.mic.lastNonZeroAt || this.mic.startedAt) > MUTED_MS &&
+      !this.problems.has('mic_muted')
+    ) {
+      this.problem(
+        'mic_muted',
+        'Your microphone is on but sends no sound. It may be muted, or access may have been turned off.',
+        { label: 'Open microphone settings', kind: 'open_mic_settings' },
+      );
     }
     if (
       this.system.enabled &&
@@ -528,6 +647,12 @@ export class CaptureSession {
   audioDir(meetingId = this.meetingId): string {
     return join(this.deps.audioRoot, meetingId ?? 'unknown');
   }
+}
+
+function channelCodes(channel: CaptureChannelName): ProblemCode[] {
+  return channel === 'mic'
+    ? ['mic_denied', 'mic_lost', 'mic_muted']
+    : ['system_audio_unavailable', 'system_audio_lost'];
 }
 
 export function audioFiles(

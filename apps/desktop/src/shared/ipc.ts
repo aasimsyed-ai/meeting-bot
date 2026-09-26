@@ -102,6 +102,7 @@ export const IPC_SCHEMAS = {
   'capture:pause': z.tuple([]),
   'capture:resume': z.tuple([]),
   'capture:stop': z.tuple([]),
+  'capture:retryAudio': z.tuple([]),
   'capture:status': z.tuple([]),
   'detection:current': z.tuple([]),
   'meetings:list': z.tuple([]),
@@ -189,6 +190,7 @@ export interface Results {
   'capture:pause': CaptureStatus;
   'capture:resume': CaptureStatus;
   'capture:stop': CaptureStatus;
+  'capture:retryAudio': CaptureStatus;
   'capture:status': CaptureStatus;
   'detection:current': DetectedMeeting | null;
   'meetings:list': MeetingSummary[];

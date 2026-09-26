@@ -24,6 +24,7 @@ export type CaptureWindowEvent =
 
 export type CaptureWindowCommand =
   | { type: 'start'; mic: boolean; micDeviceId: string | null; system: boolean }
+  | { type: 'restart'; channel: CaptureChannelName; micDeviceId: string | null }
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'stop' };

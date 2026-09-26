@@ -83,6 +83,10 @@ export class FakeBackend implements CaptureBackend {
   async stop() {
     this.calls.push('stop');
   }
+  async retry() {
+    this.calls.push('retry');
+    for (const ch of this.session.failedChannels()) this.session.reopen(ch);
+  }
   async probeSystemAudio() {
     return true;
   }
