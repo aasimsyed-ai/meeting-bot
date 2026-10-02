@@ -23,7 +23,7 @@
     "@tesseract.js-data/eng": "1.0.0",
     "electron-updater": "^6.8.9",
     "sherpa-onnx-node": "1.13.8",
-    "tesseract.js": "^6.0.1",
+    "tesseract.js": "^7.0.0",
     "zod": "^4.1.0"
   },
   "optionalDependencies": {
