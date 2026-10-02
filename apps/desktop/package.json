@@ -18,7 +18,7 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.128.0",
+    "@anthropic-ai/sdk": "^0.129.0",
     "@meeting-assistant/core": "workspace:*",
     "@tesseract.js-data/eng": "1.0.0",
     "electron-updater": "^6.8.9",
