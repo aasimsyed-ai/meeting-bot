@@ -1,9 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { installModels, launch, onboard, shot, type Launched } from './app';
+import { installModels, launch, onboard, shot, tempDir, type Launched } from './app';
 import {
   loadScenario,
   openFakeMeeting,
@@ -109,7 +108,7 @@ async function runScenario(
   opts: { during?: (win: Page) => Promise<void>; shots?: boolean } = {},
 ): Promise<{ sc: Scenario; win: Page; findings: Findings }> {
   const sc = loadScenario(id);
-  const dataDir = mkdtempSync(join(tmpdir(), 'ma-harness-'));
+  const dataDir = tempDir('ma-harness-');
   installModels(dataDir, models!);
   l = await launch({
     dataDir,

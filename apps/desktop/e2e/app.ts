@@ -12,11 +12,16 @@ export interface Launched {
   logs: string[];
 }
 
+/** A new empty folder inside this run's temporary folder (removed when the run ends). */
+export function tempDir(prefix: string): string {
+  return mkdtempSync(join(process.env.MEETING_ASSISTANT_E2E_TMP ?? tmpdir(), prefix));
+}
+
 /** Launch the built app in test mode with its own empty data folder. */
 export async function launch(
   opts: { dataDir?: string; env?: Record<string, string> } = {},
 ): Promise<Launched> {
-  const dataDir = opts.dataDir ?? mkdtempSync(join(tmpdir(), 'ma-e2e-'));
+  const dataDir = opts.dataDir ?? tempDir('ma-e2e-');
   // MEETING_ASSISTANT_E2E_EXECUTABLE runs the same tests against a packaged app.
   const executablePath = process.env.MEETING_ASSISTANT_E2E_EXECUTABLE || undefined;
   const args = executablePath ? [] : ['.'];

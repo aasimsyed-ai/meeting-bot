@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { existsSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { installModels, launch, onboard, type Launched } from './app';
+import { existsSync } from 'node:fs';
+import { installModels, launch, onboard, tempDir, type Launched } from './app';
 
 /**
  * The whole product with real speech: meeting audio -> capture session ->
@@ -24,7 +22,7 @@ test.skip(
 
 test('meeting audio becomes a transcript with speakers and correct notes', async () => {
   test.setTimeout(240_000);
-  const dataDir = mkdtempSync(join(tmpdir(), 'ma-e2e-audio-'));
+  const dataDir = tempDir('ma-e2e-audio-');
   installModels(dataDir, models!);
   l = await launch({
     dataDir,
