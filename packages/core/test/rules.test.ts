@@ -311,6 +311,17 @@ describe('rules extractor: topics', () => {
     expect(r.topics.map((t) => t.title)).toEqual(['Deployment plan']);
   });
 
+  it('keeps small talk out of topics', () => {
+    const r = run([
+      ['Alice Johnson', "Let's start with the release checklist."],
+      ['Bob Smith', 'The release checklist is almost done, only the release notes are missing.'],
+      ['Carol King', 'How was your weekend, by the way?'],
+      ['Bob Smith', 'Good, we went hiking and had coffee by the lake.'],
+    ]);
+    const text = JSON.stringify(r.topics);
+    expect(text).not.toMatch(/coffee|weekend|hiking/i);
+  });
+
   it('never titles a topic with contractions or weekdays', () => {
     const r = run([
       ['Alice Johnson', "Let's move the deployment to Monday."],

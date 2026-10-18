@@ -916,7 +916,16 @@ const NOT_A_TOPIC =
   /^(?:\d+(?:st|nd|rd|th)|(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth)|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|yesterday|week|weeks|month|months|january|february|march|april|june|july|august|september|october|november|december|morning|afternoon|everyone|guys|folks|thanks|thank|good|great|update|finish|check|send|make|done|work|working|time|start|sounds|agreed|either|else|anything|nothing|everyone|anyone|really|little|thing|things|point)$/;
 
 /** Fallback title: words people kept coming back to. Never contractions or dates. */
-function keywordTitle(units: Unit[]): string {
+/** Chat that is not part of the work: weekends, coffee, the game last night. */
+const SMALL_TALK_RE =
+  /\b(?:weekend|coffee|weather|lunch|vacation|holiday|the game|last night|the kids|hiking|the book|by the way,? did (?:you|either of you|anyone)|how was (?:your|everyone's|the)|good to see you|thanks for joining|have a (?:good|great|nice))\b/i;
+
+const isSmallTalk = (u: Unit) => SMALL_TALK_RE.test(u.text);
+
+function keywordTitle(all: Unit[]): string {
+  // Titles come from the work, not the small talk around it.
+  const work = all.filter((u) => !isSmallTalk(u));
+  const units = work.length ? work : all;
   const freq = new Map<string, number>();
   for (const u of units)
     for (const w of contentWords(u.text))
@@ -937,7 +946,7 @@ function keywordTitle(units: Unit[]): string {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 2)
     .map(([p]) => p);
-  if (phrases.length) return capitalize(phrases.join(' and '));
+  if (phrases.length) return capitalize(phrases.join(', '));
   const top = [...freq.entries()]
     .filter(([, n]) => n >= 2)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -961,21 +970,24 @@ function extractTopics(units: Unit[]): RawTopic[] {
     }
     blocks[blocks.length - 1]!.units.push(u);
   }
-  return blocks
-    .filter((b) => b.units.length > 0)
-    .slice(0, 10)
-    .map((b) => {
-      const informative = b.units.filter(
-        (u) => words(u.text).length >= 7 && !looksLikeInjection(u.text),
-      );
-      const summary = informative
-        .slice(0, 2)
-        .map((u) => u.text)
-        .join(' ');
-      return {
-        title: b.title ?? keywordTitle(b.units),
-        summary: summary || b.units[0]!.text,
-        segmentIds: [...new Set(b.units.slice(0, 6).map((u) => u.segId))],
-      };
-    });
+  return (
+    blocks
+      // A stretch that is only small talk is not a topic.
+      .filter((b) => b.units.some((u) => !isSmallTalk(u) && words(u.text).length >= 4))
+      .slice(0, 10)
+      .map((b) => {
+        const informative = b.units.filter(
+          (u) => words(u.text).length >= 7 && !looksLikeInjection(u.text) && !isSmallTalk(u),
+        );
+        const summary = informative
+          .slice(0, 2)
+          .map((u) => u.text)
+          .join(' ');
+        return {
+          title: b.title ?? keywordTitle(b.units),
+          summary: summary || b.units[0]!.text,
+          segmentIds: [...new Set(b.units.slice(0, 6).map((u) => u.segId))],
+        };
+      })
+  );
 }
