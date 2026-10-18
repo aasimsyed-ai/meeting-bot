@@ -4,7 +4,10 @@
  * free synthetic voices and transcribed by each on-device speech model. It measures; it
  * does not fail on a mishearing. Results go to MEETING_ASSISTANT_PROBE_OUT (JSON).
  *
- *   MEETING_ASSISTANT_TEST_MODELS=<dir with the speech models and the TTS model>
+ * American English voices always; British English voices too when the free VCTK voice
+ * model (vits-piper-en_GB-vctk-medium) is in the models folder.
+ *
+ *   MEETING_ASSISTANT_TEST_MODELS=<dir with the speech models and the TTS models>
  *   MEETING_ASSISTANT_PROBE_OUT=<file.json> pnpm exec vitest run test/asr-probe.integration.test.ts
  */
 import { describe, expect, it } from 'vitest';
@@ -19,6 +22,32 @@ const models = process.env.MEETING_ASSISTANT_TEST_MODELS;
 const out = process.env.MEETING_ASSISTANT_PROBE_OUT;
 const tts = models && join(models, 'vits-piper-en_US-libritts_r-medium');
 const ready = Boolean(models && out && tts && existsSync(tts));
+
+interface VoiceSet {
+  name: string;
+  dir: string;
+  file: string;
+  /** Speaker ids used in turn for the probes, and one for the interruption. */
+  sids: number[];
+  interrupter: number;
+}
+
+const VOICE_SETS: VoiceSet[] = [
+  {
+    name: 'American English (LibriTTS)',
+    dir: 'vits-piper-en_US-libritts_r-medium',
+    file: 'en_US-libritts_r-medium.onnx',
+    sids: [10, 200, 450, 700],
+    interrupter: 88,
+  },
+  {
+    name: 'British English (VCTK)',
+    dir: 'vits-piper-en_GB-vctk-medium',
+    file: 'en_GB-vctk-medium.onnx',
+    sids: [0, 5, 8, 9],
+    interrupter: 20,
+  },
+];
 
 interface Probe {
   kind: string;
@@ -125,39 +154,45 @@ describe.skipIf(!ready)('transcription probe (measurement)', () => {
   it('measures each model on names, numbers, dates, URLs, acronyms, noise, interruptions', async () => {
     const require = createRequire(__filename);
     const sherpa = require('sherpa-onnx-node');
-    const synth = new sherpa.OfflineTts({
-      model: {
-        vits: {
-          model: `${tts}/en_US-libritts_r-medium.onnx`,
-          tokens: `${tts}/tokens.txt`,
-          dataDir: `${tts}/espeak-ng-data`,
-          noiseScale: 0.0001,
-          noiseScaleW: 0.0001,
+    const sets = VOICE_SETS.filter((v) => existsSync(join(models!, v.dir, v.file)));
+    const clips = sets.map((set) => {
+      const dir = join(models!, set.dir);
+      const synth = new sherpa.OfflineTts({
+        model: {
+          vits: {
+            model: join(dir, set.file),
+            tokens: join(dir, 'tokens.txt'),
+            dataDir: join(dir, 'espeak-ng-data'),
+            noiseScale: 0.0001,
+            noiseScaleW: 0.0001,
+          },
+          numThreads: 2,
         },
-        numThreads: 2,
-      },
-    });
-    const to16k = (s: Float32Array) =>
-      new sherpa.LinearResampler(synth.sampleRate, 16000).flush(s) as Float32Array;
-    let seed = 7;
-    const rand = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff - 0.5;
-    };
-    const audio = PROBES.map((p, i) => {
-      const main = to16k(
-        synth.generate({ text: p.text, sid: [10, 200, 450, 700][i % 4], speed: 1 }).samples,
-      );
-      const pad = new Float32Array(16000 * 0.6);
-      let clip = new Float32Array(pad.length * 2 + main.length);
-      clip.set(main, pad.length);
-      if (p.interruptedBy) {
-        const other = to16k(synth.generate({ text: p.interruptedBy, sid: 88, speed: 1.1 }).samples);
-        for (let k = 0; k < other.length && pad.length - 4000 + k < clip.length; k++)
-          clip[pad.length - 4000 + k]! += other[k]! * 0.8;
-      }
-      if (p.noise) clip = clip.map((v) => v + rand() * p.noise!);
-      return clip;
+      });
+      const to16k = (s: Float32Array) =>
+        new sherpa.LinearResampler(synth.sampleRate, 16000).flush(s) as Float32Array;
+      let seed = 7;
+      const rand = () => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff - 0.5;
+      };
+      return PROBES.map((p, i) => {
+        const main = to16k(
+          synth.generate({ text: p.text, sid: set.sids[i % set.sids.length], speed: 1 }).samples,
+        );
+        const pad = new Float32Array(16000 * 0.6);
+        let clip = new Float32Array(pad.length * 2 + main.length);
+        clip.set(main, pad.length);
+        if (p.interruptedBy) {
+          const other = to16k(
+            synth.generate({ text: p.interruptedBy, sid: set.interrupter, speed: 1.1 }).samples,
+          );
+          for (let k = 0; k < other.length && pad.length - 4000 + k < clip.length; k++)
+            clip[pad.length - 4000 + k]! += other[k]! * 0.8;
+        }
+        if (p.noise) clip = clip.map((v) => v + rand() * p.noise!);
+        return clip;
+      });
     });
 
     const results: Record<string, unknown>[] = [];
@@ -165,26 +200,29 @@ describe.skipIf(!ready)('transcription probe (measurement)', () => {
       const engine = await SpeechEngine.create(modelPaths(models!, model), {
         speakerLabels: false,
       });
-      PROBES.forEach((p, i) => {
-        const segs = [];
-        const a = audio[i]!;
-        for (let k = 0; k < a.length; k += 1600)
-          segs.push(...engine.push('system', a.subarray(k, k + 1600)));
-        segs.push(...engine.flush());
-        const heard = segs.map((s) => s.text).join(' ');
-        const lower = heard.toLowerCase();
-        const missed = p.expect.filter((g) => !g.some((w) => lower.includes(w)));
-        results.push({
-          model,
-          kind: p.kind,
-          said: p.text,
-          heard,
-          ok: missed.length === 0,
-          missed: missed.map((g) => g[0]),
-        });
-      });
+      sets.forEach((set, si) =>
+        PROBES.forEach((p, i) => {
+          const segs = [];
+          const a = clips[si]![i]!;
+          for (let k = 0; k < a.length; k += 1600)
+            segs.push(...engine.push('system', a.subarray(k, k + 1600)));
+          segs.push(...engine.flush());
+          const heard = segs.map((s) => s.text).join(' ');
+          const lower = heard.toLowerCase();
+          const missed = p.expect.filter((g) => !g.some((w) => lower.includes(w)));
+          results.push({
+            model,
+            voices: set.name,
+            kind: p.kind,
+            said: p.text,
+            heard,
+            ok: missed.length === 0,
+            missed: missed.map((g) => g[0]),
+          });
+        }),
+      );
     }
     writeFileSync(out!, JSON.stringify(results, null, 2));
-    expect(results.length).toBe(PROBES.length * MODELS.length);
+    expect(results.length).toBe(PROBES.length * MODELS.length * sets.length);
   }, 600_000);
 });
