@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { launch, onboard, shot, type Launched } from './app';
@@ -69,14 +69,18 @@ test('first-time user: onboarding -> sample meeting -> notes -> tasks -> email -
   await expect(win.locator('.segment.highlight')).toContainText('Monday');
   await win.getByRole('tab', { name: 'Summary' }).click();
 
-  // Edit a task: set the migration task's due date and mark the firewall task done.
-  const taskTexts = await tasks
-    .locator('[aria-label="Task"]')
-    .evaluateAll((els) => els.map((e) => (e as HTMLTextAreaElement).value));
-  const migration = tasks.locator('tbody tr').nth(taskTexts.findIndex((v) => /migration/i.test(v)));
-  await migration.locator('input[type="date"]').fill('2026-10-02');
-  await tasks.getByRole('checkbox').first().click();
-  await expect(tasks.getByRole('checkbox').first()).toHaveAttribute('aria-checked', 'true');
+  // Edit a task: set the migration task's due date and mark the firewall task done. Rows are
+  // found by their text, since editing a date can reorder the list.
+  const due = localToday();
+  await (await rowWithTask(tasks, /migration/i)).locator('input[type="date"]').fill(due);
+  await expect((await rowWithTask(tasks, /migration/i)).locator('input[type="date"]')).toHaveValue(
+    due,
+  );
+  await tasks.getByRole('checkbox', { name: /firewall.* as done$/i }).click();
+  await expect(tasks.getByRole('checkbox', { name: /firewall.* as not done$/i })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
 
   // Review the follow-up email: add recipients, see the external warning, "send" in test mode.
   await win.getByRole('button', { name: 'Review email' }).click();
@@ -111,8 +115,10 @@ test('first-time user: onboarding -> sample meeting -> notes -> tasks -> email -
   // Tasks page reflects the edits.
   await win.getByRole('link', { name: 'Tasks' }).click();
   await win.getByRole('button', { name: 'Everyone' }).click();
-  await expect(win.locator('tbody [aria-label="Task"]').first()).toHaveValue(/migration/i);
-  await expect(win.locator('tbody input[type="date"]').first()).toHaveValue('2026-10-02');
+  const page = win.locator('main');
+  await expect((await rowWithTask(page, /migration/i)).locator('input[type="date"]')).toHaveValue(
+    due,
+  );
   await win.getByRole('tab', { name: 'Completed' }).click();
   await expect(win.locator('tbody [aria-label="Task"]').first()).toHaveValue(/firewall/i);
   await shot(win, '07-tasks');
@@ -175,3 +181,25 @@ test('delete a meeting, then delete everything', async () => {
   await win.getByRole('link', { name: 'Meetings' }).click();
   await expect(win.getByText('No meetings yet')).toBeVisible();
 });
+
+/** Today's date (yyyy-mm-dd) on this computer, so the test does not depend on the calendar. */
+function localToday(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** The table row whose task text matches (task text lives in a textarea's value). */
+async function rowWithTask(scope: Locator, re: RegExp): Promise<Locator> {
+  await expect(scope.locator('tbody tr').first()).toBeVisible();
+  const texts = await scope
+    .locator('tbody tr')
+    .evaluateAll((rows) =>
+      rows.map(
+        (r) => (r.querySelector('[aria-label="Task"]') as HTMLTextAreaElement | null)?.value ?? '',
+      ),
+    );
+  const i = texts.findIndex((t) => re.test(t));
+  expect(i, `a task matching ${re}`).toBeGreaterThanOrEqual(0);
+  return scope.locator('tbody tr').nth(i);
+}
