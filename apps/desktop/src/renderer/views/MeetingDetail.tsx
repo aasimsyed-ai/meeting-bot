@@ -83,6 +83,11 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
     (s) => s.segments > 0 && !s.name && /^Speaker \d+$/.test(s.label),
   );
   const suggested = unnamed.filter((s) => s.suggestion);
+  // A voice heard only once or twice is often someone else split off by mistake
+  // (one-word replies give weak voice prints), so say so instead of guessing.
+  const few = unnamed.filter(
+    (s) => s.segments <= 2 && !s.suggestion && d.speakers.some((o) => o.segments > 2),
+  );
   const showEvidence = (e: Evidence) => {
     setHighlight(e.segmentIds[0] ?? null);
     setTab('transcript');
@@ -197,6 +202,10 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
                 .map((s) => `${s.label} → ${s.suggestion!.name}`)
                 .join(', ')}.`
             : 'Naming them puts real names on the tasks and in the email.'}
+          {few.length > 0 &&
+            ` ${few.map((s) => s.label).join(' and ')} said only a line or two, so ${
+              few.length === 1 ? 'it may be' : 'they may be'
+            } someone already listed. Giving two voices the same name joins them.`}
         </Notice>
       )}
       {tab === 'summary' && d.notes && (
@@ -792,7 +801,8 @@ function Transcript({ detail, highlight }: { detail: Detail; highlight: string |
           <Users size={16} className="muted" aria-hidden />
           <h2 id="speakers">Speakers</h2>
           <span className="small muted">
-            Name a speaker to use their name in the notes. This only changes this meeting.
+            Name a speaker to use their name in the notes. Giving two voices the same name joins
+            them. This only changes this meeting.
           </span>
         </div>
         <div className="row" style={{ flexWrap: 'wrap' }}>

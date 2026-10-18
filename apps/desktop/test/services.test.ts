@@ -239,6 +239,54 @@ describe('live capture', () => {
     expect(after.speakers.every((x) => !x.suggestion)).toBe(true);
   });
 
+  it('giving two voices the same name joins them in the transcript and the notes', async () => {
+    const line = (startMs: number, speakerKey: string, text: string) => ({
+      channel: 'system' as const,
+      startMs,
+      endMs: startMs + 1500,
+      text,
+      speakerKey,
+    });
+    h = makeHarness({
+      transcriber: () =>
+        new FakeTranscriber({
+          lines: [
+            line(1000, 'spk-1', "Let's go through the launch plan today."),
+            line(3000, 'spk-2', 'Sounds good, the slides are ready.'),
+            // A short line split off as its own voice.
+            line(5000, 'spk-3', "I'll send the launch checklist by Friday."),
+          ],
+        }),
+    });
+    fakeInstallModels(h.dir);
+    const s = await call<CaptureStatus>('capture:start', {});
+    for (let i = 0; i < 5; i++)
+      h.services.session.ingest('system', new Float32Array(1600).fill(0.2));
+    await waitFor(() => h.transcribers[0]!.started);
+    await call('capture:stop');
+    await waitFor(() =>
+      h.events.some(
+        (e) => e.type === 'processing' && e.meetingId === s.meetingId && e.info === null,
+      ),
+    );
+    await call('meetings:renameSpeaker', s.meetingId, 'spk-1', 'Dana Lee');
+    await call('meetings:renameSpeaker', s.meetingId, 'spk-3', 'Dana Lee');
+    type Detail = {
+      segments: { speaker: string }[];
+      notes: { actionItems: { task: string; owner: string | null }[] } | null;
+    };
+    // Renaming re-runs the notes in the background.
+    let d = await call<Detail>('meetings:get', s.meetingId);
+    for (let i = 0; i < 100 && !d.notes?.actionItems.some((a) => a.owner === 'Dana Lee'); i++) {
+      await tick(20);
+      d = await call<Detail>('meetings:get', s.meetingId);
+    }
+    expect(d.segments.map((x) => x.speaker)).toEqual(['Dana Lee', 'Speaker 2', 'Dana Lee']);
+    expect(d.notes!.actionItems).toEqual([
+      expect.objectContaining({ task: 'Send the launch checklist', owner: 'Dana Lee' }),
+    ]);
+  });
+
   it('records audio when the speech engine is missing, and says so', async () => {
     h = makeHarness();
     const s = await call<CaptureStatus>('capture:start', {});
