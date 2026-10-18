@@ -10,10 +10,10 @@ What we reuse, why, and under which license. Versions are the ones locked in `pn
 | sherpa-onnx-node       | 1.13.8  | Apache-2.0 | On-device voice activity detection, speech recognition, speaker embeddings  |
 | audiotee (macOS only)  | 0.0.7   | MIT        | System audio on macOS 14.2+ through Core Audio taps                         |
 | electron-updater       | 6.8.9   | MIT        | Auto-update from GitHub releases                                            |
-| @anthropic-ai/sdk      | 0.128.0 | MIT        | Optional cloud AI (Claude)                                                  |
+| @anthropic-ai/sdk      | 0.129.0 | MIT        | Optional cloud AI (Claude)                                                  |
 | zod                    | 4.6.5   | MIT        | IPC validation and the AI output schema                                     |
 | chrono-node            | 2.10.1  | MIT        | Parsing spoken dates ("next Tuesday", "end of the month")                   |
-| tesseract.js           | 6.0.1   | Apache-2.0 | Reading the text of shared slides on the device (no pictures kept)          |
+| tesseract.js           | 7.0.0   | Apache-2.0 | Reading the text of shared slides on the device (no pictures kept)          |
 | @tesseract.js-data/eng | 1.0.0   | MIT        | English text-reading data, bundled (only the compact `best_int` file ships) |
 | react, react-dom       | 19.3.0  | MIT        | User interface                                                              |
 | lucide-react           | 1.48.0  | ISC        | Icons                                                                       |
@@ -37,14 +37,14 @@ Before a commercial release, confirm each model's license on its upstream page a
 
 | Package                               | License                | Used for                                       |
 | ------------------------------------- | ---------------------- | ---------------------------------------------- |
-| electron-vite 5.0.0, vite 7.3.6       | MIT                    | Build                                          |
-| @vitejs/plugin-react 5.2.0            | MIT                    | Build                                          |
+| electron-vite 6.0.0, vite 8.3.1       | MIT                    | Build                                          |
+| @vitejs/plugin-react 6.1.2            | MIT                    | Build                                          |
 | electron-builder 26.15.3              | MIT                    | Installers                                     |
 | @playwright/test 1.63.0               | Apache-2.0             | End-to-end tests against the real Electron app |
 | axe-core 4.13.0                       | MPL-2.0                | Accessibility checks, injected only in tests   |
 | vitest 4.1.11                         | MIT                    | Unit tests                                     |
 | typescript 6.0.3                      | Apache-2.0             | Types                                          |
-| eslint 9, typescript-eslint 8.70      | MIT                    | Lint                                           |
+| eslint 10, typescript-eslint 8.71     | MIT                    | Lint                                           |
 | prettier 3.9.9                        | MIT                    | Formatting                                     |
 | Piper voice `en_US-libritts_r-medium` | CC-BY-4.0 (LibriTTS-R) | Synthesizing test meetings in CI               |
 

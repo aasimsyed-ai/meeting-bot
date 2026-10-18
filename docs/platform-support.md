@@ -37,6 +37,6 @@ Detection reads window titles, which apps change from time to time. When detecti
 - **In-room meetings.** Everyone on one laptop microphone is labelled "You" ([#19](https://github.com/aasimsyed-ai/meeting-bot/issues/19)).
 - **Device changes.** When a microphone is unplugged, the OS moves recording to another input and notes carry on; when it comes back, recording moves back (tested on Linux with PulseAudio). Speakers switching to headphones: meeting audio kept flowing (Linux). A source that stops is retried automatically, and **Try again** is offered. Windows and macOS device changes: not tested.
 - **Meeting ends.** When the meeting window has been gone for 15 seconds, the app suggests stopping. It never stops by itself.
-- **Sleep.** Notes pause when the computer sleeps, and the app offers to resume on wake.
+- **Sleep.** Notes pause when the computer sleeps, and resume only when the user clicks **Resume** after waking. Tested by sending the operating system's sleep and wake events to the running app on Linux, Windows and macOS CI runners; a real laptop lid has not been tested.
 - **Crash.** Audio and transcript are saved as they arrive; the next launch offers to recover the meeting. Tested by killing the main process on Linux, macOS and Windows CI runners.
 - **Unsigned builds.** Development installers are unsigned, so Windows SmartScreen and macOS Gatekeeper warn. Signing is a release-stage task ([release-prerequisites.md](release-prerequisites.md)).

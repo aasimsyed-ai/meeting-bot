@@ -1,32 +1,32 @@
 # Test results
 
-Latest full run: 2026-09-26 (real meeting capture validation phase), branch `claude/universal-ai-meeting-assistant-yj65ne`. Everything below was actually run; anything that was not is listed at the end.
+Latest full run: 2026-10-18 (follow-up to the real meeting capture validation phase), branch `claude/universal-ai-meeting-assistant-yj65ne`. Everything below was actually run; anything that was not is listed at the end.
 
 ## Summary
 
-| Layer                                 | Result                                                                                                       | Where                              |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| Lint, format, types                   | Pass                                                                                                         | Local and CI                       |
-| Core unit tests                       | 250 passed (includes evidence and email trust checks on 29 meetings)                                         | Local and CI                       |
-| Desktop unit tests                    | 103 passed, 2 skipped (speech test and transcription probe, which need models; the speech test runs in CI)   | Local; CI on Linux, Windows, macOS |
-| AI quality gate (development set)     | Pass, 100% on every measure                                                                                  | Local and CI                       |
-| AI held-out set                       | Pass (numbers below)                                                                                         | Local and CI                       |
-| AI difficult set (new)                | 100% after fixes; blind first run lower (section below)                                                      | Local and CI                       |
-| Real speech integration               | Pass (Parakeet v3)                                                                                           | Local and CI (Linux)               |
-| E2E, development build                | 14/14 locally on Linux, including the five permission cases; CI runs the same on Linux, Windows, macOS       | Local (Linux) and CI               |
-| Capture harness (real OS audio paths) | 3 scenarios pass locally; the two short ones run in CI on every push                                         | Local and CI (Linux)               |
-| Installers                            | All three platforms built in CI; packaged app E2E in CI                                                      | CI                                 |
-| Packaged app, real capture            | Linux package (unpacked) passes the harness standup, including reading the slide from inside the app archive | Local (Linux)                      |
+| Layer                                 | Result                                                                                                        | Where                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Lint, format, types                   | Pass                                                                                                          | Local and CI                       |
+| Core unit tests                       | 258 passed (includes evidence and email trust checks on 29 meetings)                                          | Local and CI                       |
+| Desktop unit tests                    | 105 passed, 2 skipped (speech test and transcription probe, which need models; the speech test runs in CI)    | Local; CI on Linux, Windows, macOS |
+| AI quality gate (development set)     | Pass, 100% on every measure                                                                                   | Local and CI                       |
+| AI held-out set                       | Pass (numbers below)                                                                                          | Local and CI                       |
+| AI difficult set (new)                | 100% after fixes; blind first run lower (section below)                                                       | Local and CI                       |
+| Real speech integration               | Pass (Parakeet v3)                                                                                            | Local and CI (Linux)               |
+| E2E, development build                | 14 passed locally on Linux, including the five permission cases and laptop sleep; CI runs the same on all 3   | Local (Linux) and CI               |
+| Capture harness (real OS audio paths) | 3 scenarios pass locally; the two short ones run in CI on every push; standup also passes under full CPU load | Local and CI (Linux)               |
+| Installers                            | All three platforms built in CI; packaged app E2E in CI                                                       | CI                                 |
+| Packaged app, real capture            | Linux package (unpacked) passes the harness standup, including reading the slide from inside the app archive  | Local (Linux)                      |
 
 ## Capture harness
 
 Real PulseAudio devices, a stand-in meeting app with a Teams-style title, synthetic voices; the app driven only through its UI. Details in [capture-validation.md](capture-validation.md).
 
-| Scenario             | Result                                                                                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `deployment-standup` | Pass. Decision "Move the deployment to Monday" (confirmed); Bob, firewall rule, Friday; Sarah Lee, QA, Monday; slide read; email correct. "QA" misheard in 1 of 5 repeat runs. |
-| `device-changes`     | Pass. Minimized, microphone unplugged and back, headphones; all three tasks, owners and weekdays right; both slides read.                                                      |
-| `team-sync-10min`    | 9.9 minutes, 108 lines. Final run: see capture-validation.md section 10. Notes ready under a second after **Stop**.                                                            |
+| Scenario             | Result                                                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deployment-standup` | Pass. Decision "Move the deployment to Monday" (confirmed); Bob, firewall rule, Friday; Sarah Lee, QA, Monday; slide read; email correct. "QA" misheard in 1 of 5 repeat runs.                                                                                                           |
+| `device-changes`     | Pass. Minimized, microphone unplugged and back, headphones; all three tasks, owners and weekdays right; both slides read.                                                                                                                                                                |
+| `team-sync-10min`    | 9.9 minutes, 108 lines. Latest clean run (2026-10-18): pass, see capture-validation.md section 10. One earlier run, while lint and type checks ran on the same machine, lost the first words of one line and so one task ([#43](https://github.com/aasimsyed-ai/meeting-bot/issues/43)). |
 
 ## Transcription
 
@@ -34,10 +34,24 @@ Real PulseAudio devices, a stand-in meeting app with a Teams-style title, synthe
 | ----------------------------------- | --------------------------- | ----------------------- |
 | Word error rate, four-voice meeting | 3.5%                        | 1.9%                    |
 | Transcription probe (14 items)      | 8 of 14                     | 9 of 14                 |
+| Same probe, British English voices  | 8 of 14                     | 11 of 14                |
 | Speed (4 cores, 2 threads)          | about 8x real time          | about 4.7x real time    |
 | "QA" in the harness standup         | Misheard in 3 of 3 captures | Misheard in 1 of 5 runs |
 
-Probe details (names, numbers, dates, URL, acronyms, technical terms, noise, interruption) are in [capture-validation.md](capture-validation.md#7-transcription-quality). Numbers, dates and ordinary speech come through; acronyms and uncommon names often do not ([#36](https://github.com/aasimsyed-ai/meeting-bot/issues/36)).
+Probe details (names, numbers, dates, URL, acronyms, technical terms, noise, interruption) are in [capture-validation.md](capture-validation.md#7-transcription-quality). Numbers, dates and ordinary speech come through; uncommon names often do not, and acronyms depend on the voice: missed with the American synthetic voices, heard with the British ones ([#36](https://github.com/aasimsyed-ai/meeting-bot/issues/36)). The British voices are the free VCTK model (en_GB); they are synthetic, so this hints at, but does not show, how real accents fare.
+
+## Speaker grouping
+
+Twelve synthetic meetings (3 or 4 people each), end-of-meeting grouping compared with who really spoke:
+
+| Setting                               | Extra voice labels       | Real people folded into someone else | Speech under the right voice |
+| ------------------------------------- | ------------------------ | ------------------------------------ | ---------------------------- |
+| Current (no merging)                  | 3 meetings, 1 extra each | 0                                    | 97 to 100% per meeting       |
+| Merge voices with under 2 s of speech | 1 meeting                | 1 meeting                            |                              |
+| Merge voices with under 3 s of speech | 0                        | 3 meetings                           |                              |
+| Merge voices with under 5 s of speech | 0                        | 7 meetings                           |                              |
+
+Voice similarity did not separate the two cases either (0.77 for true strays, 0.38 to 0.83 for real quiet people), so automatic merging was not adopted. The app tells the user when a voice spoke only a line or two, and giving two voices the same name joins them.
 
 ## Permissions (simulated denial, real app code after it)
 
@@ -123,6 +137,7 @@ The generated transcripts are lighter than real speech (a real 2-hour meeting is
 | Delete a meeting, then everything                                             | Pass                 | Pass                                                   | Pass    |
 | Live capture through the real microphone path                                 | Pass                 | Pass (meeting audio correctly reported as unavailable) | Pass    |
 | Crash mid-meeting, then recover                                               | Pass                 | Pass                                                   | Pass    |
+| Laptop sleep and wake (the OS's suspend and resume events, sent to the app)   | Pass                 | CI                                                     | CI      |
 | Sample tour: recurring changes, my tasks, external email, speaker names       | Pass                 | Pass                                                   | Pass    |
 | Prompt injection shown as a warning, never acted on                           | Pass                 | Pass                                                   | Pass    |
 | Accessibility (axe, main screens)                                             | Pass                 | Pass                                                   | Pass    |
@@ -131,9 +146,13 @@ The generated transcripts are lighter than real speech (a real 2-hour meeting is
 | Permission cases B to F                                                       | Pass                 | CI                                                     | CI      |
 | Capture harness (real OS audio and window paths)                              | Pass (CI and local)  | Not run                                                | Not run |
 
+## Dependency updates (Dependabot)
+
+Five updates were proposed. Each was applied only after the checks it needs: typescript-eslint 8.71 and the Anthropic SDK 0.129 (lint, types, unit tests); eslint 10 (one new lint finding, fixed); tesseract.js 7 (slide reading in the harness on the development build and on a packaged Linux build); vite 8, which needed electron-vite 6 and the React plugin 6 at the same time (full E2E suite, harness on the development and packaged builds).
+
 ## Bugs found by testing
 
-Twenty-four bugs are recorded in the [bug log](bug-log.md), each with an issue. In this phase the capture harness found five that fake devices and unit tests had missed (almost silent meeting audio, clipped words, unread slides, a dropped reply, misheard acronyms), the audit found the false "Taking notes" and the missing recovery, and the difficult set and the ten-minute meeting found the notes mistakes.
+Twenty-six bugs are recorded in the [bug log](bug-log.md), each with an issue. In this phase the capture harness found five that fake devices and unit tests had missed (almost silent meeting audio, clipped words, unread slides, a dropped reply, misheard acronyms), the audit found the false "Taking notes" and the missing recovery, and the difficult set and the ten-minute meeting found the notes mistakes.
 
 ## NOT TESTED
 
@@ -146,7 +165,7 @@ Each needs something this project does not have yet. Status for all: **NOT TESTE
 - Larger local models (7B and up) on the evaluation sets: not run yet. A 3B model has been measured.
 - Opening the email draft in real mail apps (Outlook, Apple Mail, Gmail in a browser).
 - Long real meetings (60 to 120 minutes) on a low-end laptop.
-- Real people's voices, accents, crosstalk, and laptop speakers echoing into the microphone.
+- Real people's voices, real accents (only synthetic American and British voices were measured), crosstalk, and laptop speakers echoing into the microphone.
 - Windows and macOS device changes, Bluetooth headsets, laptop sleep on real hardware.
 - Screen reading on Windows and macOS, and on a Linux Wayland session.
 - Real OS permission prompts (the permission cases were simulated).

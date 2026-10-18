@@ -25,11 +25,12 @@ No paid API key, service or certificate during development unless the user expli
 
 ## Key decisions (details in architecture-decisions.md)
 
-- Electron 44 + electron-vite 5 + electron-builder. Vite pinned to 7 (electron-vite 5 does not support Vite 8). TypeScript 6.0 (typescript-eslint caps at <6.1).
+- Electron 44 + electron-vite 6 + Vite 8 + electron-builder (Vite, electron-vite and @vitejs/plugin-react must move together: electron-vite 5 and plugin-react 5 stop at Vite 7). ESLint 10. TypeScript 6.0 (typescript-eslint caps at <6.1).
 - Storage: `node:sqlite` (built into Electron 44 / Node 24) with FTS5. No native DB module. Data folder: Electron `userData` (`-development` / `-test` suffixes outside production, or `MEETING_ASSISTANT_DATA_DIR`).
 - Speech: `sherpa-onnx-node` 1.13.8 in an Electron utility process. VAD Silero, ASR **Parakeet v3 (default since the capture validation phase; Moonshine base and tiny are smaller options)**, speaker embeddings WeSpeaker ResNet34. Models downloaded on first use from k2-fsa GitHub releases, SHA-256 pinned in `transcription/models.ts`. Each speech segment is recognized with 250 ms of audio either side (VAD cuts clip words).
 - **Inside Electron, call sherpa with `enableExternalBuffer = false`** (`vad.front(false)`, `extractor.compute(stream, false)`). Electron's V8 forbids external buffers; default calls fail with "External buffers are not allowed".
-- Speaker labels: live online clustering (cosine 0.72) plus an end-of-meeting average-linkage pass (0.75) that relabels meeting-audio segments. Microphone channel = "You" (one person per mic).
+- Speaker labels: live online clustering (cosine 0.72) plus an end-of-meeting average-linkage pass (0.75) that relabels meeting-audio segments. Microphone channel = "You" (one person per mic). Do not auto-merge small voice groups: measured on 12 meetings, it folds real quiet people into others and similarity cannot tell them apart (test-results.md, Speaker grouping). Instead the UI points out voices heard once or twice; giving two voices one name joins them.
+- Speaker name suggestions: `core/src/speakers.ts` (`suggestSpeakerNames`), from "Thanks, Bob" after a voice spoke, a request by name that the voice answered, or a self-introduction. Case-sensitive name patterns, never the user's or an already-given name, ties give nothing. Only suggestions: applied by an ordinary rename when the user clicks.
 - Meeting audio: Windows/Linux via Chromium loopback (`setDisplayMediaRequestHandler` with `audio: 'loopback'`, hidden capture window, start runs as a user gesture). **Request it with `echoCancellation`, `noiseSuppression` and `autoGainControl` false**: Chromium's defaults cancel the meeting audio and turned the PulseAudio monitor volume down to 8% (BUG-017). macOS 14.2+ via AudioTee (Core Audio taps). Electron's own macOS loopback with a custom picker is broken upstream (electron/electron#52738).
 - AI: `Extractor` is the offline rules engine (default) or `LlmExtractor(provider)` with providers mock, local-llm (OpenAI-compatible, e.g. Ollama) and optional Claude (`docs/ai-providers.md`). Env override `MEETING_ASSISTANT_AI_PROVIDER`; tests only allow rules or mock. Claude details: (`claude-opus-5`, `client.beta.messages.parse` + `betaZodOutputFormat`, `fallbacks: 'default'` with beta `server-side-fallback-2026-07-01`, adaptive thinking) or the offline rules engine. The validator (`core/src/validate.ts`) is the hallucination guard for both. Email is composed by code from validated notes.
 - Email: default opens a `mailto:` draft in the user's mail app; mock provider in tests writes `test-outbox/`. Never report "sent" unless a provider really sent.
@@ -51,7 +52,11 @@ No paid API key, service or certificate during development unless the user expli
 - Linux E2E needs `xvfb-run -a`.
 - Capture harness (`tests/capture/run.sh <models>`): needs PulseAudio, Xvfb, `openbox` (window list) and `xcompmgr` (capture of covered windows), the speech models and the free VITS LibriTTS TTS model. Env: `MEETING_ASSISTANT_HARNESS=1`, `MEETING_ASSISTANT_HARNESS_AUDIO`, `MEETING_ASSISTANT_TEST_DETECTION=1` (detection in test mode). Results in `.harness/results/`.
 - `MEETING_ASSISTANT_TEST_DENY=mic,system,screen` (test only; `globalThis.__testDeny` can change it at run time) makes the capture page act as if access was refused, for permission E2E.
-- `MEETING_ASSISTANT_TEST_ASR_MODEL` picks the speech model for real-speech tests (default Parakeet v3). `MEETING_ASSISTANT_PROBE_OUT` runs the transcription probe.
+- `MEETING_ASSISTANT_TEST_ASR_MODEL` picks the speech model for real-speech tests (default Parakeet v3). `MEETING_ASSISTANT_PROBE_OUT` runs the transcription probe; it adds British English voices when `vits-piper-en_GB-vctk-medium` is in the models folder.
+- E2E data folders live under one folder per run (`MEETING_ASSISTANT_E2E_TMP`, made by `e2e/global-setup.ts`) and are removed at the end; use `tempDir()` from `e2e/app.ts`, never a bare `mkdtemp`. The harness copies about 1 GB of models per scenario.
+- `MEETING_ASSISTANT_HARNESS_SCENARIOS` (set by `run.sh`) limits the harness to the scenarios it synthesized.
+- Synthetic audio is not bit-for-bit repeatable even with near-zero TTS noise; assert on meaning (decision about the deployment, evidence citing Monday), not one spelling.
+- Tests that depend on today's date must compute it (`localToday()` in `journey.spec.ts`).
 
 ## Known limitations (keep current)
 
@@ -60,7 +65,9 @@ No paid API key, service or certificate during development unless the user expli
 - One person per microphone: in-room meetings on a shared mic are all labelled "You".
 - Offline engine is conservative; on the held-out set (first run) decision recall was 60% and action precision 82%. The held-out set is no longer blind (#18).
 - A free 3B local model was measured and scored below the offline engine (#27); Claude is optional and requires provider credentials.
-- Bare acronyms and uncommon names are often misheard (#36).
+- Uncommon names are often misheard; acronyms are with the American synthetic voices but not the British ones (#36).
+- One microphone line once lost its first words while the machine was very busy; not reproduced (#43).
+- A misheard word can split one decision in two (#42).
 - Capture validated only on Linux with a stand-in meeting app and synthetic voices; permission denials simulated.
 - No calendar integration: participants and recipients come from the user.
 - Screen reading tested on Linux only; Windows and macOS window capture untested.
