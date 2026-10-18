@@ -27,7 +27,12 @@ import {
 } from '../components/ui';
 import { EmailReview } from './EmailReview';
 import { ModelNotice } from './shared';
-import type { MeetingDetail as Detail, ProcessingInfo, TaskRow } from '../../shared/types';
+import type {
+  MeetingDetail as Detail,
+  ProcessingInfo,
+  SpeakerRow,
+  TaskRow,
+} from '../../shared/types';
 
 const ENGINE_LABELS: Record<string, string> = {
   rules: 'Analyzed on this device',
@@ -77,6 +82,7 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
   const unnamed = d.speakers.filter(
     (s) => s.segments > 0 && !s.name && /^Speaker \d+$/.test(s.label),
   );
+  const suggested = unnamed.filter((s) => s.suggestion);
   const showEvidence = (e: Evidence) => {
     setHighlight(e.segmentIds[0] ?? null);
     setTab('transcript');
@@ -169,14 +175,28 @@ export function MeetingDetail({ id, path }: { id: string; path: string }) {
         <Notice
           tone="accent"
           action={
-            <button className="btn btn-sm" onClick={() => setTab('transcript')}>
-              Name them
-            </button>
+            <span className="row" style={{ gap: 6 }}>
+              {suggested.length > 0 && (
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => void acceptSuggestedNames(d.summary.id, suggested, toast)}
+                >
+                  Use these names
+                </button>
+              )}
+              <button className="btn btn-sm" onClick={() => setTab('transcript')}>
+                {suggested.length > 0 ? 'Check first' : 'Name them'}
+              </button>
+            </span>
           }
         >
           {unnamed.length === 1 ? 'One voice is' : `${unnamed.length} voices are`} not named yet (
-          {unnamed.map((s) => s.label).join(', ')}). Naming them puts real names on the tasks and in
-          the email.
+          {unnamed.map((s) => s.label).join(', ')}).{' '}
+          {suggested.length > 0
+            ? `From how people spoke to each other, they might be: ${suggested
+                .map((s) => `${s.label} → ${s.suggestion!.name}`)
+                .join(', ')}.`
+            : 'Naming them puts real names on the tasks and in the email.'}
         </Notice>
       )}
       {tab === 'summary' && d.notes && (
@@ -823,6 +843,22 @@ function Transcript({ detail, highlight }: { detail: Detail; highlight: string |
             ),
           )}
         </div>
+        {speakers
+          .filter((s) => !s.name && s.suggestion)
+          .map((s) => (
+            <div key={`sugg-${s.speakerId}`} className="row small" style={{ gap: 8 }}>
+              <span>
+                <strong>{s.label}</strong> might be <strong>{s.suggestion!.name}</strong>.{' '}
+                <span className="muted">{s.suggestion!.reason}.</span>
+              </span>
+              <button
+                className="btn btn-sm"
+                onClick={() => void acceptSuggestedNames(detail.summary.id, [s], toast)}
+              >
+                Use {s.suggestion!.name}
+              </button>
+            </div>
+          ))}
       </section>
       {detail.screen.length > 0 && (
         <section className="card card-body stack" style={{ gap: 10 }} aria-labelledby="on-screen">
@@ -899,4 +935,20 @@ function ConfirmDelete({
       </p>
     </Modal>
   );
+}
+
+/** Accept suggested names for numbered voices (only when the user asks). */
+async function acceptSuggestedNames(
+  meetingId: string,
+  speakers: SpeakerRow[],
+  toast: ReturnType<typeof useToast>,
+): Promise<void> {
+  try {
+    for (const s of speakers)
+      if (s.suggestion)
+        await call('meetings:renameSpeaker', meetingId, s.speakerId, s.suggestion.name);
+    toast('Names added. Updating the notes…', 'success');
+  } catch (e) {
+    toast(e instanceof ApiError ? e.message : 'Could not rename the speaker.', 'error');
+  }
 }

@@ -189,6 +189,56 @@ describe('live capture', () => {
     expect(existsSync(audioDir)).toBe(false);
   });
 
+  it('suggests names for numbered voices, and applies one only when asked', async () => {
+    const line = (startMs: number, speakerKey: string, text: string) => ({
+      channel: speakerKey === 'mic' ? ('mic' as const) : ('system' as const),
+      startMs,
+      endMs: startMs + 1500,
+      text,
+      speakerKey,
+    });
+    h = makeHarness({
+      transcriber: () =>
+        new FakeTranscriber({
+          lines: [
+            line(1000, 'spk-1', 'Bob, can you send the budget report to Carol by Friday?'),
+            line(3000, 'spk-2', "Sure, I'll send it by Friday."),
+            line(5000, 'spk-1', 'Thanks, Bob.'),
+          ],
+        }),
+    });
+    fakeInstallModels(h.dir);
+    const s = await call<CaptureStatus>('capture:start', {});
+    for (let i = 0; i < 5; i++)
+      h.services.session.ingest('system', new Float32Array(1600).fill(0.2));
+    await waitFor(() => h.transcribers[0]!.started);
+    await call('capture:stop');
+    await waitFor(() =>
+      h.events.some(
+        (e) => e.type === 'processing' && e.meetingId === s.meetingId && e.info === null,
+      ),
+    );
+    type Speakers = {
+      speakers: {
+        speakerId: string;
+        name: string | null;
+        suggestion?: { name: string; reason: string };
+      }[];
+    };
+    const before = await call<Speakers>('meetings:get', s.meetingId);
+    const spk2 = before.speakers.find((x) => x.speakerId === 'spk-2')!;
+    expect(spk2.name).toBeNull();
+    expect(spk2.suggestion).toEqual({
+      name: 'Bob',
+      reason: 'This voice answered “Bob, can you send the budget report to Carol by Friday?”',
+    });
+    // Accepting it is an ordinary rename.
+    await call('meetings:renameSpeaker', s.meetingId, 'spk-2', spk2.suggestion!.name);
+    const after = await call<Speakers>('meetings:get', s.meetingId);
+    expect(after.speakers.find((x) => x.speakerId === 'spk-2')).toMatchObject({ name: 'Bob' });
+    expect(after.speakers.every((x) => !x.suggestion)).toBe(true);
+  });
+
   it('records audio when the speech engine is missing, and says so', async () => {
     h = makeHarness();
     const s = await call<CaptureStatus>('capture:start', {});

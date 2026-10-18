@@ -14,6 +14,7 @@ export * from './search.ts';
 export * from './qa.ts';
 export * from './recurring.ts';
 export * from './access.ts';
+export * from './speakers.ts';
 export {
   LlmExtractor,
   LLM_PROMPT_VERSION,

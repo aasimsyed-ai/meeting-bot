@@ -80,8 +80,13 @@ async function nameSpeakers(win: Page, sc: Scenario, findings: Findings) {
       problems.push(`no transcript line found for ${person}`);
       continue;
     }
+    if (label === person) {
+      // Already right (a suggested name the user accepted).
+      renamed[person] = label;
+      continue;
+    }
     if (Object.values(renamed).includes(label) || remote.includes(label)) {
-      problems.push(`${person} shares a speaker label with someone else (${label})`);
+      problems.push(`${person} is labelled ${label}, which belongs to someone else`);
       continue;
     }
     renamed[person] = label;
@@ -165,6 +170,18 @@ async function runScenario(
   await expect(win.getByRole('heading', { name: 'TL;DR' })).toBeVisible({ timeout: 300_000 });
   findings.notesSecondsAfterStop = Math.round((Date.now() - stopped) / 1000);
   await snap(win, sc.id, '07-summary');
+
+  // Suggested names: a user would accept them when offered; whether they were right is
+  // checked below by naming every remote voice.
+  const offer = win.locator('.notice', { hasText: 'not named yet' });
+  findings.nameSuggestions = (await offer.count()) ? await offer.innerText() : null;
+  const accept = offer.getByRole('button', { name: 'Use these names' });
+  if (await accept.count()) {
+    await accept.click();
+    await expect(win.getByText('Names added', { exact: false }).first()).toBeVisible();
+    // Voices with no suggestion may still be listed; the offer itself goes away.
+    await expect(accept).toBeHidden({ timeout: 15_000 });
+  }
 
   // 6. Transcript and slides; remote voices are numbered until the user names them.
   await win.getByRole('tab', { name: /Transcript/ }).click();

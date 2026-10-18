@@ -4,7 +4,9 @@ import {
   answerQuestion,
   AccessDeniedError,
   isValidEmail,
+  suggestSpeakerNames,
   type Principal,
+  type TranscriptSegment,
 } from '@meeting-assistant/core';
 import { openDatabase, type Db } from './db/database';
 import { NotFoundError, Repo, LOCAL_USER } from './db/repo';
@@ -33,6 +35,7 @@ import type {
   ModelStatus,
   PermissionKind,
   PermissionStatus,
+  SpeakerRow,
   StartCaptureOptions,
 } from '../shared/types';
 
@@ -434,6 +437,24 @@ export class Services {
     return this.session.stop();
   }
 
+  /** Possible names for numbered voices, from how people addressed each other. */
+  private withSuggestions(d: {
+    segments: TranscriptSegment[];
+    speakers: SpeakerRow[];
+    participants: { name: string }[];
+  }): SpeakerRow[] {
+    const taken = d.speakers.map((s) => s.name).filter((n): n is string => Boolean(n));
+    const found = suggestSpeakerNames(d.segments, {
+      known: d.participants.map((x) => x.name),
+      taken,
+      userName: this.settings.get().profile.name || undefined,
+    });
+    return d.speakers.map((s) => {
+      const hit = s.name ? undefined : found.find((f) => f.speakerId === s.speakerId);
+      return hit ? { ...s, suggestion: { name: hit.name, reason: hit.reason } } : s;
+    });
+  }
+
   // ------------------------------------------------------------------ handlers
 
   handlers(): Handlers {
@@ -547,7 +568,12 @@ export class Services {
                   retryable: false,
                 }
               : null);
-        return { ...d, processing, hasAudio: Boolean(files.mic || files.system) };
+        return {
+          ...d,
+          speakers: this.withSuggestions(d),
+          processing,
+          hasAudio: Boolean(files.mic || files.system),
+        };
       },
       'meetings:rename': (id, title) => {
         this.repo.rename(p(), id, title.trim());

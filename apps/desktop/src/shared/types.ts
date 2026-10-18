@@ -196,6 +196,8 @@ export interface SpeakerRow {
   label: string;
   name: string | null;
   segments: number;
+  /** A possible name for a numbered voice, with the words that suggest it. Never applied by itself. */
+  suggestion?: { name: string; reason: string };
 }
 
 export interface TaskRow extends ActionItem {
