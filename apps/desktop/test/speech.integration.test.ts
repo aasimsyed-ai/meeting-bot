@@ -87,9 +87,15 @@ describe.skipIf(!models || !wav)('speech engine on synthetic meeting audio', () 
       'tasks:',
       r.notes.actionItems.map((a) => `${a.task} | ${a.owner} | ${a.deadline?.date ?? '-'}`),
     );
-    expect(r.notes.decisions.some((d) => d.status === 'confirmed' && /monday/i.test(d.text))).toBe(
-      true,
-    );
+    // The synthetic audio differs slightly between runs and machines, and one CI run heard
+    // "Monda the 28th". So check the decision is about the deployment and cites the line
+    // where Monday was agreed, rather than one exact spelling in the decision text.
+    expect(
+      r.notes.decisions.some(
+        (d) =>
+          d.status === 'confirmed' && /deploy/i.test(d.text) && /monday/i.test(d.evidence.quote),
+      ),
+    ).toBe(true);
     const firewall = r.notes.actionItems.find((a) => /firewall/i.test(a.task));
     expect(firewall?.owner).toMatch(/^Speaker \d$/);
     expect(firewall?.deadline?.date).toBe('2026-09-24');

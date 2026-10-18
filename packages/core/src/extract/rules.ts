@@ -563,6 +563,7 @@ function cleanDecision(raw: string): string | null {
     );
     if (cut > 0) t = w.slice(0, cut).join(' ');
   }
+  t = t.replace(/[,;:]+$/, '');
   if (contentWords(t).length < 2) return null;
   return capitalize(t);
 }

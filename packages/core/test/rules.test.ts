@@ -78,6 +78,16 @@ describe('rules extractor: action items', () => {
 });
 
 describe('rules extractor: decisions', () => {
+  it('cuts a long proposal at a clause without leaving a trailing comma', () => {
+    const r = run([
+      [
+        'Carol King',
+        'What if we move the deployment to Monday, that gives David time and gives me time to speed up the migration?',
+      ],
+    ]);
+    expect(r.decisions.map((d) => d.text)).toEqual(['Move the deployment to Monday']);
+  });
+
   it('confirms a proposal only after someone else agrees', () => {
     const agreed = run([
       ['Bob Smith', "Let's move the release to Tuesday."],
