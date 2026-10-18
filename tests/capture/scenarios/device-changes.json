@@ -65,7 +65,7 @@
     "tasks": [
       { "match": "pricing table", "owner": "Sarah Lee", "weekday": "Wednesday" },
       { "match": "press release", "owner": "Bob", "weekday": "Thursday" },
-      { "match": "help center", "owner": "Sarah Lee" }
+      { "match": "update the help", "owner": "Sarah Lee" }
     ],
     "screen": ["Launch date"]
   }

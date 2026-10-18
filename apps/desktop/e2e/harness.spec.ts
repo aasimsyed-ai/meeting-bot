@@ -406,9 +406,12 @@ test('device changes mid-meeting: minimized, microphone unplugged and back, head
   findings.events = events;
   record('device-changes', findings);
   // What must survive the changes: the user's words after the microphone came back, and
-  // the remote voices after the switch to headphones.
+  // the remote voices after the switch to headphones. Matched on words the recognizer
+  // reliably gets ("help center" has come out as "help setter").
   const transcript = (findings.transcript as string[]).join('\n');
-  expect.soft(transcript, 'user heard again after re-plugging').toMatch(/help center/i);
+  expect
+    .soft(transcript, 'user heard again after re-plugging')
+    .toMatch(/update the help\b.*\barticles/i);
   expect
     .soft(transcript, 'remote voices heard after switching to headphones')
     .toMatch(/launching on the fifteenth|fifteenth works/i);

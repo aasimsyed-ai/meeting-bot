@@ -721,7 +721,7 @@
     "notDecisions": ["color"],
     "tasks": [
       {
-        "match": "checkout flow mock ?ups",
+        "match": "checkout flow mock[- ]?ups",
         "owner": "Bob",
         "weekday": "Thursday"
       },
