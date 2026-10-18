@@ -22,4 +22,5 @@ done
 cd "$repo/apps/desktop"
 [ -f out/main/index.js ] || pnpm build
 export MEETING_ASSISTANT_HARNESS=1 MEETING_ASSISTANT_TEST_MODELS="$models" MEETING_ASSISTANT_HARNESS_AUDIO="$out"
+export MEETING_ASSISTANT_HARNESS_SCENARIOS="${scenarios[*]}"
 xvfb-run -a -s "-screen 0 1600x1000x24" bash -c "openbox >/dev/null 2>&1 & xcompmgr -n >/dev/null 2>&1 & sleep 1; pnpm exec playwright test e2e/harness.spec.ts ${PLAYWRIGHT_ARGS:-}"

@@ -270,6 +270,8 @@ export class CaptureController {
 
   private async startAudioTee(): Promise<void> {
     try {
+      // Test only: act as if macOS refused system audio capture.
+      if (this.opts.denied?.('system')) throw new Error('system audio refused (test)');
       const { AudioTee } = (await import('audiotee')) as unknown as {
         AudioTee: new (o: Record<string, unknown>) => AudioTeeLike;
       };

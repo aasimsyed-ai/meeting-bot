@@ -278,13 +278,19 @@ async function runScenario(
   return { sc, win, findings };
 }
 
+/** Only scenarios the runner synthesized (MEETING_ASSISTANT_HARNESS_SCENARIOS) run. */
+const selected = (id: string) =>
+  (process.env.MEETING_ASSISTANT_HARNESS_SCENARIOS ?? '').split(/[\s,]+/).includes(id);
+
 test('deployment standup: real capture to notes, owners, dates, slides and email', async () => {
+  test.skip(!selected('deployment-standup'), 'scenario not selected');
   test.setTimeout(300_000);
   const { findings } = await runScenario('deployment-standup', { shots: true });
   expect.soft(findings.sent).toBe(0);
 });
 
 test('device changes mid-meeting: minimized, microphone unplugged and back, headphones', async () => {
+  test.skip(!selected('device-changes'), 'scenario not selected');
   test.setTimeout(300_000);
   const events: string[] = [];
   const at = Date.now();
@@ -393,6 +399,7 @@ test('device changes mid-meeting: minimized, microphone unplugged and back, head
 });
 
 test("team sync (about ten minutes): a normal user's meeting, start to email", async () => {
+  test.skip(!selected('team-sync-10min'), 'scenario not selected');
   test.setTimeout(1_500_000);
   const { findings } = await runScenario('team-sync-10min');
   expect.soft(findings.sent).toBe(0);
