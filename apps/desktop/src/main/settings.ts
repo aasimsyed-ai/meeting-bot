@@ -32,7 +32,7 @@ export class SettingsService {
 
   private load(): Stored {
     if (this.cache) return this.cache;
-    let parsed: Partial<Stored> = {};
+    let parsed: Partial<Stored>;
     try {
       parsed = JSON.parse(this.repo.getSetting('settings') ?? '{}') as Partial<Stored>;
     } catch {
