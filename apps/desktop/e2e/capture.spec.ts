@@ -66,6 +66,42 @@ test('live capture uses the real microphone path and explains what is missing', 
   }
 });
 
+test('laptop sleep pauses the notes, and they resume only when the user says so', async () => {
+  l = await launch();
+  const { app, win } = l;
+  await onboard(win);
+  await win.getByRole('button', { name: 'Zoom' }).click();
+  await win.getByRole('button', { name: 'Start taking notes' }).click();
+  await expect(win.locator('.live-state')).toHaveText('Taking notes');
+  const you = win.locator('.meter', { hasText: 'You' });
+  await expect(you).toContainText('Listening', { timeout: 15_000 });
+
+  // The same events the operating system sends when the lid closes and opens.
+  await app.evaluate(({ powerMonitor }) => powerMonitor.emit('suspend'));
+  await expect(win.locator('.live-state')).toHaveText('Paused');
+  const asleep = win.locator('.notice', { hasText: 'paused while your computer was asleep' });
+  await expect(asleep).toBeVisible();
+  const timer = win.locator('.live-timer');
+  const pausedAt = await timer.innerText();
+  await win.waitForTimeout(2200);
+  await expect(timer).toHaveText(pausedAt);
+
+  // Waking up does not quietly start recording again: it stays paused and asks.
+  await app.evaluate(({ powerMonitor }) => powerMonitor.emit('resume'));
+  await win.waitForTimeout(1000);
+  await expect(win.locator('.live-state')).toHaveText('Paused');
+  await asleep.getByRole('button', { name: 'Resume' }).click();
+  await expect(win.locator('.live-state')).toHaveText('Taking notes');
+  await expect(asleep).toBeHidden();
+  // Audio really flows again after the pause, and time counts again.
+  await expect(you).toContainText('Listening', { timeout: 15_000 });
+  await expect(timer).not.toHaveText(pausedAt, { timeout: 5000 });
+  await win.getByRole('button', { name: 'Stop', exact: true }).click();
+  await expect(
+    win.getByText('Your meeting audio is saved.', { exact: false }).first(),
+  ).toBeVisible();
+});
+
 test('a crash mid-meeting is detected and the notes can be recovered', async () => {
   l = await launch();
   await onboard(l.win);
