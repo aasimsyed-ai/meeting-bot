@@ -72,7 +72,7 @@ No paid service is needed. Notes are made by the offline engine by default. For 
 
 ```bash
 pnpm lint && pnpm format:check && pnpm typecheck
-pnpm test          # 250 core + 103 desktop unit tests
+pnpm test          # 258 core + 105 desktop unit tests
 pnpm eval          # AI quality gate on 16 annotated meetings (-- --holdout, -- --hard for the other sets)
 pnpm e2e           # Playwright drives the real Electron app (Linux: xvfb-run -a pnpm e2e)
 ```
