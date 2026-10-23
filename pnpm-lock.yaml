@@ -101,8 +101,8 @@ importers:
   packages/core:
     dependencies:
       chrono-node:
-        specifier: ^2.10.1
-        version: 2.10.1
+        specifier: ^2.10.3
+        version: 2.10.3
       zod:
         specifier: ^4.1.0
         version: 4.6.5
@@ -974,8 +974,8 @@ packages:
   chromium-pickle-js@0.2.0:
     resolution: {integrity: sha512-1R5Fho+jBq0DDydt+/vHWj5KJNJCKdARKOCwZUen84I5BreWoLqRLANH1U87eJy1tiASPtMnGqJJq0ZsLoRPOw==}
 
-  chrono-node@2.10.1:
-    resolution: {integrity: sha512-tPOsBzYVAK5zth+CiHCgp5NGeqRc4mMD8FPthQ5IxkgjPWWxIFdM5odnmfw//IRAzl6C++Xy8olQW7wn5qBR1g==}
+  chrono-node@2.10.3:
+    resolution: {integrity: sha512-MOfrzXgSMZTH4SZ5gyRKQCVwiCrCKY+uYkSJiWoRLXS88DA6WGJm8UjgS+VVEuUQeew/UUXaxrO+SeDn/WCisg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   ci-info@4.3.1:
@@ -3266,7 +3266,7 @@ snapshots:
 
   chromium-pickle-js@0.2.0: {}
 
-  chrono-node@2.10.1: {}
+  chrono-node@2.10.3: {}
 
   ci-info@4.3.1: {}
 
