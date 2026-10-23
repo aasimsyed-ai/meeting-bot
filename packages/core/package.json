@@ -19,7 +19,7 @@
     "eval:holdout": "node --experimental-strip-types --no-warnings eval/run.ts --holdout"
   },
   "dependencies": {
-    "chrono-node": "^2.10.1",
+    "chrono-node": "^2.10.3",
     "zod": "^4.1.0"
   },
   "optionalDependencies": {
