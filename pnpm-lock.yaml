@@ -37,7 +37,7 @@ importers:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.129.0
-        version: 0.129.0(zod@4.6.5)
+        version: 0.129.0(zod@4.6.7)
       '@meeting-assistant/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -54,8 +54,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       zod:
-        specifier: ^4.1.0
-        version: 4.6.5
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@playwright/test':
         specifier: 1.63.0
@@ -104,12 +104,12 @@ importers:
         specifier: ^2.10.1
         version: 2.10.1
       zod:
-        specifier: ^4.1.0
-        version: 4.6.5
+        specifier: ^4.6.6
+        version: 4.6.7
     optionalDependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.129.0
-        version: 0.129.0(zod@4.6.5)
+        version: 0.129.0(zod@4.6.7)
 
 packages:
 
@@ -2379,14 +2379,17 @@ packages:
   zod@4.6.5:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
+
 snapshots:
 
-  '@anthropic-ai/sdk@0.129.0(zod@4.6.5)':
+  '@anthropic-ai/sdk@0.129.0(zod@4.6.7)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
     optionalDependencies:
-      zod: 4.6.5
+      zod: 4.6.7
 
   '@babel/code-frame@7.29.7':
     dependencies:
@@ -4647,3 +4650,5 @@ snapshots:
       zod: 4.6.5
 
   zod@4.6.5: {}
+
+  zod@4.6.7: {}

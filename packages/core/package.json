@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "chrono-node": "^2.10.1",
-    "zod": "^4.1.0"
+    "zod": "^4.6.6"
   },
   "optionalDependencies": {
     "@anthropic-ai/sdk": "^0.129.0"
