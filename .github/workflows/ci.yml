@@ -184,6 +184,32 @@ jobs:
           esac
           export MEETING_ASSISTANT_E2E_EXECUTABLE="$exe"
           if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a pnpm exec playwright test; else pnpm exec playwright test; fi
+      - name: Windows double-click files (install, find, open, uninstall) with the real installer
+        if: runner.os == 'Windows'
+        # Windows PowerShell 5.1, which is what the .cmd files use on people's PCs.
+        shell: powershell
+        env:
+          MEETING_ASSISTANT_NOPAUSE: '1'
+        run: |
+          $setup = (Get-ChildItem release\*\Meeting-Assistant-Setup-*.exe | Select-Object -First 1).FullName
+          $scripts = (Resolve-Path ..\..\windows).Path
+          $where = { powershell -NoProfile -ExecutionPolicy Bypass -File "$scripts\MeetingAssistant.ps1" -Action Where }
+          & "$scripts\Install.cmd" -Installer $setup -Quiet
+          if ($LASTEXITCODE -ne 0) { throw "Install.cmd failed ($LASTEXITCODE)" }
+          & $where
+          if ($LASTEXITCODE -ne 0) { throw 'The installed app was not found' }
+          & "$scripts\Open.cmd"
+          if ($LASTEXITCODE -ne 0) { throw "Open.cmd failed ($LASTEXITCODE)" }
+          Start-Sleep -Seconds 15
+          $running = Get-Process -Name 'Meeting Assistant' -ErrorAction SilentlyContinue
+          if (-not $running) { throw 'Open.cmd ran, but the installed app is not running' }
+          $running | Stop-Process -Force
+          Start-Sleep -Seconds 5
+          & "$scripts\Uninstall.cmd" -Quiet
+          if ($LASTEXITCODE -ne 0) { throw "Uninstall.cmd failed ($LASTEXITCODE)" }
+          & $where
+          if ($LASTEXITCODE -ne 1) { throw 'The app is still there after Uninstall.cmd' }
+          exit 0
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

@@ -1,0 +1,4 @@
+# cmd.exe and Windows PowerShell expect Windows line endings in these files.
+windows/*.cmd text eol=crlf
+windows/*.ps1 text eol=crlf
+windows/*.txt text eol=crlf

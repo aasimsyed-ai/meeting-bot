@@ -37,6 +37,8 @@ It works the same with Microsoft Teams, Zoom, Google Meet, Slack huddles or anyt
 
 Details and what has and has not been tested: [docs/platform-support.md](docs/platform-support.md).
 
+On Windows, the [`windows`](windows/README.txt) folder has double-click files to install, open (and find) and uninstall the app, with no administrator rights needed.
+
 ## Architecture overview
 
 ```
