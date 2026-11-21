@@ -23,6 +23,6 @@
     "zod": "^4.6.6"
   },
   "optionalDependencies": {
-    "@anthropic-ai/sdk": "^0.129.0"
+    "@anthropic-ai/sdk": "^1.10.0"
   }
 }
