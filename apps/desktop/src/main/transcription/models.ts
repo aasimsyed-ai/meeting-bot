@@ -82,8 +82,8 @@ export const ASR_MODELS: Record<
     languages: 'English and 24 other European languages',
     engine: 'transducer',
     url: `${BASE}/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2`,
-    sha256: '5793d0fd397c5778d2cf2126994d58e9d56b1be7c04d13c7a15bb1b4eafb16bf',
-    bytes: 487_170_055,
+    sha256: '1495e91b59d7fc53ddca91f3431758ec99f8fa253fdb0e1e851be0f72b14b0f9',
+    bytes: 487_211_443,
     kind: 'archive',
     dir: 'sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8',
   },
@@ -192,7 +192,7 @@ export async function downloadFiles(opts: DownloadOptions & { files: ModelFile[]
     if (digest !== f.sha256) {
       rmSync(tmp, { force: true });
       throw new Error(
-        'The downloaded speech model did not pass its integrity check, so it was deleted. Please try again.',
+        'The downloaded speech model did not pass its integrity check, so it was deleted. Try again; if it fails again, the file on the download site may have changed: choose another speech model in Settings, or update the app.',
       );
     }
     if (f.kind === 'file') {
