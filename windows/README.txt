@@ -17,6 +17,9 @@ What is here
 
 Install
 -------
+  If you got this folder from the single ZIP (Meeting-Assistant-Windows-<version>.zip), first
+  right-click the ZIP > Extract All, and work from the extracted folder, not from inside the ZIP.
+  The installer is already in the folder, so step 1 below uses it.
   1. Double-click Install.cmd.
      - If a file named Meeting-Assistant-Setup-<version>.exe is in this folder, it uses that.
      - Otherwise it downloads the newest published version from

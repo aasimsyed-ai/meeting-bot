@@ -46,3 +46,26 @@ jobs:
           # Windows signing (optional)
           WIN_CSC_LINK: ${{ secrets.WIN_CERTIFICATE_P12_BASE64 }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+      - name: Bundle the Windows installer with the double-click files
+        if: runner.os == 'Windows'
+        # One ZIP for people who want a single download: the installer plus windows/ (Install.cmd,
+        # Open.cmd, Uninstall.cmd, README.txt). Added to the same draft release.
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $setup = Get-ChildItem "release\$version\Meeting-Assistant-Setup-*.exe" | Select-Object -First 1
+          if (-not $setup) { throw 'The Windows installer was not built' }
+          $stage = Join-Path $env:RUNNER_TEMP 'Meeting-Assistant-Windows'
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Copy-Item ..\..\windows\* $stage
+          Copy-Item $setup.FullName $stage
+          $name = "Meeting-Assistant-Windows-$version.zip"
+          $zip = Join-Path $env:RUNNER_TEMP $name
+          Compress-Archive -Path "$stage\*" -DestinationPath $zip -Force
+          $releases = gh api "repos/$env:GITHUB_REPOSITORY/releases" | ConvertFrom-Json
+          $release = $releases | Where-Object { $_.tag_name -eq "v$version" } | Select-Object -First 1
+          if (-not $release) { throw "No release for v$version was found" }
+          gh api --method POST "https://uploads.github.com/repos/$env:GITHUB_REPOSITORY/releases/$($release.id)/assets?name=$name" -H 'Content-Type: application/zip' --input $zip
+          if ($LASTEXITCODE -ne 0) { throw 'Uploading the ZIP failed' }
